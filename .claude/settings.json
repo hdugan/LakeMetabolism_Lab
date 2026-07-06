@@ -84,7 +84,14 @@
       "Bash(curl -s -o /dev/null -w \"module3.js: %{http_code}\\\\n\" https://hdugan.github.io/LakeMetabolism_Lab/js/module3.js)",
       "Bash(curl -s https://hdugan.github.io/LakeMetabolism_Lab/module3.html)",
       "Bash(curl -s -o /dev/null -w \"index.html: %{http_code}\\\\n\" http://localhost:8935/index.html)",
-      "Bash(curl -s http://localhost:8935/index.html)"
+      "Bash(curl -s http://localhost:8935/index.html)",
+      "Bash(curl -sI https://hdugan.github.io/LakeMetabolism_Lab/module3.html)",
+      "Bash(curl -sI https://hdugan.github.io/LakeMetabolism_Lab/js/module3.js)",
+      "Bash(osascript -l JavaScript /Users/hdugan/Documents/Rpackages/LakeMetabolism_Lab/js/module4.js)",
+      "Bash(curl -s -o /dev/null -w \"module4.html: %{http_code}\\\\n\" http://localhost:8935/module4.html)",
+      "Bash(curl -s -o /dev/null -w \"module4.js: %{http_code}\\\\n\" http://localhost:8935/js/module4.js)",
+      "Bash(curl -s -o /dev/null -w \"index nav: %{http_code}\\\\n\" http://localhost:8935/index.html)",
+      "Bash(echo \"exit: $?\")"
     ],
     "additionalDirectories": [
       "/Users/hdugan/Documents/Rpackages/LakeMetabolism_Lab/.claude"

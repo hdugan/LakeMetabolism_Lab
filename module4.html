@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build the Oxygen Curve Yourself — Lake Metabolism Lab</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎛️</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="module-nav"><div class="module-nav-inner">
+  <a href="index.html">1. Meet the Lake</a>
+  <a href="module2.html">2. Become a Lake Detective</a>
+  <a href="module3.html">3. What's Making Oxygen Change?</a>
+  <a href="module4.html" class="current">4. Build the Oxygen Curve</a>
+</div></nav>
+
+<header class="page-header">
+  <div class="header-inner">
+    <p class="eyebrow">Lake Metabolism Lab · Module 4</p>
+    <h1>Build the Oxygen Curve Yourself</h1>
+    <p class="lede">
+      You've watched oxygen rise and fall, hunted for the variable behind it, and taken apart the three-process
+      engine that drives it. Now flip it around: here are the same three dials, but as sliders you control. Start
+      from a flat guess and nudge <strong>photosynthesis</strong>, <strong>respiration</strong>, and
+      <strong>gas exchange</strong> until your model traces the same curve the real buoy recorded that week.
+    </p>
+  </div>
+</header>
+
+<main class="content">
+
+  <section class="case-card">
+    <h2>Tune the three processes</h2>
+    <p class="case-sub">Every dial starts at zero &mdash; a flat line, just like you predicted in Module 3.</p>
+    <div class="param-sliders">
+      <div class="param-slider-row">
+        <div class="param-slider-label"><span class="dot" style="background:var(--flux-add)"></span>☀️ Photosynthesis</div>
+        <input type="range" min="0" max="100" value="0" class="param-range" id="sliderPhoto" aria-label="Photosynthesis strength">
+        <span class="param-value" id="valuePhoto">0</span>
+      </div>
+      <div class="param-slider-row">
+        <div class="param-slider-label"><span class="dot" style="background:var(--flux-remove)"></span>🐟 Respiration</div>
+        <input type="range" min="0" max="100" value="0" class="param-range" id="sliderResp" aria-label="Respiration strength">
+        <span class="param-value" id="valueResp">0</span>
+      </div>
+      <div class="param-slider-row">
+        <div class="param-slider-label"><span class="dot" style="background:var(--series-wind)"></span>💨 Gas exchange</div>
+        <input type="range" min="0" max="100" value="0" class="param-range" id="sliderGas" aria-label="Gas exchange strength">
+        <span class="param-value" id="valueGas">0</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="chart-card overlay-card">
+    <div class="chart-card-head">
+      <h2>Match the real curve</h2>
+      <span class="chart-unit">mg/L</span>
+    </div>
+    <div class="overlay-legend">
+      <span><span class="swatch" style="background:var(--series-do)"></span>Real oxygen (observed)</span>
+      <span><span class="swatch" style="background:var(--series-rain)"></span>Your model</span>
+    </div>
+    <div class="match-meter">
+      <span class="match-meter-label">Match score</span>
+      <span class="match-meter-value" id="matchScoreText">0%</span>
+    </div>
+    <div class="overlay-plot" id="matchPlot"></div>
+  </section>
+
+  <section class="case-card">
+    <h2>Ready to see how you did?</h2>
+    <p class="case-sub">Reveal whenever you like &mdash; you can always keep adjusting afterward.</p>
+    <button type="button" class="play-btn" id="revealBtn">Reveal my estimate</button>
+
+    <div class="reveal-panel" id="revealPanel" hidden>
+      <p class="reveal-title">🎉 Congratulations &mdash; you've just estimated lake metabolism!</p>
+      <p>
+        This is exactly what limnologists do with real buoy data: fit a simple production&ndash;respiration&ndash;gas-exchange
+        model to the oxygen curve to estimate how much oxygen the lake produced and consumed. Here's how your dials
+        compare to the best fit for this week:
+      </p>
+      <div class="reveal-table-wrap">
+        <table class="reveal-table">
+          <thead><tr><th></th><th>Your estimate</th><th>Best fit</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Gross primary production (GPP)</td>
+              <td id="revGppYou">&ndash;</td>
+              <td id="revGppTrue">&ndash;</td>
+            </tr>
+            <tr>
+              <td>Respiration (R)</td>
+              <td id="revRYou">&ndash;</td>
+              <td id="revRTrue">&ndash;</td>
+            </tr>
+            <tr>
+              <td>Atmospheric exchange</td>
+              <td id="revGasYou">&ndash;</td>
+              <td id="revGasTrue">&ndash;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="reveal-note" id="revealNote"></p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="page-footer">
+  <p>
+    Your model is the same production&ndash;respiration&ndash;gas-exchange equation from Module 3, driven by the same
+    week's real light, wind, and temperature data. "Best fit" is the combination of the three dials that comes
+    closest to the real observed oxygen curve
+    (<a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=129" target="_blank" rel="noopener">EDI knb-lter-ntl.129</a>,
+    <a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=130" target="_blank" rel="noopener">130</a>)
+    &mdash; found the same way a computer would, by searching for the settings that minimize the gap between the two curves.
+    Even the best fit doesn't match perfectly: real lakes are messier than any three-process model.
+  </p>
+</footer>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="js/common.js"></script>
+<script src="js/module4.js"></script>
+</body>
+</html>
