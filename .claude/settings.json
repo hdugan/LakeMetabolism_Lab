@@ -92,7 +92,8 @@
       "Bash(curl -s -o /dev/null -w \"module4.js: %{http_code}\\\\n\" http://localhost:8935/js/module4.js)",
       "Bash(curl -s -o /dev/null -w \"index nav: %{http_code}\\\\n\" http://localhost:8935/index.html)",
       "Bash(echo \"exit: $?\")",
-      "Bash(curl -s http://localhost:8935/module3.html)"
+      "Bash(curl -s http://localhost:8935/module3.html)",
+      "Bash(curl -s http://localhost:8935/module4.html)"
     ],
     "additionalDirectories": [
       "/Users/hdugan/Documents/Rpackages/LakeMetabolism_Lab/.claude"

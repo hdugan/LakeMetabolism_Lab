@@ -61,6 +61,7 @@
     <div class="overlay-legend">
       <span><span class="swatch" style="background:var(--series-do)"></span>Real oxygen (observed)</span>
       <span><span class="swatch" style="background:var(--series-rain)"></span>Your model</span>
+      <span><span class="swatch" style="background:var(--baseline); height:0; border-top:2px dashed var(--baseline)"></span>Equilibrium (100% saturation)</span>
     </div>
     <div class="match-meter">
       <span class="match-meter-label">Match score</span>
@@ -104,6 +105,21 @@
         </table>
       </div>
       <p class="reveal-note" id="revealNote"></p>
+
+      <div class="state-caption" style="margin:14px 0 0;">
+        <span class="callout-label">Why is atmospheric exchange negative?</span>
+        <p style="margin:6px 0 0;">
+          This lake starts the week well above equilibrium &mdash; supersaturated with oxygen, the way Module 3
+          described. Gas exchange always pushes oxygen toward equilibrium (the gray dashed line), never away from
+          it. So when oxygen concentration is higher than equilibrium (supersaturated), gas exchange is pulling
+          oxygen out of the lake and into the air.
+        </p>
+        <p style="margin:10px 0 0;">
+          That's what a negative number means here: the lake is losing oxygen to the atmosphere, not gaining. It's
+          also why turning up your gas-exchange slider pulls your model curve down toward the gray line rather than
+          up.
+        </p>
+      </div>
     </div>
   </section>
 

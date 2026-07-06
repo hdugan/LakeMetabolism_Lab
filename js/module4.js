@@ -90,6 +90,7 @@
 
     const realColor = cssVar('--series-do');
     const yourColor = cssVar('--series-rain');
+    const eqColor = cssVar('--baseline');
 
     const realTrace = {
       x: xAll, y: doReal,
@@ -104,6 +105,13 @@
       line: { color: yourColor, width: 2.5, shape: 'spline', smoothing: 0.3 },
       hovertemplate: '%{y:.2f} mg/L<extra>Your model</extra>',
       name: 'Your model',
+    };
+    const eqTrace = {
+      x: xAll, y: temp.map(doSat),
+      type: 'scatter', mode: 'lines',
+      line: { color: eqColor, width: 1.5, dash: 'dash' },
+      hovertemplate: '%{y:.2f} mg/L<extra>Equilibrium</extra>',
+      name: 'Equilibrium',
     };
 
     const layout = {
@@ -132,7 +140,7 @@
       hovermode: 'x',
     };
 
-    Plotly.newPlot('matchPlot', [realTrace, yourTrace], layout, {
+    Plotly.newPlot('matchPlot', [realTrace, yourTrace, eqTrace], layout, {
       displayModeBar: false, responsive: true, scrollZoom: false,
     });
 
