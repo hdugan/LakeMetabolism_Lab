@@ -824,3 +824,58 @@ a { color: var(--series-do); }
   .param-slider-row { grid-template-columns: 1fr; row-gap: 4px; }
   .param-value { text-align: left; }
 }
+
+/* ==================================================================
+   Module 5 — High-Frequency Data
+   ================================================================== */
+
+.res-switch {
+  display: flex;
+  gap: 8px;
+}
+.res-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-hairline);
+  background: var(--page-plane);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.res-btn:hover { border-color: var(--baseline); }
+.res-btn.active {
+  background: color-mix(in srgb, var(--series-do) 12%, var(--surface-1));
+  border-color: var(--series-do);
+  color: var(--series-do);
+}
+
+.chart-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.mini-chart-wrap {
+  background: var(--page-plane);
+  border: 1px solid var(--border-hairline);
+  border-radius: 10px;
+  padding: 10px;
+}
+.mini-chart-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 4px;
+}
+.mini-plot {
+  width: 100%;
+  height: 170px;
+}
+
+@media (max-width: 900px) {
+  .chart-grid-3 { grid-template-columns: 1fr; }
+}

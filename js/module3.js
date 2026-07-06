@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const { cssVar, buildNightLayer } = window.LakeCommon;
+  const { cssVar, buildNightLayer, DATA_URL } = window.LakeCommon;
 
   // Simplified process rates, hand-tuned (see scripts/build_dataset.py sibling
   // notes) so that with all three processes on the simulated curve lands in
@@ -41,7 +41,7 @@
     '000': "All three processes are off. Nothing is adding or removing oxygen, so it just sits flat wherever it started.",
   };
 
-  fetch('data/mendota_week.json')
+  fetch(DATA_URL)
     .then((r) => r.json())
     .then(init)
     .catch((err) => {

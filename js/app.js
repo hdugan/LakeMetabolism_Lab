@@ -8,9 +8,9 @@
     { key: 'wind_ms',  elId: 'plot-wind',  varName: '--series-wind',  label: 'Wind speed',        unit: 'm/s',        decimals: 1 },
   ];
 
-  const { cssVar, WEEKDAYS, parseHM, fmtBadgeTime, buildNightLayer, cursorLineShape } = window.LakeCommon;
+  const { cssVar, WEEKDAYS, DATA_URL, parseHM, fmtBadgeTime, buildNightLayer, cursorLineShape } = window.LakeCommon;
 
-  fetch('data/mendota_week.json')
+  fetch(DATA_URL)
     .then((r) => r.json())
     .then(init)
     .catch((err) => {

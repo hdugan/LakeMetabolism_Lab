@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const { cssVar, buildNightLayer } = window.LakeCommon;
+  const { cssVar, buildNightLayer, DATA_URL } = window.LakeCommon;
 
   const SUSPECTS = [
     {
@@ -34,7 +34,7 @@
   const VERDICT_KEY = 'lakeDetective.verdict';
   const triedSet = new Set();
 
-  fetch('data/mendota_week.json')
+  fetch(DATA_URL)
     .then((r) => r.json())
     .then(init)
     .catch((err) => {

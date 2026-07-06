@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>High-Frequency Data — Lake Metabolism Lab</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔬</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav class="module-nav"><div class="module-nav-inner">
+  <a href="index.html">1. Meet the Lake</a>
+  <a href="module2.html">2. Become a Lake Detective</a>
+  <a href="module3.html">3. What's Making Oxygen Change?</a>
+  <a href="module4.html">4. Build the Oxygen Curve</a>
+  <a href="module5.html" class="current">5. High-Frequency Data</a>
+</div></nav>
+
+<header class="page-header">
+  <div class="header-inner">
+    <p class="eyebrow">Lake Metabolism Lab · Module 5</p>
+    <h1>High-Frequency Data</h1>
+    <p class="lede">
+      Time to see the real thing. Every chart so far has used <strong>hourly</strong> readings, but the buoy actually
+      logs oxygen once a minute. Pick a resolution below and watch the same real week, the same real lake, sampled
+      differently &mdash; then see what that choice costs you.
+    </p>
+  </div>
+</header>
+
+<main class="content">
+
+  <section class="case-card">
+    <h2>Pick a resolution</h2>
+    <p class="case-sub">Same lake, same week, same variable &mdash; just averaged over a longer or shorter window.</p>
+    <div class="res-switch" id="resSwitch">
+      <button type="button" class="res-btn active" data-res="five">5-minute</button>
+      <button type="button" class="res-btn" data-res="hourly">Hourly</button>
+      <button type="button" class="res-btn" data-res="daily">Daily</button>
+    </div>
+  </section>
+
+  <section class="chart-card overlay-card">
+    <div class="chart-card-head">
+      <h2 id="resChartTitle">Oxygen at 5-minute resolution</h2>
+      <span class="chart-unit">mg/L</span>
+    </div>
+    <div class="overlay-plot" id="resPlot"></div>
+  </section>
+
+  <div class="state-caption">
+    <span class="callout-label">What survives at each resolution</span>
+    <p id="statsText" style="margin:6px 0 0;"></p>
+  </div>
+
+  <section class="chart-card">
+    <div class="chart-card-head">
+      <h2>All three, side by side</h2>
+      <span class="chart-unit">mg/L, identical scale</span>
+    </div>
+    <div class="chart-grid-3">
+      <div class="mini-chart-wrap">
+        <div class="mini-chart-label">5-minute &middot; 2,016 points</div>
+        <div class="mini-plot" id="miniFive"></div>
+      </div>
+      <div class="mini-chart-wrap">
+        <div class="mini-chart-label">Hourly &middot; 168 points</div>
+        <div class="mini-plot" id="miniHourly"></div>
+      </div>
+      <div class="mini-chart-wrap">
+        <div class="mini-chart-label">Daily &middot; 7 points</div>
+        <div class="mini-plot" id="miniDaily"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="page-footer">
+  <p>
+    5-minute and daily values are averaged here from the buoy's native ~1-minute log (NTL-LTER
+    "High Resolution Meteorological and Metabolism Data," <a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=129" target="_blank" rel="noopener">EDI knb-lter-ntl.129</a>).
+    Hourly values are NTL's own published hourly product from the same package. All three describe the exact same
+    week and the exact same lake &mdash; only the averaging window changes.
+  </p>
+</footer>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="js/common.js"></script>
+<script src="js/module5.js"></script>
+</body>
+</html>

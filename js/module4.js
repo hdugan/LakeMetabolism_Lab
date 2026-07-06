@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const { cssVar, buildNightLayer } = window.LakeCommon;
+  const { cssVar, buildNightLayer, DATA_URL } = window.LakeCommon;
 
   // Slider 0-100 maps linearly onto each parameter's real range. The maxima
   // were chosen so the best-fit values (below) sit roughly mid-slider,
@@ -51,7 +51,7 @@
     return Math.max(0, Math.round(100 * (1 - e / RMSE_FLOOR)));
   }
 
-  fetch('data/mendota_week.json')
+  fetch(DATA_URL)
     .then((r) => r.json())
     .then(init)
     .catch((err) => {

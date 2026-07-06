@@ -13,6 +13,12 @@ window.LakeCommon = (() => {
 
   const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  // Bump this whenever data/mendota_week.json's content or schema changes -
+  // it's the only thing standing between an editor and a stale browser (or
+  // GitHub Pages CDN) cache silently serving the old file to every module.
+  const DATA_VERSION = 2;
+  const DATA_URL = `data/mendota_week.json?v=${DATA_VERSION}`;
+
   function parseHM(hhmm) {
     const [h, m] = hhmm.split(':').map(Number);
     return h + m / 60;
@@ -76,5 +82,5 @@ window.LakeCommon = (() => {
     return { nightShapes, sunAnnotations, xAll };
   }
 
-  return { cssVar, stripOffset, WEEKDAYS, parseHM, fmtBadgeTime, buildNightLayer, cursorLineShape };
+  return { cssVar, stripOffset, WEEKDAYS, DATA_URL, parseHM, fmtBadgeTime, buildNightLayer, cursorLineShape };
 })();

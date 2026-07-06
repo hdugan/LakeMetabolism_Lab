@@ -93,7 +93,19 @@
       "Bash(curl -s -o /dev/null -w \"index nav: %{http_code}\\\\n\" http://localhost:8935/index.html)",
       "Bash(echo \"exit: $?\")",
       "Bash(curl -s http://localhost:8935/module3.html)",
-      "Bash(curl -s http://localhost:8935/module4.html)"
+      "Bash(curl -s http://localhost:8935/module4.html)",
+      "Bash(curl -s \"https://pasta.lternet.edu/package/data/eml/knb-lter-ntl/129/41/af29c64a7de5ad797b5709b5f7718cb9\" -o /tmp/meteo_hires_head.csv --range 0-3000)",
+      "Bash(curl -sI \"https://pasta.lternet.edu/package/data/eml/knb-lter-ntl/129/41/af29c64a7de5ad797b5709b5f7718cb9\")",
+      "Bash(curl -sI https://pasta.lternet.edu/package/data/eml/knb-lter-ntl/129/41/af29c64a7de5ad797b5709b5f7718cb9)",
+      "Bash(mkdir -p /private/tmp/claude-503/-Users-hdugan-Documents-Rpackages-LakeMetabolism-Lab/4a9d8b36-578e-4c74-b645-1eca1c2de4d8/scratchpad)",
+      "Bash(mv /tmp/rangetest.bin /private/tmp/claude-503/-Users-hdugan-Documents-Rpackages-LakeMetabolism-Lab/4a9d8b36-578e-4c74-b645-1eca1c2de4d8/scratchpad/meteo_1min_full.csv)",
+      "Bash(python3 build_multires.py)",
+      "Bash(osascript -l JavaScript /Users/hdugan/Documents/Rpackages/LakeMetabolism_Lab/js/module5.js)",
+      "Bash(curl -s -o /dev/null -w \"module5.html: %{http_code}\\\\n\" http://localhost:8935/module5.html)",
+      "Bash(curl -s -o /dev/null -w \"module5.js: %{http_code}\\\\n\" http://localhost:8935/js/module5.js)",
+      "Bash(curl -s http://localhost:8935/module5.html)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://hdugan.github.io/LakeMetabolism_Lab/module5.html)",
+      "Bash(curl -s -o /dev/null -w \"with version query: %{http_code}\\\\n\" \"http://localhost:8935/data/mendota_week.json?v=2\")"
     ],
     "additionalDirectories": [
       "/Users/hdugan/Documents/Rpackages/LakeMetabolism_Lab/.claude"
