@@ -15,6 +15,7 @@
   --series-wind:  #1baf7a; /* aqua */
   --series-par:   #eda100; /* yellow */
   --series-wtemp: #eb6834; /* orange */
+  --series-rain:  #4a3aa7; /* violet */
 
   --good: #0ca30c;
 }
@@ -35,6 +36,7 @@
     --series-wind:  #199e70;
     --series-par:   #c98500;
     --series-wtemp: #d95926;
+    --series-rain:  #9085e9;
 
     --good: #0ca30c;
   }
@@ -52,6 +54,32 @@ html, body {
 }
 
 a { color: var(--series-do); }
+
+/* ---------- Module nav ---------- */
+.module-nav {
+  background: var(--page-plane);
+  border-bottom: 1px solid var(--border-hairline);
+}
+.module-nav-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 10px 24px;
+  display: flex;
+  gap: 8px;
+}
+.module-nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+.module-nav a:hover { background: var(--border-hairline); }
+.module-nav a.current {
+  color: #fff;
+  background: var(--series-do);
+}
 
 /* ---------- Header ---------- */
 .page-header {
@@ -275,4 +303,170 @@ a { color: var(--series-do); }
   .chart-grid { grid-template-columns: 1fr; }
   .control-bar { flex-wrap: wrap; }
   .time-readout { text-align: left; min-width: 0; }
+}
+
+/* ==================================================================
+   Module 2 — Become a Lake Detective
+   ================================================================== */
+
+.case-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--card-radius);
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+.case-card h2 {
+  font-size: 17px;
+  margin: 0 0 4px;
+}
+.case-card .case-sub {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.suspect-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.suspect-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 10px 12px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-hairline);
+  background: var(--page-plane);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text-primary);
+  transition: border-color 0.15s, background 0.15s;
+}
+.suspect-btn:hover { border-color: var(--baseline); }
+.suspect-btn .suspect-icon { font-size: 26px; line-height: 1; }
+.suspect-btn .suspect-label { font-size: 13px; font-weight: 600; }
+.suspect-btn .suspect-check {
+  position: absolute;
+  top: 6px; right: 8px;
+  font-size: 11px;
+  color: var(--good);
+  visibility: hidden;
+}
+.suspect-btn.tried .suspect-check { visibility: visible; }
+.suspect-btn.active {
+  background: color-mix(in srgb, var(--accent, var(--series-do)) 12%, var(--surface-1));
+  border-color: var(--accent, var(--series-do));
+}
+
+.case-empty {
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+  padding: 28px 10px;
+  border: 1.5px dashed var(--border-hairline);
+  border-radius: 12px;
+}
+
+.overlay-card { margin-bottom: 18px; }
+.overlay-legend {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.overlay-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.overlay-legend .swatch {
+  width: 16px; height: 2px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.overlay-plot {
+  width: 100%;
+  height: 340px;
+}
+
+.callout {
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.callout-observe {
+  background: color-mix(in srgb, var(--accent, var(--series-do)) 8%, var(--surface-1));
+  border: 1px solid color-mix(in srgb, var(--accent, var(--series-do)) 30%, transparent);
+}
+.callout-observe .callout-label {
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent, var(--series-do));
+  margin-bottom: 4px;
+  display: block;
+}
+.callout-think {
+  background: var(--page-plane);
+  border: 1px solid var(--border-hairline);
+}
+.callout-think .callout-label {
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  display: block;
+}
+.callout p { margin: 0; color: var(--text-primary); }
+
+.notes-field {
+  width: 100%;
+  min-height: 64px;
+  resize: vertical;
+  border-radius: 10px;
+  border: 1px solid var(--border-hairline);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 10px 12px;
+  margin-top: 4px;
+}
+.notes-field:focus {
+  outline: none;
+  border-color: var(--series-do);
+}
+.notes-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.verdict-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 4px 0 2px;
+}
+.verdict-chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--page-plane);
+  border: 1px solid var(--border-hairline);
+  color: var(--text-secondary);
+}
+
+@media (max-width: 700px) {
+  .suspect-grid { grid-template-columns: repeat(2, 1fr); }
 }

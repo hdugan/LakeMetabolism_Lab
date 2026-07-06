@@ -8,27 +8,7 @@
     { key: 'wind_ms',  elId: 'plot-wind',  varName: '--series-wind',  label: 'Wind speed',        unit: 'm/s',        decimals: 1 },
   ];
 
-  const root = getComputedStyle(document.documentElement);
-  const cssVar = (name) => root.getPropertyValue(name).trim();
-
-  // ISO strings with a fixed -05:00 offset; strip the offset so Plotly treats
-  // them as naive local time on the axis (the data is already single-timezone).
-  const stripOffset = (iso) => iso.slice(0, 19);
-
-  const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-  function fmtBadgeTime(date) {
-    let h = date.getHours();
-    const m = date.getMinutes();
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    h = h % 12; if (h === 0) h = 12;
-    return `${WEEKDAYS[date.getDay()]} ${date.getMonth() + 1}/${date.getDate()}, ${h}:${String(m).padStart(2, '0')} ${ampm}`;
-  }
-
-  function parseHM(hhmm) {
-    const [h, m] = hhmm.split(':').map(Number);
-    return h + m / 60;
-  }
+  const { cssVar, WEEKDAYS, parseHM, fmtBadgeTime, buildNightLayer, cursorLineShape } = window.LakeCommon;
 
   fetch('data/mendota_week.json')
     .then((r) => r.json())
@@ -43,49 +23,11 @@
     const days = data.days;
     const n = hourly.length;
 
-    const xAll = hourly.map((h) => stripOffset(h.t));
+    const { nightShapes, sunAnnotations, xAll } = buildNightLayer(data);
     // Built from the offset-stripped naive string (not h.t) so that Date's
     // local getters replay the original Central-time wall clock regardless
     // of the browser's own timezone.
     const dateObjs = xAll.map((x) => new Date(x));
-
-    // ---- night shading + sunrise/sunset annotations (shared by all 4 charts) ----
-    const nightShapes = [];
-    const sunAnnotations = [];
-    days.forEach((d, i) => {
-      const dayStart = `${d.date}T00:00:00`;
-      const sunrise = `${d.date}T${d.sunrise}:00`;
-      const sunset = `${d.date}T${d.sunset}:00`;
-      const nextDate = days[i + 1] ? days[i + 1].date : null;
-      const dayEnd = nextDate ? `${nextDate}T00:00:00` : xAll[xAll.length - 1];
-
-      // pre-dawn night
-      nightShapes.push(rectShape(dayStart, sunrise));
-      // post-dusk night
-      nightShapes.push(rectShape(sunset, dayEnd));
-
-      sunAnnotations.push(sunGlyph(sunrise, '☀️'));   // sunrise
-      sunAnnotations.push(sunGlyph(sunset, '🌙'));    // sunset
-    });
-
-    function rectShape(x0, x1) {
-      return {
-        type: 'rect', xref: 'x', yref: 'paper',
-        x0, x1, y0: 0, y1: 1,
-        fillcolor: cssVar('--night-fill'),
-        line: { width: 0 },
-        layer: 'below',
-      };
-    }
-    function sunGlyph(x, glyph) {
-      // yanchor 'top' hangs the glyph down from the paper edge, into the
-      // margin.t gap reserved above the plot area, instead of poking up past
-      // the top of the canvas (which is where paper y=1 actually sits).
-      return {
-        x, y: 1.0, yref: 'paper', yanchor: 'top',
-        text: glyph, showarrow: false, font: { size: 12 },
-      };
-    }
 
     // ---- build the four charts ----
     const plots = {};
@@ -143,14 +85,6 @@
 
       plots[s.key] = { el: document.getElementById(s.elId), y };
     });
-
-    function cursorLineShape(x) {
-      return {
-        type: 'line', xref: 'x', yref: 'paper',
-        x0: x, x1: x, y0: 0, y1: 1,
-        line: { color: cssVar('--text-primary'), width: 1.5, dash: 'dot' },
-      };
-    }
 
     // ---- stat row ----
     const statRow = document.getElementById('statRow');

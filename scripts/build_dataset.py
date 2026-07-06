@@ -4,7 +4,11 @@
 #   curl -o wtemp_hourly.csv "https://pasta.lternet.edu/package/data/eml/knb-lter-ntl/130/36/4f25fc29e69efbe93bbee36bb22692d8"
 # (revision numbers 41 / 36 are the latest as of 2026-07; check
 # https://pasta.lternet.edu/package/eml/knb-lter-ntl/129 for newer ones.)
-import csv, json, math
+#
+# Precipitation (used in Module 2's "rainfall" suspect) has no NTL-LTER buoy
+# sensor, so it's pulled live from Open-Meteo's free, no-key historical
+# archive for the same site and week.
+import csv, json, math, urllib.request
 from datetime import date, timedelta
 
 LAT = 43.0989
@@ -87,6 +91,22 @@ with open('meteo_hourly.csv', newline='') as f:
             'do_mgl': row[23],
         }
 
+# ---- fetch hourly precipitation from Open-Meteo (no API key required) ----
+precip = {}
+url = (
+    "https://archive-api.open-meteo.com/v1/archive"
+    f"?latitude={LAT}&longitude={LON}"
+    f"&start_date={DAYS[0].isoformat()}&end_date={DAYS[-1].isoformat()}"
+    "&hourly=precipitation&timezone=America%2FChicago"
+)
+with urllib.request.urlopen(url) as resp:
+    weather = json.load(resp)
+for t, p in zip(weather['hourly']['time'], weather['hourly']['precipitation']):
+    d, hhmm = t.split('T')
+    hh = int(hhmm.split(':')[0])
+    precip.setdefault(d, {})[hh] = p
+
+
 # ---- load water temp hourly, surface only ----
 wtemp = {}
 with open('wtemp_hourly.csv', newline='') as f:
@@ -128,6 +148,7 @@ for d in DAYS:
     for hh in range(24):
         m = meteo.get(ds, {}).get(hh, {})
         wt = wtemp.get(ds, {}).get(hh)
+        pr = precip.get(ds, {}).get(hh)
         ts = f"{ds}T{hh:02d}:00:00-05:00"
         hourly.append({
             't': ts,
@@ -138,6 +159,7 @@ for d in DAYS:
             'wind_ms': fnum(m.get('wind_ms')),
             'chlor_rfu': fnum(m.get('chlor_rfu')),
             'air_temp_c': fnum(m.get('air_temp_c')),
+            'precip_mm': fnum(pr),
         })
 
 days_meta = []
@@ -160,6 +182,7 @@ out = {
     'source': {
         'oxygen_chlorophyll': 'EDI knb-lter-ntl.129 (Hourly Meteorological and Metabolism Data, Lake Mendota)',
         'water_temperature': 'EDI knb-lter-ntl.130 (Hourly Water Temperature, Lake Mendota)',
+        'precipitation': 'Open-Meteo historical archive (ERA5-based reanalysis) for 43.0989, -89.4045',
     },
 }
 
