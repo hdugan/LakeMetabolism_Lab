@@ -79,7 +79,12 @@
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('precip present:', 'precip_mm' in d['hourly'][0]\\)\")",
       "Bash(osascript -l JavaScript /Users/hdugan/Documents/Rpackages/LakeMetabolism_Lab/js/module3.js)",
       "Bash(curl -s -o /dev/null -w \"module3.html: %{http_code}\\\\n\" http://localhost:8935/module3.html)",
-      "Bash(curl -s -o /dev/null -w \"module3.js: %{http_code}\\\\n\" http://localhost:8935/js/module3.js)"
+      "Bash(curl -s -o /dev/null -w \"module3.js: %{http_code}\\\\n\" http://localhost:8935/js/module3.js)",
+      "Bash(curl -s -o /dev/null -w \"module3: %{http_code}\\\\n\" https://hdugan.github.io/LakeMetabolism_Lab/module3.html)",
+      "Bash(curl -s -o /dev/null -w \"module3.js: %{http_code}\\\\n\" https://hdugan.github.io/LakeMetabolism_Lab/js/module3.js)",
+      "Bash(curl -s https://hdugan.github.io/LakeMetabolism_Lab/module3.html)",
+      "Bash(curl -s -o /dev/null -w \"index.html: %{http_code}\\\\n\" http://localhost:8935/index.html)",
+      "Bash(curl -s http://localhost:8935/index.html)"
     ],
     "additionalDirectories": [
       "/Users/hdugan/Documents/Rpackages/LakeMetabolism_Lab/.claude"
