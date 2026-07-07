@@ -134,6 +134,34 @@ a { color: var(--series-do); }
 }
 .lede strong { color: var(--text-primary); }
 
+/* ---------- Header photo (Module 1) ---------- */
+.header-flex {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.header-text { flex: 1 1 auto; min-width: 0; }
+.header-photo { flex: 0 0 auto; width: 330px; }
+.header-photo img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: var(--card-radius);
+  display: block;
+}
+.header-photo-credit {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: right;
+}
+@media (max-width: 700px) {
+  .header-flex { flex-direction: column; }
+  .header-photo { width: 100%; }
+  .header-photo img { height: 180px; }
+}
+
 /* ---------- Layout ---------- */
 .content {
   max-width: 1180px;
