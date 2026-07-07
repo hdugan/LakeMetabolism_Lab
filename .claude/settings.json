@@ -126,7 +126,15 @@
       "Bash(curl -s -o /dev/null -w \"module6.js: %{http_code}\\\\n\" http://localhost:8935/js/module6.js)",
       "Bash(curl -s http://localhost:8935/module6.html)",
       "Bash(curl -s http://localhost:8935/js/module6.js)",
-      "Bash(curl -sI http://localhost:8935/js/module6.js)"
+      "Bash(curl -sI http://localhost:8935/js/module6.js)",
+      "Bash(curl -s -o /dev/null -w \"module6.html: %{http_code}\\\\n\" https://hdugan.github.io/LakeMetabolism_Lab/module6.html)",
+      "Bash(curl -s -o /dev/null -w \"module6.js?v=1: %{http_code}\\\\n\" \"https://hdugan.github.io/LakeMetabolism_Lab/js/module6.js?v=1\")",
+      "Bash(curl -s \"https://hdugan.github.io/LakeMetabolism_Lab/js/module6.js?v=1\")",
+      "Bash(python3 build_seasonal.py)",
+      "Bash(osascript -l JavaScript /Users/hdugan/Documents/Rpackages/LakeMetabolism_Lab/js/module8.js)",
+      "Bash(curl -s -o /dev/null -w \"module8.html: %{http_code}\\\\n\" http://localhost:8935/module8.html)",
+      "Bash(curl -s -o /dev/null -w \"module8.js: %{http_code}\\\\n\" http://localhost:8935/js/module8.js)",
+      "Bash(curl -s -o /dev/null -w \"seasonal data: %{http_code}\\\\n\" \"http://localhost:8935/data/mendota_seasonal.json?v=1\")"
     ],
     "additionalDirectories": [
       "/Users/hdugan/Documents/Rpackages/LakeMetabolism_Lab/.claude"

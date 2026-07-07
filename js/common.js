@@ -23,6 +23,10 @@ window.LakeCommon = (() => {
   const EXTENDED_DATA_VERSION = 1;
   const EXTENDED_DATA_URL = `data/mendota_extended.json?v=${EXTENDED_DATA_VERSION}`;
 
+  // Same idea for Module 8's full-season dataset.
+  const SEASONAL_DATA_VERSION = 1;
+  const SEASONAL_DATA_URL = `data/mendota_seasonal.json?v=${SEASONAL_DATA_VERSION}`;
+
   function parseHM(hhmm) {
     const [h, m] = hhmm.split(':').map(Number);
     return h + m / 60;
@@ -86,5 +90,5 @@ window.LakeCommon = (() => {
     return { nightShapes, sunAnnotations, xAll };
   }
 
-  return { cssVar, stripOffset, WEEKDAYS, DATA_URL, EXTENDED_DATA_URL, parseHM, fmtBadgeTime, buildNightLayer, cursorLineShape };
+  return { cssVar, stripOffset, WEEKDAYS, DATA_URL, EXTENDED_DATA_URL, SEASONAL_DATA_URL, parseHM, fmtBadgeTime, buildNightLayer, cursorLineShape };
 })();

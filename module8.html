@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seasonal Metabolism — Lake Metabolism Lab</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍂</text></svg>">
+<link rel="stylesheet" href="css/style.css?v=1">
+</head>
+<body>
+
+<nav class="module-nav"><div class="module-nav-inner">
+  <a href="index.html">1. Meet the Lake</a>
+  <a href="module2.html">2. Become a Lake Detective</a>
+  <a href="module3.html">3. What's Making Oxygen Change?</a>
+  <a href="module4.html">4. Build the Oxygen Curve</a>
+  <a href="module5.html">5. The Sensor Revolution</a>
+  <a href="module6.html">6. Every Lake Has a Metabolism</a>
+  <a href="module8.html" class="current">8. Seasonal Metabolism</a>
+</div></nav>
+
+<header class="page-header">
+  <div class="header-inner">
+    <p class="eyebrow">Lake Metabolism Lab · Module 8</p>
+    <h1>Seasonal Metabolism</h1>
+    <p class="lede">
+      Module 6 estimated GPP and ER from one single night. Now zoom all the way out: this is that same calculation,
+      repeated automatically for <strong>every single day</strong> of a real open-water season &mdash; March through
+      November 2024, the same Lake Mendota buoy. Slide through spring, summer, and fall and watch the lake's whole
+      metabolic year unfold.
+    </p>
+  </div>
+</header>
+
+<main class="content">
+
+  <section class="control-bar" aria-label="Season control">
+    <button id="playBtn" class="play-btn" aria-label="Play through the season" type="button">
+      <svg id="iconPlay" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 4l14 8-14 8V4z" fill="currentColor"/></svg>
+      <svg id="iconPause" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" hidden><path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="currentColor"/></svg>
+      <span id="playLabel">Play</span>
+    </button>
+    <div class="slider-wrap">
+      <input id="timeSlider" type="range" min="0" max="100" step="1" value="35" aria-label="Day of the season">
+      <div class="slider-scale" id="sliderScale" aria-hidden="true"></div>
+    </div>
+    <div class="time-readout" aria-live="polite">
+      <div class="time-readout-date" id="readoutDate">&nbsp;</div>
+      <div class="daynight-badge" id="seasonBadge">&nbsp;</div>
+    </div>
+  </section>
+
+  <section class="stat-row" id="statRow" aria-label="Current readings"></section>
+
+  <section class="chart-card overlay-card">
+    <div class="chart-card-head">
+      <h2>GPP and ER across the season</h2>
+      <span class="chart-unit">mg O&#8322;/L/day, 7-day median</span>
+    </div>
+    <div class="overlay-legend">
+      <span><span class="swatch" style="background:var(--flux-add)"></span>GPP</span>
+      <span><span class="swatch" style="background:var(--flux-remove)"></span>ER</span>
+    </div>
+    <div class="overlay-plot" id="gppErPlot"></div>
+  </section>
+
+  <section class="chart-card">
+    <div class="chart-card-head">
+      <h2>Net metabolism (NEP) through the season</h2>
+      <span class="chart-unit">green = autotrophic, red = heterotrophic</span>
+    </div>
+    <div class="overlay-plot" id="nepPlot"></div>
+  </section>
+
+  <div class="state-caption">
+    <span class="callout-label">The missing season</span>
+    <p style="margin:6px 0 0;">
+      This chart starts in mid-March and ends in late November &mdash; not because nothing happens in winter, but
+      because the buoy isn't there to see it. Every year, it comes out of the water before ice-in and goes back in
+      after ice-out, the same as almost every lake-monitoring buoy in a climate like Wisconsin's. Winter (and
+      under-ice) metabolism is real, and ecologically important, but measuring it requires different equipment
+      entirely &mdash; it's a genuine blind spot, not a gap in this app.
+    </p>
+  </div>
+
+  <!-- ===================== Guided questions ===================== -->
+  <section class="case-card">
+    <h2>When is GPP highest? When is ER highest?</h2>
+    <p class="case-sub">Scrub the slider above to explore, then check your guess.</p>
+    <button type="button" class="play-btn" id="revealPeaks">Reveal the peak dates</button>
+    <div class="reveal-panel" id="peaksPanel" hidden>
+      <p id="peaksText"></p>
+    </div>
+  </section>
+
+  <section class="case-card">
+    <h2>When is the lake autotrophic? When is it heterotrophic?</h2>
+    <p class="case-sub">Look at the NEP chart above &mdash; green bars vs. red bars.</p>
+    <button type="button" class="play-btn" id="revealNepSummary">Reveal the pattern</button>
+    <div class="reveal-panel" id="nepSummaryPanel" hidden>
+      <p id="nepSummaryText"></p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="page-footer">
+  <p>
+    Every day's GPP and ER come from the same automated night-slope / day-slope method used in Module 6, run once
+    per day across the full 2024 open-water season
+    (<a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=129" target="_blank" rel="noopener">EDI knb-lter-ntl.129</a>).
+    That method is noisy day to day - a single sensor blip at the sampled sunrise or sunset hour can throw off one
+    day's number - so the lines above show a 7-day rolling median, standard practice for this technique, rather than
+    the raw daily estimate.
+  </p>
+</footer>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="js/common.js?v=2"></script>
+<script src="js/module8.js?v=1"></script>
+</body>
+</html>
