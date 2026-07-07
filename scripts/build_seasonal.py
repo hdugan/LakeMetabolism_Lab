@@ -76,7 +76,8 @@ with open('meteo_hourly.csv', newline='') as f:
                 return None
         hourly[(ds, hh)] = {
             'do_mgl': fnum(row[23]), 'wtemp_c': fnum(row[19]), 'wind_ms': fnum(row[7]),
-            'par': fnum(row[15]), 'chlor_rfu': fnum(row[11]), 'air_temp_c': fnum(row[3]),
+            'par': fnum(row[15]), 'chlor_rfu': fnum(row[11]), 'phyco_rfu': fnum(row[13]),
+            'air_temp_c': fnum(row[3]),
         }
 
 print('hourly rows loaded:', len(hourly))
@@ -124,6 +125,7 @@ for d in days:
         'wtemp_c': dmean('wtemp_c'),
         'par': dmean('par'),
         'chlor_rfu': dmean('chlor_rfu'),
+        'phyco_rfu': dmean('phyco_rfu'),
     })
 
 print('days total:', len(days), 'days with GPP/ER:', n_ok)
@@ -151,11 +153,13 @@ def rolling_median(key, window=7):
 gpp_smooth = rolling_median('gpp')
 er_smooth = rolling_median('er')
 chlor_smooth = rolling_median('chlor_rfu')
+phyco_smooth = rolling_median('phyco_rfu')
 for i, r in enumerate(results):
     r['gpp_smooth'] = round(gpp_smooth[i], 3) if gpp_smooth[i] is not None else None
     r['er_smooth'] = round(er_smooth[i], 3) if er_smooth[i] is not None else None
     r['nep_smooth'] = round(gpp_smooth[i] - er_smooth[i], 3) if None not in (gpp_smooth[i], er_smooth[i]) else None
     r['chlor_smooth'] = round(chlor_smooth[i], 3) if chlor_smooth[i] is not None else None
+    r['phyco_smooth'] = round(phyco_smooth[i], 3) if phyco_smooth[i] is not None else None
 
 out = {
     'lake': 'Lake Mendota',

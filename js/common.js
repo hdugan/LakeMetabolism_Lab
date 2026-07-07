@@ -24,7 +24,7 @@ window.LakeCommon = (() => {
   const EXTENDED_DATA_URL = `data/mendota_extended.json?v=${EXTENDED_DATA_VERSION}`;
 
   // Same idea for Module 7's full-season dataset.
-  const SEASONAL_DATA_VERSION = 3;
+  const SEASONAL_DATA_VERSION = 4;
   const SEASONAL_DATA_URL = `data/mendota_seasonal.json?v=${SEASONAL_DATA_VERSION}`;
 
   function parseHM(hhmm) {
