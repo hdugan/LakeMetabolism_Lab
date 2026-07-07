@@ -105,7 +105,20 @@
       "Bash(curl -s -o /dev/null -w \"module5.js: %{http_code}\\\\n\" http://localhost:8935/js/module5.js)",
       "Bash(curl -s http://localhost:8935/module5.html)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://hdugan.github.io/LakeMetabolism_Lab/module5.html)",
-      "Bash(curl -s -o /dev/null -w \"with version query: %{http_code}\\\\n\" \"http://localhost:8935/data/mendota_week.json?v=2\")"
+      "Bash(curl -s -o /dev/null -w \"with version query: %{http_code}\\\\n\" \"http://localhost:8935/data/mendota_week.json?v=2\")",
+      "Bash(curl -s -o /dev/null -w \"module5.html: %{http_code}\\\\n\" https://hdugan.github.io/LakeMetabolism_Lab/module5.html)",
+      "Bash(curl -s -o /dev/null -w \"module5.js: %{http_code}\\\\n\" https://hdugan.github.io/LakeMetabolism_Lab/js/module5.js)",
+      "Bash(curl -s \"https://hdugan.github.io/LakeMetabolism_Lab/data/mendota_week.json?v=2\")",
+      "Bash(git mv *)",
+      "Bash(curl -s -o /dev/null -w \"archived html: %{http_code}\\\\n\" http://localhost:8935/archive/module5-v1-highfreq.html)",
+      "Bash(curl -s -o /dev/null -w \"archived js: %{http_code}\\\\n\" http://localhost:8935/archive/js/module5-v1-highfreq.js)",
+      "Bash(curl -s -o /dev/null -w \"archived css ref: %{http_code}\\\\n\" http://localhost:8935/css/style.css)",
+      "Bash(curl -s -o /dev/null -w \"module5.html \\(should 404 now, being rebuilt\\): %{http_code}\\\\n\" http://localhost:8935/module5.html)",
+      "Bash(curl -s \"https://archive-api.open-meteo.com/v1/archive?latitude=43.0989&longitude=-89.4045&start_date=2023-06-01&end_date=2023-07-31&hourly=precipitation&timezone=America%2FChicago\" -o precip_extended.json)",
+      "Bash(python3 build_extended.py)",
+      "Bash(curl -s -o /dev/null -w \"extended data \\(v1\\): %{http_code}\\\\n\" \"http://localhost:8935/data/mendota_extended.json?v=1\")",
+      "Bash(cp /Users/hdugan/Documents/Rpackages/LakeMetabolism_Lab/scripts/build_extended.py /private/tmp/claude-503/-Users-hdugan-Documents-Rpackages-LakeMetabolism-Lab/4a9d8b36-578e-4c74-b645-1eca1c2de4d8/scratchpad/)",
+      "Bash(curl -s \"http://localhost:8935/data/mendota_extended.json?v=1\")"
     ],
     "additionalDirectories": [
       "/Users/hdugan/Documents/Rpackages/LakeMetabolism_Lab/.claude"

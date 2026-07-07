@@ -826,15 +826,17 @@ a { color: var(--series-do); }
 }
 
 /* ==================================================================
-   Module 5 — High-Frequency Data
+   Shared segmented-switch pattern, used by several modules'
+   resolution/frequency/event selectors.
    ================================================================== */
 
 .res-switch {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 .res-btn {
-  flex: 1;
+  flex: 1 1 100px;
   padding: 10px 14px;
   border-radius: 10px;
   border: 1.5px solid var(--border-hairline);
