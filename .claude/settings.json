@@ -118,7 +118,15 @@
       "Bash(python3 build_extended.py)",
       "Bash(curl -s -o /dev/null -w \"extended data \\(v1\\): %{http_code}\\\\n\" \"http://localhost:8935/data/mendota_extended.json?v=1\")",
       "Bash(cp /Users/hdugan/Documents/Rpackages/LakeMetabolism_Lab/scripts/build_extended.py /private/tmp/claude-503/-Users-hdugan-Documents-Rpackages-LakeMetabolism-Lab/4a9d8b36-578e-4c74-b645-1eca1c2de4d8/scratchpad/)",
-      "Bash(curl -s \"http://localhost:8935/data/mendota_extended.json?v=1\")"
+      "Bash(curl -s \"http://localhost:8935/data/mendota_extended.json?v=1\")",
+      "Bash(curl -s -o /dev/null -w \"archive page: %{http_code}\\\\n\" https://hdugan.github.io/LakeMetabolism_Lab/archive/module5-v1-highfreq.html)",
+      "Bash(curl -s \"https://hdugan.github.io/LakeMetabolism_Lab/data/mendota_extended.json?v=1\")",
+      "Bash(osascript -l JavaScript /Users/hdugan/Documents/Rpackages/LakeMetabolism_Lab/js/module6.js)",
+      "Bash(curl -s -o /dev/null -w \"module6.html: %{http_code}\\\\n\" http://localhost:8935/module6.html)",
+      "Bash(curl -s -o /dev/null -w \"module6.js: %{http_code}\\\\n\" http://localhost:8935/js/module6.js)",
+      "Bash(curl -s http://localhost:8935/module6.html)",
+      "Bash(curl -s http://localhost:8935/js/module6.js)",
+      "Bash(curl -sI http://localhost:8935/js/module6.js)"
     ],
     "additionalDirectories": [
       "/Users/hdugan/Documents/Rpackages/LakeMetabolism_Lab/.claude"

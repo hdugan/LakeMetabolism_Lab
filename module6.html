@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Every Lake Has a Metabolism — Lake Metabolism Lab</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
+<link rel="stylesheet" href="css/style.css?v=1">
+</head>
+<body>
+
+<nav class="module-nav"><div class="module-nav-inner">
+  <a href="index.html">1. Meet the Lake</a>
+  <a href="module2.html">2. Become a Lake Detective</a>
+  <a href="module3.html">3. What's Making Oxygen Change?</a>
+  <a href="module4.html">4. Build the Oxygen Curve</a>
+  <a href="module5.html">5. The Sensor Revolution</a>
+  <a href="module6.html" class="current">6. Every Lake Has a Metabolism</a>
+</div></nav>
+
+<header class="page-header">
+  <div class="header-inner">
+    <p class="eyebrow">Lake Metabolism Lab · Module 6</p>
+    <h1>Every Lake Has a Metabolism</h1>
+    <p class="lede">
+      You have a metabolism. When you eat, you gain energy. When you exercise, you burn it. Scientists can even
+      estimate your metabolic rate just by measuring how quickly you consume oxygen. A lake is no different &mdash;
+      except instead of one organism breathing, an <strong>entire ecosystem</strong> is breathing: every fish,
+      every bacterium, every alga, every plant, all at once. This module gives that whole-lake metabolism its two
+      most important numbers, then has you calculate them yourself from one real night.
+    </p>
+  </div>
+</header>
+
+<main class="content">
+
+  <!-- ===================== Section 1: the analogy ===================== -->
+  <section class="case-card">
+    <h2>An ecosystem, breathing</h2>
+    <p style="font-size:14px; color:var(--text-secondary); line-height:1.6; margin:0 0 12px;">
+      Every organism in the lake is quietly doing the same two things your body does: building itself up using
+      energy from food (or, for algae and plants, from sunlight), and breaking itself down to release that energy
+      again. Add up that activity across the whole lake, all at once, and you get one number for the whole
+      ecosystem &mdash; its metabolism.
+    </p>
+    <div class="organism-row" aria-hidden="true">
+      <span>🐟</span><span>🦠</span><span>🌿</span><span>🍃</span><span>🦆</span><span>🐌</span>
+    </div>
+    <p style="font-size:13px; color:var(--text-muted); text-align:center; margin:8px 0 0;">
+      Every fish. Every bacterium. Every alga. Every plant. All together, they create one ecosystem-wide metabolism.
+    </p>
+  </section>
+
+  <!-- ===================== Section 2: GPP / ER / diagram / quiz ===================== -->
+  <section class="case-card">
+    <h2>Two big numbers</h2>
+    <p class="case-sub">Scientists give this whole-ecosystem activity two names.</p>
+    <div class="toggle-row">
+      <div class="toggle-card">
+        <div class="toggle-card-head">
+          <span class="toggle-card-title"><span class="toggle-card-icon">☀️</span>GPP</span>
+        </div>
+        <p><strong>Gross Primary Production.</strong> The total amount of oxygen produced by photosynthesis, from
+          every alga and plant in the lake, added together.</p>
+      </div>
+      <div class="toggle-card">
+        <div class="toggle-card-head">
+          <span class="toggle-card-title"><span class="toggle-card-icon">🫧</span>ER</span>
+        </div>
+        <p><strong>Ecosystem Respiration.</strong> The total amount of oxygen consumed by every living thing in the
+          lake &mdash; fish, bacteria, algae, plants &mdash; added together.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="chart-card">
+    <div class="gper-diagram">
+      <div class="gper-divider" aria-hidden="true">
+        <svg viewBox="0 0 400 20" preserveAspectRatio="none">
+          <path d="M0,10 Q12.5,0 25,10 T50,10 T75,10 T100,10 T125,10 T150,10 T175,10 T200,10 T225,10 T250,10 T275,10 T300,10 T325,10 T350,10 T375,10 T400,10" />
+        </svg>
+      </div>
+      <div class="gper-row">
+        <div class="gper-col">
+          <div class="gper-arrow gper-arrow-up">&uarr;</div>
+          <div class="gper-tag gper-tag-gpp">GPP</div>
+          <div class="gper-line gper-produced">Oxygen produced</div>
+        </div>
+        <div class="gper-col">
+          <div class="gper-arrow gper-arrow-down">&darr;</div>
+          <div class="gper-tag gper-tag-er">ER</div>
+          <div class="gper-line gper-consumed">Oxygen consumed</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="case-card">
+    <h2>Before the equations&hellip;</h2>
+    <p class="case-sub">No formulas needed yet &mdash; just reason it through.</p>
+
+    <p style="font-size:14px; font-weight:600; margin:14px 0 6px;">If GPP is greater than ER, what happens to oxygen?</p>
+    <div class="quiz-grid" id="q1Grid">
+      <button type="button" class="quiz-option" data-key="q1falls" data-correct="false">It falls over time</button>
+      <button type="button" class="quiz-option" data-key="q1same" data-correct="false">It stays exactly the same</button>
+      <button type="button" class="quiz-option" data-key="q1rises" data-correct="true">It rises over time</button>
+    </div>
+    <div class="quiz-feedback" id="q1Feedback" hidden></div>
+
+    <p style="font-size:14px; font-weight:600; margin:18px 0 6px;">If ER is greater than GPP, what happens to oxygen?</p>
+    <div class="quiz-grid" id="q2Grid">
+      <button type="button" class="quiz-option" data-key="q2rises" data-correct="false">It rises over time</button>
+      <button type="button" class="quiz-option" data-key="q2same" data-correct="false">It stays exactly the same</button>
+      <button type="button" class="quiz-option" data-key="q2falls" data-correct="true">It falls over time</button>
+    </div>
+    <div class="quiz-feedback" id="q2Feedback" hidden></div>
+  </section>
+
+  <!-- ===================== Section 3: guided calculation ===================== -->
+  <section class="case-card">
+    <h2>Now calculate it yourself: GPP and ER from one real night</h2>
+    <p class="case-sub">
+      July 9&ndash;10, 2023, the same week from Module 1.
+    </p>
+  </section>
+
+  <section class="chart-card overlay-card">
+    <div class="chart-card-head">
+      <h2>Oxygen, July 9 evening &ndash; July 10 evening</h2>
+      <span class="chart-unit">mg/L</span>
+    </div>
+    <div class="overlay-legend">
+      <span><span class="swatch" style="background:#000000"></span>Night slope</span>
+      <span><span class="swatch" style="background:#7f1d1d"></span>Day slope</span>
+    </div>
+    <div class="overlay-plot" id="m6Plot"></div>
+  </section>
+
+  <section class="case-card">
+    <h3 style="margin:0 0 6px;">Step 1 &middot; The night slope</h3>
+    <p style="font-size:14px; color:var(--text-secondary); margin:0 0 10px;">
+      At night, photosynthesis stops completely &mdash; so any change in oxygen overnight is <strong>pure
+      respiration</strong>. Oxygen was <strong id="m6NightStartVal">&ndash;</strong> mg/L at 9pm (July 9) and
+      <strong id="m6NightEndVal">&ndash;</strong> mg/L at 5am (July 10), <span id="m6NightHours">8</span> hours later.
+    </p>
+    <div class="calc-step">
+      <label for="m6Step1Input">Rate of change overnight (mg/L per hour):</label>
+      <input type="number" step="0.01" id="m6Step1Input" class="calc-input" placeholder="e.g. -0.10">
+      <button type="button" class="play-btn" id="m6Step1Check">Check</button>
+    </div>
+    <p class="calc-feedback" id="m6Step1Feedback" hidden></p>
+  </section>
+
+  <section class="case-card" id="m6Step2Card" hidden>
+    <h3 style="margin:0 0 6px;">Step 2 &middot; The daytime slope</h3>
+    <p style="font-size:14px; color:var(--text-secondary); margin:0 0 10px;">
+      During the day (5am&ndash;8pm, 15 hours), oxygen went from <strong id="m6DayStartVal">&ndash;</strong> mg/L to
+      <strong id="m6DayEndVal">&ndash;</strong> mg/L. This time, <strong>both</strong> photosynthesis and
+      respiration are happening at once, so whatever rate you calculate is their combined, net effect &mdash;
+      not GPP or ER on its own.
+    </p>
+    <div class="calc-step">
+      <label for="m6Step2Input">Net rate of change during the day (mg/L per hour):</label>
+      <input type="number" step="0.01" id="m6Step2Input" class="calc-input" placeholder="e.g. -0.03">
+      <button type="button" class="play-btn" id="m6Step2Check">Check</button>
+    </div>
+    <p class="calc-feedback" id="m6Step2Feedback" hidden></p>
+  </section>
+
+  <!-- ===================== Section 3b: putting it together ===================== -->
+  <section class="case-card" id="m6Summary" hidden>
+    <h2>Putting it together</h2>
+    <p class="case-sub">Your two slopes are all it takes to separate GPP from ER.</p>
+    <div class="calc-summary">
+      <div class="calc-summary-row">
+        <div class="calc-summary-label">Night slope <span class="calc-summary-sub">(pure respiration)</span></div>
+        <div class="calc-summary-formula" id="sumNightFormula"></div>
+      </div>
+      <div class="calc-summary-row">
+        <div class="calc-summary-label">Day slope <span class="calc-summary-sub">(GPP and ER combined)</span></div>
+        <div class="calc-summary-formula" id="sumDayFormula"></div>
+      </div>
+      <div class="calc-summary-row calc-summary-row-highlight">
+        <div class="calc-summary-label">GPP rate <span class="calc-summary-sub">(day slope + respiration rate)</span></div>
+        <div class="calc-summary-formula" id="sumGppRateFormula"></div>
+      </div>
+      <div class="calc-summary-row">
+        <div class="calc-summary-label">GPP <span class="calc-summary-sub">(&times; 15 daylight hours)</span></div>
+        <div class="calc-summary-formula" id="sumGppFormula"></div>
+      </div>
+      <div class="calc-summary-row">
+        <div class="calc-summary-label">ER <span class="calc-summary-sub">(&times; 24 hours)</span></div>
+        <div class="calc-summary-formula" id="sumErFormula"></div>
+      </div>
+      <div class="calc-summary-row calc-summary-row-highlight">
+        <div class="calc-summary-label">NEP <span class="calc-summary-sub">(GPP &minus; ER)</span></div>
+        <div class="calc-summary-formula" id="sumNepFormula"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Section 4: the verdict ===================== -->
+  <section class="case-card" id="m6Verdict" hidden>
+    <h2>The verdict</h2>
+    <div class="balance-beam">
+      <div class="balance-side">
+        <div class="balance-label">Photosynthesis</div>
+        <div class="balance-value balance-gpp" id="verdictGpp">+0.00</div>
+      </div>
+      <div class="balance-op" id="verdictOp">&gt;</div>
+      <div class="balance-side">
+        <div class="balance-label">Respiration</div>
+        <div class="balance-value balance-er" id="verdictEr">&minus;0.00</div>
+      </div>
+    </div>
+    <div class="balance-net" id="verdictNet">Net = 0.00</div>
+    <p id="verdictText" style="font-size:14px; color:var(--text-secondary); margin-top:12px;"></p>
+  </section>
+
+  <!-- ===================== Section 5: autotrophic / heterotrophic ===================== -->
+  <section class="case-card">
+    <h2>Autotrophic vs. heterotrophic</h2>
+    <p class="case-sub">Two real nights from the same week, two very different verdicts.</p>
+
+    <h3 style="margin:14px 0 4px;">July 9&ndash;10: heterotrophic</h3>
+    <div class="example-chart-wrap">
+      <div class="example-chart-head">
+        <span>Oxygen, July 9 evening &ndash; July 10 evening</span>
+        <span class="net-badge net-badge-negative" id="ex1NetBadge">Net &ndash;</span>
+      </div>
+      <div class="overlay-plot" id="ex1Plot" style="height:170px;"></div>
+    </div>
+    <div class="balance-beam">
+      <div class="balance-side"><div class="balance-label">Photosynthesis</div><div class="balance-value balance-gpp" id="ex1Gpp">&ndash;</div></div>
+      <div class="balance-op" id="ex1Op">&lt;</div>
+      <div class="balance-side"><div class="balance-label">Respiration</div><div class="balance-value balance-er" id="ex1Er">&ndash;</div></div>
+    </div>
+    <div class="balance-net" id="ex1Net">Net = &ndash;</div>
+    <p style="font-size:14px; color:var(--text-secondary); margin-top:10px;">
+      Ecosystem Respiration beat Gross Primary Production that day. The lake consumed more oxygen than it produced:
+      it's <strong>heterotrophic</strong>. It's living off stored food &mdash; instead of producing enough new
+      organic matter, organisms are consuming material that already exists: dead leaves, algae from an earlier
+      bloom, or carbon washed in from the surrounding watershed.
+    </p>
+
+    <h3 style="margin:20px 0 4px;">July 14&ndash;15: autotrophic</h3>
+    <div class="example-chart-wrap">
+      <div class="example-chart-head">
+        <span>Oxygen, July 14 evening &ndash; July 15 evening</span>
+        <span class="net-badge net-badge-positive" id="ex2NetBadge">Net &ndash;</span>
+      </div>
+      <div class="overlay-plot" id="ex2Plot" style="height:170px;"></div>
+    </div>
+    <div class="balance-beam">
+      <div class="balance-side"><div class="balance-label">Photosynthesis</div><div class="balance-value balance-gpp" id="ex2Gpp">&ndash;</div></div>
+      <div class="balance-op" id="ex2Op">&gt;</div>
+      <div class="balance-side"><div class="balance-label">Respiration</div><div class="balance-value balance-er" id="ex2Er">&ndash;</div></div>
+    </div>
+    <div class="balance-net" id="ex2Net">Net = &ndash;</div>
+    <p style="font-size:14px; color:var(--text-secondary); margin-top:10px;">
+      Five days later, the balance flipped. Gross Primary Production beat Ecosystem Respiration: the lake is
+      <strong>autotrophic</strong>. It's acting like a factory &mdash; it builds more organic material than it
+      burns, and there's extra production left over.
+    </p>
+  </section>
+
+  <!-- ===================== Section 6: farm analogy ===================== -->
+  <section class="case-card">
+    <h2>The farm analogy</h2>
+    <p style="font-size:14px; color:var(--text-secondary); line-height:1.6;">
+      Think of a farm. A productive farm grows more food than its residents can eat, creating a surplus. A less
+      productive farm can't feed itself and has to bring food in from elsewhere.
+    </p>
+    <p style="font-size:14px; color:var(--text-secondary); line-height:1.6;">
+      A lake has a similar "carbon economy." An <strong>autotrophic</strong> lake produces more organic matter than
+      it consumes, building a surplus. A <strong>heterotrophic</strong> lake consumes more than it produces and must
+      rely on organic matter imported from the surrounding landscape or stored from previous production &mdash; like
+      living on imports or savings.
+    </p>
+  </section>
+
+</main>
+
+<footer class="page-footer">
+  <p>
+    All numbers on this page come from the same real Lake Mendota buoy week used in Modules 1&ndash;4
+    (<a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=129" target="_blank" rel="noopener">EDI knb-lter-ntl.129</a>,
+    <a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=130" target="_blank" rel="noopener">130</a>).
+    This simplified calculation intentionally ignores atmospheric gas exchange, the third process from Module 3 -
+    real research corrects for it, but this simple night-slope method gets remarkably close.
+  </p>
+</footer>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="js/common.js?v=1"></script>
+<script src="js/module6.js?v=1"></script>
+</body>
+</html>
