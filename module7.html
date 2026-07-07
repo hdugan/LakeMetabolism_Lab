@@ -16,18 +16,25 @@
   <a href="module4.html">4. Build the Oxygen Curve</a>
   <a href="module5.html">5. The Sensor Revolution</a>
   <a href="module6.html">6. Every Lake Has a Metabolism</a>
-  <a href="module8.html" class="current">8. Seasonal Metabolism</a>
+  <a href="module7.html" class="current">7. Seasonal Metabolism</a>
 </div></nav>
 
 <header class="page-header">
   <div class="header-inner">
-    <p class="eyebrow">Lake Metabolism Lab · Module 8</p>
+    <p class="eyebrow">Lake Metabolism Lab · Module 7</p>
     <h1>Seasonal Metabolism</h1>
     <p class="lede">
       Module 6 estimated GPP and ER from one single night. Now zoom all the way out: this is that same calculation,
       repeated automatically for <strong>every single day</strong> of a real open-water season &mdash; March through
       November 2024, the same Lake Mendota buoy. Slide through spring, summer, and fall and watch the lake's whole
       metabolic year unfold.
+    </p>
+    <p class="lede">
+      Module 6's night-slope / day-slope arithmetic has a name: <strong>bookkeeping</strong>. It's the simplest way to
+      pull GPP and ER out of an oxygen curve, but it's not the only one. Below, switch between bookkeeping and four
+      more advanced methods &mdash; all borrowed from the same statistical toolkit as the R package
+      <a href="https://github.com/GLEON/LakeMetabolizer" target="_blank" rel="noopener">LakeMetabolizer</a> &mdash;
+      fit to the exact same buoy data.
     </p>
   </div>
 </header>
@@ -47,6 +54,19 @@
     <div class="time-readout" aria-live="polite">
       <div class="time-readout-date" id="readoutDate">&nbsp;</div>
       <div class="daynight-badge" id="seasonBadge">&nbsp;</div>
+    </div>
+  </section>
+
+  <section class="control-bar" aria-label="Method selector">
+    <div class="slider-wrap" style="flex:1 1 auto;">
+      <div class="res-switch" id="methodSwitch">
+        <button type="button" class="res-btn active" data-method="bookkeeping">Bookkeeping</button>
+        <button type="button" class="res-btn" data-method="ols">OLS</button>
+        <button type="button" class="res-btn" data-method="mle">MLE</button>
+        <button type="button" class="res-btn" data-method="kf">Kalman filter</button>
+        <button type="button" class="res-btn" data-method="bayes">Bayesian</button>
+      </div>
+      <p style="margin:8px 0 0; font-size:13px; color:var(--text-secondary);" id="methodDesc"></p>
     </div>
   </section>
 
@@ -83,6 +103,38 @@
     </p>
   </div>
 
+  <!-- ===================== Does the method matter? ===================== -->
+  <section class="case-card">
+    <h2>Does the method matter?</h2>
+    <p class="case-sub">
+      Same buoy, same summer, same 3-process model &mdash; just five different ways of fitting it. Here's the
+      season-mean net metabolism (NEP) each one comes back with.
+    </p>
+  </section>
+
+  <section class="chart-card">
+    <div class="chart-card-head">
+      <h2>Season-mean NEP, by method</h2>
+      <span class="chart-unit">mg O&#8322;/L/day &middot; green = net autotrophic</span>
+    </div>
+    <div class="overlay-plot" id="methodComparePlot"></div>
+    <p style="margin:10px 0 0; font-size:13px; color:var(--text-secondary);" id="methodCompareText"></p>
+  </section>
+
+  <!-- ===================== Season summary ===================== -->
+  <section class="chart-card">
+    <div class="chart-card-head">
+      <h2>Summarized by season</h2>
+      <span class="chart-unit">mean mg O&#8322;/L/day &middot; <span id="seasonBarMethodLabel">bookkeeping</span></span>
+    </div>
+    <div class="overlay-legend">
+      <span><span class="swatch" style="background:var(--flux-add)"></span>GPP</span>
+      <span><span class="swatch" style="background:var(--flux-remove)"></span>ER</span>
+    </div>
+    <div class="overlay-plot" id="seasonBarPlot"></div>
+    <p style="margin:10px 0 0; font-size:13px; color:var(--text-secondary);" id="seasonAutoText"></p>
+  </section>
+
   <!-- ===================== Guided questions ===================== -->
   <section class="case-card">
     <h2>When is GPP highest? When is ER highest?</h2>
@@ -102,21 +154,45 @@
     </div>
   </section>
 
+  <!-- ===================== Chlorophyll vs NEP ===================== -->
+  <section class="case-card">
+    <h2>Do autotrophic periods line up with algal blooms?</h2>
+    <p class="case-sub">Chlorophyll (algal biomass) vs. net metabolism, both scaled to their own range this season.</p>
+  </section>
+
+  <section class="chart-card overlay-card">
+    <div class="chart-card-head">
+      <h2>Chlorophyll vs. NEP</h2>
+      <span class="chart-unit">each series, % of its own range</span>
+    </div>
+    <div class="overlay-legend">
+      <span><span class="swatch" style="background:var(--series-rain)"></span>Chlorophyll</span>
+      <span><span class="swatch" style="background:var(--series-do)"></span>NEP</span>
+    </div>
+    <div class="overlay-plot" id="chlorNepPlot"></div>
+  </section>
+
+  <div class="state-caption">
+    <span class="callout-label">What the data actually shows</span>
+    <p id="chlorNepText" style="margin:6px 0 0;"></p>
+  </div>
+
 </main>
 
 <footer class="page-footer">
   <p>
-    Every day's GPP and ER come from the same automated night-slope / day-slope method used in Module 6, run once
-    per day across the full 2024 open-water season
+    Bookkeeping GPP/ER come from the same automated night-slope / day-slope method used in Module 6; OLS, MLE, Kalman
+    filter, and Bayesian (Metropolis-Hastings MCMC) all fit the same alpha/R/gas-exchange model used in Modules 3
+    &amp; 4 to a 48-hour window around each day instead. All five are run once per day across the full 2024
+    open-water season
     (<a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=129" target="_blank" rel="noopener">EDI knb-lter-ntl.129</a>).
-    That method is noisy day to day - a single sensor blip at the sampled sunrise or sunset hour can throw off one
-    day's number - so the lines above show a 7-day rolling median, standard practice for this technique, rather than
-    the raw daily estimate.
+    Every method is noisy day to day - a single sensor blip can throw off one day's number - so every line above
+    shows a 7-day rolling median rather than the raw daily estimate.
   </p>
 </footer>
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-<script src="js/common.js?v=2"></script>
-<script src="js/module8.js?v=1"></script>
+<script src="js/common.js?v=4"></script>
+<script src="js/module7.js?v=3"></script>
 </body>
 </html>

@@ -150,10 +150,12 @@ def rolling_median(key, window=7):
 
 gpp_smooth = rolling_median('gpp')
 er_smooth = rolling_median('er')
+chlor_smooth = rolling_median('chlor_rfu')
 for i, r in enumerate(results):
     r['gpp_smooth'] = round(gpp_smooth[i], 3) if gpp_smooth[i] is not None else None
     r['er_smooth'] = round(er_smooth[i], 3) if er_smooth[i] is not None else None
     r['nep_smooth'] = round(gpp_smooth[i] - er_smooth[i], 3) if None not in (gpp_smooth[i], er_smooth[i]) else None
+    r['chlor_smooth'] = round(chlor_smooth[i], 3) if chlor_smooth[i] is not None else None
 
 out = {
     'lake': 'Lake Mendota',
