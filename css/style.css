@@ -25,6 +25,12 @@
   --good: #0ca30c;
   --warning: #fab219;
   --critical: #d03b3b;
+
+  --lake-oligo:    #2a78d6; /* clear blue */
+  --lake-eutro:    #4c9a2a; /* algae green */
+  --lake-bog:      #8a5a2b; /* tea-stained brown */
+  --lake-arctic:   #29b6d8; /* icy cyan */
+  --lake-tropical: #e0762c; /* warm coral */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -48,6 +54,12 @@
     --good: #0ca30c;
     --warning: #fab219;
     --critical: #d03b3b;
+
+    --lake-oligo:    #4c95ec;
+    --lake-eutro:    #63b445;
+    --lake-bog:      #b07d4f;
+    --lake-arctic:   #4fd0ef;
+    --lake-tropical: #ec8f4e;
   }
 }
 
@@ -855,9 +867,14 @@ a { color: var(--series-do); }
 }
 .res-btn:hover { border-color: var(--baseline); }
 .res-btn.active {
-  background: color-mix(in srgb, var(--series-do) 12%, var(--surface-1));
-  border-color: var(--series-do);
-  color: var(--series-do);
+  background: color-mix(in srgb, var(--accent, var(--series-do)) 12%, var(--surface-1));
+  border-color: var(--accent, var(--series-do));
+  color: var(--accent, var(--series-do));
+}
+.res-btn.sm {
+  flex: 1 1 70px;
+  padding: 6px 10px;
+  font-size: 12px;
 }
 
 .chart-grid-3 {
@@ -1076,4 +1093,424 @@ a { color: var(--series-do); }
   font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
   white-space: nowrap;
+}
+
+/* ==================================================================
+   Module 7 — Seasonal Metabolism: match-the-season drag game
+   ================================================================== */
+
+.match-game {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.match-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.match-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border-hairline);
+  background: var(--page-plane);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: grab;
+  user-select: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.match-chip:hover { border-color: var(--baseline); }
+.match-chip.selected {
+  background: color-mix(in srgb, var(--series-do) 14%, var(--surface-1));
+  border-color: var(--series-do);
+}
+.match-slot .match-chip {
+  cursor: default;
+  padding: 6px 12px;
+}
+.match-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.match-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.match-label {
+  flex: 0 0 170px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.match-slot {
+  flex: 1 1 auto;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1.5px dashed var(--border-hairline);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.match-slot.over {
+  border-color: var(--series-do);
+  background: color-mix(in srgb, var(--series-do) 8%, var(--surface-1));
+}
+.match-slot.correct {
+  border-style: solid;
+  border-color: var(--good);
+  background: color-mix(in srgb, var(--good) 10%, var(--surface-1));
+}
+.match-slot.incorrect {
+  border-style: solid;
+  border-color: var(--flux-remove);
+  background: color-mix(in srgb, var(--flux-remove) 10%, var(--surface-1));
+}
+.match-slot-clear {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+.match-slot-answer {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 600px) {
+  .match-row { flex-direction: column; align-items: stretch; gap: 4px; }
+  .match-label { flex-basis: auto; }
+}
+
+/* ==================================================================
+   Module 8 — Compare Lakes
+   ================================================================== */
+
+.stat-row.cols-5 { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 900px) {
+  .stat-row.cols-5 { grid-template-columns: repeat(2, 1fr); }
+}
+
+.chart-grid-3 > .chart-card .chart-plot { height: 260px; }
+@media (max-width: 900px) {
+  .chart-grid-3 { grid-template-columns: 1fr; }
+}
+
+/* ---- environmental characteristics table ---- */
+.env-table-wrap { overflow-x: auto; }
+.env-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.env-table th, .env-table td {
+  text-align: right;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-hairline);
+  white-space: nowrap;
+}
+.env-table th:first-child, .env-table td:first-child {
+  text-align: left;
+}
+.env-table th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+.env-table td { font-variant-numeric: tabular-nums; }
+.env-table .env-lake-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.env-table tr { transition: background 0.2s; }
+.env-table tr.active { background: color-mix(in srgb, var(--row-accent, var(--series-do)) 10%, transparent); }
+.env-table tr.active td:first-child { color: var(--row-accent, var(--series-do)); }
+
+/* ---- prediction rows (Part 5) ---- */
+.predict-rows { display: flex; flex-direction: column; gap: 10px; }
+.predict-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.predict-lake {
+  flex: 0 0 168px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.predict-toggle { flex: 1 1 260px; display: flex; gap: 6px; }
+.predict-result {
+  flex: 0 0 auto;
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+@media (max-width: 640px) {
+  .predict-row { flex-direction: column; align-items: stretch; }
+  .predict-lake { flex-basis: auto; }
+}
+
+/* ---- carbon budget meter (Part 4) ---- */
+.budget-wrap {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.budget-flows {
+  flex: 1 1 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.budget-flow-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.budget-flow-label {
+  flex: 0 0 90px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.budget-flow-track {
+  flex: 1 1 auto;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--page-plane);
+  border: 1px solid var(--border-hairline);
+  overflow: hidden;
+}
+.budget-flow-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 0%;
+}
+.budget-flow-fill.is-gpp { background: var(--flux-add); }
+.budget-flow-fill.is-er { background: var(--flux-remove); }
+.budget-flow-value {
+  flex: 0 0 90px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: right;
+}
+.budget-equation {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.budget-tank-wrap {
+  flex: 0 0 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.budget-tank {
+  width: 64px;
+  height: 160px;
+  border-radius: 10px;
+  border: 2px solid var(--border-hairline);
+  background: var(--page-plane);
+  position: relative;
+  overflow: hidden;
+}
+.budget-tank-mid {
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  border-top: 1px dashed var(--baseline);
+}
+.budget-tank-fill {
+  position: absolute;
+  left: 0; right: 0; bottom: 50%;
+  transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 0%;
+}
+.budget-tank-fill.is-positive { background: color-mix(in srgb, var(--good) 55%, transparent); }
+.budget-tank-fill.is-negative { background: color-mix(in srgb, var(--flux-remove) 55%, transparent); bottom: auto; top: 50%; }
+.budget-tank-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+.budget-analogy {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-hairline);
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ---- annual ranking bars ---- */
+.rank-list { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rank-lake {
+  flex: 0 0 150px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.rank-track {
+  flex: 1 1 auto;
+  height: 22px;
+  position: relative;
+  background: var(--page-plane);
+  border-radius: 6px;
+}
+.rank-bar {
+  position: absolute;
+  top: 0; bottom: 0;
+  border-radius: 6px;
+  transition: width 0.6s ease, left 0.6s ease;
+}
+.rank-value {
+  flex: 0 0 90px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.rank-note {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 2px 0 0;
+  line-height: 1.55;
+}
+
+/* ---- scale-up latitude / carbon-exchange diagram ---- */
+.carbon-map {
+  position: relative;
+  padding: 34px 10px 54px;
+}
+.carbon-map-atm {
+  height: 26px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--series-wind) 16%, var(--surface-1));
+  border: 1px dashed color-mix(in srgb, var(--series-wind) 45%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.carbon-map-band {
+  position: relative;
+  height: 64px;
+  margin-top: 40px;
+  border-radius: 8px;
+  background: linear-gradient(to right, #bfe7f2, #d9edd0 45%, #f6e3b4 75%, #f3c48a);
+}
+@media (prefers-color-scheme: dark) {
+  .carbon-map-band { background: linear-gradient(to right, #1c3a44, #23361f 45%, #4a3c1c 75%, #4a2f1c); }
+}
+.carbon-map-pole-label, .carbon-map-eq-label {
+  position: absolute;
+  top: -20px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.carbon-map-pole-label { left: 2px; }
+.carbon-map-eq-label { right: 2px; }
+.carbon-map-lake {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.carbon-map-lake-icon {
+  font-size: 24px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25));
+}
+.carbon-map-lake.active .carbon-map-lake-icon {
+  transform: scale(1.25);
+}
+.carbon-map-lake-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: var(--surface-1);
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border-hairline);
+}
+.carbon-map-arrow {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 15px;
+  font-weight: 700;
+}
+.carbon-map-arrow.is-source {
+  top: -34px;
+  color: var(--flux-remove);
+  animation: carbonArrowUp 1.8s ease-in-out infinite;
+}
+.carbon-map-arrow.is-sink {
+  bottom: -34px;
+  color: var(--good);
+  animation: carbonArrowDown 1.8s ease-in-out infinite;
+}
+@keyframes carbonArrowUp {
+  0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.55; }
+  50% { transform: translateX(-50%) translateY(-8px); opacity: 1; }
+}
+@keyframes carbonArrowDown {
+  0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.55; }
+  50% { transform: translateX(-50%) translateY(8px); opacity: 1; }
+}
+.carbon-map-note {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* ---- vote buttons ---- */
+.vote-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.vote-row .quiz-option { flex: 1 1 220px; text-align: center; font-weight: 700; }
+.vote-row .quiz-option.selected {
+  border-color: var(--series-do);
+  background: color-mix(in srgb, var(--series-do) 10%, var(--surface-1));
 }
