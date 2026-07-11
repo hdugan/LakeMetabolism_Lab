@@ -59,6 +59,45 @@
         '<p style="padding:40px;color:var(--text-secondary)">Could not load lake data (' + err + ').</p>';
     });
 
+  // ---- "Quiz me!" panel - independent of the chart data fetch ----
+  const quizMeBtn = document.getElementById('quizMeBtn');
+  const quizPanel = document.getElementById('quizPanel');
+  quizMeBtn.addEventListener('click', () => {
+    quizPanel.hidden = false;
+    quizPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  function initQuiz(gridId, feedbackId, messages) {
+    const grid = document.getElementById(gridId);
+    const feedback = document.getElementById(feedbackId);
+    Array.from(grid.children).forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const correct = btn.dataset.correct === 'true';
+        Array.from(grid.children).forEach((b) => b.classList.remove('is-correct', 'is-incorrect'));
+        btn.classList.add(correct ? 'is-correct' : 'is-incorrect');
+        feedback.hidden = false;
+        feedback.classList.toggle('is-correct', correct);
+        feedback.classList.toggle('is-incorrect', !correct);
+        feedback.textContent = (correct ? '✅ ' : '🤔 ') + messages[btn.dataset.key];
+      });
+    });
+  }
+
+  initQuiz('quizStep1Grid', 'quizStep1Feedback', {
+    into: 'Not quite — gas exchange always pushes oxygen toward equilibrium, so a lake with too much oxygen loses it, it doesn’t gain more.',
+    out: 'Right. The lake is supersaturated, so gas exchange pushes oxygen out toward the atmosphere, back toward equilibrium.',
+  });
+  initQuiz('quizStep2Grid', 'quizStep2Feedback', {
+    positive: 'Not quite — a positive atmospheric exchange term would mean oxygen is entering the lake, the opposite of what’s happening here.',
+    negative: 'Right. Oxygen leaving the lake means the atmospheric exchange term is negative, just like you saw in your model.',
+    zero: 'Not quite — zero would mean no exchange at all, but oxygen is actively leaving the lake here.',
+  });
+  initQuiz('quizBonusGrid', 'quizBonusFeedback', {
+    faster: 'Right. Wind strengthens gas exchange, so a supersaturated lake loses oxygen to the atmosphere even faster.',
+    slower: 'Not quite — more wind speeds up gas exchange, it doesn’t slow it down.',
+    enters: 'Not quite — wind speed changes how fast gas exchange happens, not which direction it pushes oxygen. The lake is still supersaturated, so oxygen keeps leaving.',
+  });
+
   function init(data) {
     const hourly = data.hourly;
     const par = hourly.map((h) => h.par);

@@ -115,6 +115,8 @@
         '<p style="padding:40px;color:var(--text-secondary)">Could not load lake data (' + err + ').</p>';
     });
 
+  initActivity3(); // independent of the chart data fetch
+
   function init(data) {
     const doColor = cssVar('--series-do');
     const fiveMinDo = data.five_min_do;
@@ -128,9 +130,8 @@
 
     initPart1(data, fiveMinDo, fiveMinMinutes);
     initPart2(fiveMinDo, fiveMinMinutes, xRange, yRangeFull);
-    initPart3(fiveMinDo, fiveMinMinutes, xRange, yRangeFull, doColor);
-    initPart4(data, fiveMinDo, fiveMinMinutes);
-    initPart5(data, doColor);
+    initPart3(data, fiveMinDo, fiveMinMinutes);
+    initPart4(data, doColor);
   }
 
   // ==========================================================================
@@ -213,99 +214,9 @@
   }
 
   // ==========================================================================
-  // Part 3 - the aliasing game
+  // Part 3 - the night shift
   // ==========================================================================
-  function initPart3(fiveMinDo, fiveMinMinutes, xRange, yRangeFull, doColor) {
-    const titleEl = document.getElementById('p3Title');
-    const statsEl = document.getElementById('p3Stats');
-    const switchEl = document.getElementById('p3Switch');
-    const revealBtn = document.getElementById('p3RevealBtn');
-    const accent = cssVar('--series-rain');
-    let revealed = false;
-    let currentSampled = [];
-
-    const STRATEGIES = {
-      every12h: { title: 'every 12 hours', run: () => sampleRegular(fiveMinDo, fiveMinMinutes, 12 * 60) },
-      every24h: { title: 'every 24 hours (starting midnight)', run: () => sampleRegular(fiveMinDo, fiveMinMinutes, 24 * 60) },
-      tuesday: {
-        title: 'every Tuesday at noon',
-        run: () => fiveMinDo.filter((p) => weekdayOf(p.t) === 2 && p.t.slice(11, 16) === '12:00'),
-      },
-      noon: {
-        title: 'every day at noon',
-        run: () => fiveMinDo.filter((p) => p.t.slice(11, 16) === '12:00'),
-      },
-      random: {
-        title: 'random times',
-        run: () => {
-          const n = Math.round((fiveMinMinutes[fiveMinMinutes.length - 1] - fiveMinMinutes[0]) / (24 * 60));
-          const picks = [];
-          for (let i = 0; i < n; i++) {
-            const t = fiveMinMinutes[0] + Math.random() * (fiveMinMinutes[fiveMinMinutes.length - 1] - fiveMinMinutes[0]);
-            picks.push(fiveMinDo[nearestIndex(fiveMinMinutes, t)]);
-          }
-          return picks.sort((a, b) => (a.t < b.t ? -1 : 1));
-        },
-      },
-    };
-
-    function draw(key) {
-      revealed = false;
-      const strat = STRATEGIES[key];
-      currentSampled = strat.run();
-      titleEl.textContent = `Your samples: ${strat.title}`;
-      redraw();
-      const n = currentSampled.length;
-      if (key === 'tuesday' || key === 'noon') {
-        statsEl.textContent = `${n} points, every one at the same time of day. Every visit lands at the same point in the daily cycle, so the cycle itself is invisible - even though it's really there.`;
-      } else if (key === 'every24h') {
-        statsEl.textContent = `${n} points, exactly 24 hours apart. Same trap as "every Tuesday": a 24-hour cadence always samples the same phase of the daily cycle, no matter which hour you start on.`;
-      } else if (key === 'every12h') {
-        statsEl.textContent = `${n} points, 12 hours apart. This alternates between roughly "day" and "night" moments - closer to the truth, but still easy to misread as a two-step staircase instead of a smooth wave.`;
-      } else {
-        statsEl.textContent = `${n} points at random times. No fixed cadence to get trapped by - random sampling actually stands a better chance of stumbling onto the true shape than a naive fixed schedule does.`;
-      }
-    }
-
-    function redraw() {
-      const traces = [{
-        x: currentSampled.map((p) => p.t), y: currentSampled.map((p) => p.do_mgl),
-        type: 'scatter', mode: 'markers+lines',
-        line: { color: accent, width: 1.5, dash: 'dot' },
-        marker: { size: 7, color: accent },
-        name: 'Your samples',
-        hovertemplate: '%{y:.2f} mg/L<extra>Your samples</extra>',
-      }];
-      if (revealed) {
-        traces.unshift({
-          x: fiveMinDo.map((p) => p.t), y: fiveMinDo.map((p) => p.do_mgl),
-          type: 'scatter', mode: 'lines',
-          line: { color: doColor, width: 1 },
-          opacity: 0.5,
-          name: 'True 5-minute record',
-          hovertemplate: '%{y:.2f} mg/L<extra>True record</extra>',
-        });
-      }
-      Plotly.react('p3Plot', traces, basePlotLayout({
-        xaxis: { type: 'date', range: xRange, tickformat: '%b %-d', gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') } },
-        yaxis: { range: yRangeFull, gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
-      }), { displayModeBar: false, responsive: true, scrollZoom: false });
-    }
-
-    Array.from(switchEl.children).forEach((btn) => {
-      btn.addEventListener('click', () => {
-        Array.from(switchEl.children).forEach((b) => b.classList.toggle('active', b === btn));
-        draw(btn.dataset.strategy);
-      });
-    });
-    revealBtn.addEventListener('click', () => { revealed = !revealed; redraw(); });
-    draw('every12h');
-  }
-
-  // ==========================================================================
-  // Part 4 - hidden metabolism
-  // ==========================================================================
-  function initPart4(data, fiveMinDo, fiveMinMinutes) {
+  function initPart3(data, fiveMinDo, fiveMinMinutes) {
     const titleEl = document.getElementById('p4Title');
     const rateEl = document.getElementById('p4RateOut');
     const explainEl = document.getElementById('p4Explain');
@@ -319,6 +230,13 @@
     // so the sparser rungs have a fighting chance of landing a point nearby
     const viewStartM = nightStartM - 120;
     const viewEndM = nightEndM + 120;
+    const nightShape = {
+      type: 'rect', xref: 'x', yref: 'paper',
+      x0: fromMinutes(nightStartM), x1: fromMinutes(nightEndM), y0: 0, y1: 1,
+      fillcolor: cssVar('--night-fill'),
+      line: { width: 0 },
+      layer: 'below',
+    };
 
     const trueNight = fiveMinDo.filter((p) => {
       const m = toMinutes(p.t);
@@ -359,6 +277,7 @@
           name: 'Your data', hovertemplate: '%{y:.2f} mg/L<extra></extra>',
         },
       ], basePlotLayout({
+        shapes: [nightShape],
         xaxis: { type: 'date', range: [fromMinutes(viewStartM), fromMinutes(viewEndM)], tickformat: '%-I %p', gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') } },
         yaxis: { gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
       }), { displayModeBar: false, responsive: true, scrollZoom: false });
@@ -392,7 +311,7 @@
   }
 
   // ==========================================================================
-  // Part 5 - weather events
+  // Part 4 - weather events
   // ==========================================================================
   function doSat(tempC) {
     // Standard freshwater DO-saturation regression at 1 atm (mg/L) - same
@@ -400,7 +319,7 @@
     return 14.652 - 0.41022 * tempC + 0.007991 * tempC * tempC - 0.000077774 * tempC * tempC * tempC;
   }
 
-  function initPart5(data, doColor) {
+  function initPart4(data, doColor) {
     const switchEl = document.getElementById('p5Switch');
     const fineTitle = document.getElementById('p5FineTitle');
     const fineLegend = document.getElementById('p5FineLegend');
@@ -419,10 +338,6 @@
       cloud: {
         label: 'Cloud cover', resolutionLabel: '5-minute data', secondaryKey: 'par', secondaryLabel: 'Light (PAR)', secondaryColor: cssVar('--series-par'),
         caption: 'June 11, 2023 was heavily overcast - peak light that day reached only about a quarter of a typical sunny day. With that much less light, photosynthesis nearly stalled: oxygen barely moved, a striking contrast to the much bigger rise-and-fall on the sunnier days right before and after it.',
-      },
-      bloom: {
-        label: 'Algal bloom', resolutionLabel: 'Hourly data', secondaryKey: 'chlor_rfu', secondaryLabel: 'Chlorophyll', secondaryColor: cssVar('--series-rain'),
-        caption: 'Watch chlorophyll climb steadily from mid-June into early July as an algal bloom builds - and oxygen\'s daily swings grow right along with it, since more algae means more daytime photosynthesis (and more nighttime respiration). A bloom like this develops over weeks, not minutes, so hourly data is plenty to see it. The bloom breaks up right around the July 12 storm, when wind and rain mixed and diluted it.',
       },
     };
 
@@ -489,5 +404,136 @@
       });
     });
     draw('storm');
+  }
+
+  // ==========================================================================
+  // Activity 3 - match the process (weather event -> lake response), plus
+  // guesses about photosynthesis rate. Independent of the chart data fetch.
+  // ==========================================================================
+  function initActivity3() {
+    const quizMeBtn = document.getElementById('quizMeBtn');
+    const quizPanel = document.getElementById('quizPanel');
+    quizMeBtn.addEventListener('click', () => {
+      quizPanel.hidden = false;
+      quizPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+
+    // ---- match the process ----
+    const RESPONSE_LABEL = {
+      mixing: 'Increased mixing',
+      lowerphoto: 'Lower photosynthesis',
+      warming: 'Warming surface water',
+      cooling: 'Cooling surface water',
+    };
+    const CORRECT_RESPONSE = { wind: 'mixing', cloud: 'lowerphoto', sunny: 'warming', coldfront: 'cooling' };
+    const slotAssignments = { wind: null, cloud: null, sunny: null, coldfront: null };
+    let selectedResponse = null;
+
+    function renderSlot(eventKey) {
+      const slot = document.querySelector(`.match-slot[data-event="${eventKey}"]`);
+      const response = slotAssignments[eventKey];
+      slot.classList.remove('correct', 'incorrect');
+      slot.innerHTML = response
+        ? `<span class="match-chip">${RESPONSE_LABEL[response]}</span><button type="button" class="match-slot-clear" aria-label="Clear">&times;</button>`
+        : '';
+    }
+    function assignSlot(eventKey, response) {
+      slotAssignments[eventKey] = response;
+      renderSlot(eventKey);
+    }
+
+    document.getElementById('matchGame').addEventListener('click', (e) => {
+      const chip = e.target.closest('.match-tray .match-chip');
+      if (chip) {
+        const wasSelected = chip.classList.contains('selected');
+        document.querySelectorAll('.match-tray .match-chip').forEach((c) => c.classList.remove('selected'));
+        selectedResponse = wasSelected ? null : chip.dataset.response;
+        if (selectedResponse) chip.classList.add('selected');
+        return;
+      }
+      const clearBtn = e.target.closest('.match-slot-clear');
+      if (clearBtn) {
+        assignSlot(clearBtn.closest('.match-slot').dataset.event, null);
+        return;
+      }
+      const slot = e.target.closest('.match-slot');
+      if (slot && selectedResponse) assignSlot(slot.dataset.event, selectedResponse);
+    });
+    document.querySelectorAll('.match-tray .match-chip').forEach((chip) => {
+      chip.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', chip.dataset.response));
+    });
+    document.querySelectorAll('.match-slot').forEach((slot) => {
+      slot.addEventListener('dragover', (e) => { e.preventDefault(); slot.classList.add('over'); });
+      slot.addEventListener('dragleave', () => slot.classList.remove('over'));
+      slot.addEventListener('drop', (e) => {
+        e.preventDefault();
+        slot.classList.remove('over');
+        const response = e.dataTransfer.getData('text/plain');
+        if (response) assignSlot(slot.dataset.event, response);
+      });
+    });
+
+    // ---- photosynthesis rate guesses ----
+    const EVENTS = [
+      { key: 'wind', emoji: '💨', label: 'Strong wind' },
+      { key: 'cloud', emoji: '☁️', label: 'Cloud cover' },
+      { key: 'sunny', emoji: '☀️', label: 'Sunny day' },
+    ];
+    const CORRECT_PHOTO = { wind: 'same', cloud: 'lower', sunny: 'higher' };
+    const PHOTO_CHOICES = [
+      { key: 'higher', label: 'Higher' },
+      { key: 'lower', label: 'Lower' },
+      { key: 'same', label: 'About the same' },
+    ];
+    const photoGuesses = {};
+    const photoRows = document.getElementById('photoPredictRows');
+
+    EVENTS.forEach((ev) => {
+      const row = document.createElement('div');
+      row.className = 'predict-row';
+      row.innerHTML = `
+        <div class="predict-lake">${ev.emoji} ${ev.label}</div>
+        <div class="predict-toggle" data-event="${ev.key}"></div>
+        <div class="predict-result" id="photoResult-${ev.key}"></div>`;
+      const toggle = row.querySelector('.predict-toggle');
+      PHOTO_CHOICES.forEach((c) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'res-btn sm';
+        b.dataset.choice = c.key;
+        b.textContent = c.label;
+        b.addEventListener('click', () => {
+          photoGuesses[ev.key] = c.key;
+          toggle.querySelectorAll('.res-btn').forEach((x) => x.classList.toggle('active', x === b));
+        });
+        toggle.appendChild(b);
+      });
+      photoRows.appendChild(row);
+    });
+
+    // ---- reveal both the match game and the photosynthesis guesses ----
+    document.getElementById('revealActivity3').addEventListener('click', () => {
+      Object.keys(CORRECT_RESPONSE).forEach((eventKey) => {
+        const slot = document.querySelector(`.match-slot[data-event="${eventKey}"]`);
+        const isCorrect = slotAssignments[eventKey] === CORRECT_RESPONSE[eventKey];
+        slot.classList.toggle('correct', isCorrect);
+        slot.classList.toggle('incorrect', !isCorrect);
+        slot.querySelectorAll('.match-slot-answer').forEach((el) => el.remove());
+        if (!isCorrect) {
+          const ans = document.createElement('span');
+          ans.className = 'match-slot-answer';
+          ans.textContent = `(answer: ${RESPONSE_LABEL[CORRECT_RESPONSE[eventKey]]})`;
+          slot.appendChild(ans);
+        }
+      });
+
+      EVENTS.forEach((ev) => {
+        const resultEl = document.getElementById(`photoResult-${ev.key}`);
+        const guess = photoGuesses[ev.key];
+        if (guess) resultEl.textContent = guess === CORRECT_PHOTO[ev.key] ? '✅' : '❌';
+      });
+
+      document.getElementById('activity3Panel').hidden = false;
+    });
   }
 })();

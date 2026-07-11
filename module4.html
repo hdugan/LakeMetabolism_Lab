@@ -129,6 +129,40 @@
     </div>
   </section>
 
+  <section class="case-card">
+    <h2>Check your understanding</h2>
+    <p class="case-sub">A few quick questions about the gas-exchange process you just tuned.</p>
+    <button type="button" class="play-btn" id="quizMeBtn">Quiz me!</button>
+
+    <div class="reveal-panel" id="quizPanel" hidden>
+      <h3 class="reveal-title">Step 1 (qualitative)</h3>
+      <p class="case-sub">The lake contains more oxygen than it can hold at equilibrium. Which way will oxygen move?</p>
+      <div class="quiz-grid" id="quizStep1Grid">
+        <button type="button" class="quiz-option" data-key="into" data-correct="false">Into the lake</button>
+        <button type="button" class="quiz-option" data-key="out" data-correct="true">Out of the lake</button>
+      </div>
+      <div class="quiz-feedback" id="quizStep1Feedback" hidden></div>
+
+      <h3 class="reveal-title" style="margin-top:22px;">Step 2 (sign)</h3>
+      <p class="case-sub">If oxygen is leaving the lake, the atmospheric exchange term is&hellip;</p>
+      <div class="quiz-grid" id="quizStep2Grid">
+        <button type="button" class="quiz-option" data-key="positive" data-correct="false">Positive</button>
+        <button type="button" class="quiz-option" data-key="negative" data-correct="true">Negative</button>
+        <button type="button" class="quiz-option" data-key="zero" data-correct="false">Zero</button>
+      </div>
+      <div class="quiz-feedback" id="quizStep2Feedback" hidden></div>
+
+      <h3 class="reveal-title" style="margin-top:22px;">Bonus</h3>
+      <p class="case-sub">The wind suddenly doubles while the lake remains supersaturated. What happens?</p>
+      <div class="quiz-grid" id="quizBonusGrid">
+        <button type="button" class="quiz-option" data-key="faster" data-correct="true">Oxygen leaves faster.</button>
+        <button type="button" class="quiz-option" data-key="slower" data-correct="false">Oxygen leaves slower.</button>
+        <button type="button" class="quiz-option" data-key="enters" data-correct="false">Oxygen begins entering the lake.</button>
+      </div>
+      <div class="quiz-feedback" id="quizBonusFeedback" hidden></div>
+    </div>
+  </section>
+
 </main>
 
 <footer class="page-footer">
@@ -145,6 +179,6 @@
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="js/common.js?v=5"></script>
-<script src="js/module4.js?v=1"></script>
+<script src="js/module4.js?v=2"></script>
 </body>
 </html>

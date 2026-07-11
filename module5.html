@@ -28,9 +28,8 @@
     <p class="lede">
       Everything so far has used one real week of data. This module zooms out to two real months
       (June&ndash;July 2023) and asks a different question: not <em>what</em> is the lake doing, but
-      <strong>how often do you have to look to find out?</strong> You'll play field limnologist, buy more
-      observations, get fooled by your own sampling schedule, watch a real metabolism estimate become
-      impossible, and catch two real storms and a real algal bloom in the act.
+      <strong>how often do you have to look to find out?</strong> You'll play field limnologist and decide
+      how many measurements you need to estimate oxygen dynamics.
     </p>
   </div>
 </header>
@@ -92,37 +91,7 @@
 
   <!-- ============================== PART 3 ============================== -->
   <section class="case-card">
-    <h2>Part 3 &middot; The aliasing game</h2>
-    <p class="case-sub">
-      The buoy secretly has 5-minute data for these two months. You don't get to see it &mdash; you only get to
-      choose <em>when</em> to sample. Pick a strategy.
-    </p>
-    <div class="res-switch" id="p3Switch">
-      <button type="button" class="res-btn active" data-strategy="every12h">Every 12 hours</button>
-      <button type="button" class="res-btn" data-strategy="every24h">Every 24 hours</button>
-      <button type="button" class="res-btn" data-strategy="tuesday">Every Tuesday</button>
-      <button type="button" class="res-btn" data-strategy="noon">Every day at noon</button>
-      <button type="button" class="res-btn" data-strategy="random">Random times</button>
-    </div>
-  </section>
-
-  <section class="chart-card overlay-card">
-    <div class="chart-card-head">
-      <h2 id="p3Title">Your samples: every 12 hours</h2>
-      <span class="chart-unit">mg/L</span>
-    </div>
-    <div class="overlay-plot" id="p3Plot"></div>
-    <button type="button" class="play-btn" id="p3RevealBtn" style="margin-top:12px;">Reveal the full 5-minute record</button>
-  </section>
-
-  <div class="state-caption">
-    <span class="callout-label">What your strategy caught &mdash; or missed</span>
-    <p id="p3Stats" style="margin:6px 0 0;"></p>
-  </div>
-
-  <!-- ============================== PART 4 ============================== -->
-  <section class="case-card">
-    <h2>Part 4 &middot; Hidden metabolism</h2>
+    <h2>Part 3 &middot; The night shift</h2>
     <p class="case-sub">
       Pick one real night (July 9&ndash;10) and ask a very specific question: from whatever data survives at each
       resolution, <strong>can you still estimate respiration</strong> &mdash; the rate oxygen falls overnight?
@@ -149,15 +118,19 @@
     <p id="p4Explain" style="margin:6px 0 0; font-size:13.5px; color:var(--text-secondary);"></p>
   </section>
 
-  <!-- ============================== PART 5 ============================== -->
+  <!-- ============================== PART 4 ============================== -->
   <section class="case-card">
-    <h2>Part 5 &middot; Weather events</h2>
-    <p class="case-sub">This is where high-frequency data really earns its keep. Pick a real event from this summer.</p>
+    <h2>Part 4 &middot; Weather events</h2>
+    <p class="case-sub">
+      Continuous sensor networks have transformed limnology by allowing scientists to observe lakes as dynamic
+      systems rather than static snapshots. High-frequency measurements reveal how weather events influence lake
+      physics and biology over the course of hours. Explore a real event from this summer and investigate how the
+      lake responded.
+    </p>
     <div class="res-switch" id="p5Switch">
       <button type="button" class="res-btn active" data-event="storm">Storm</button>
       <button type="button" class="res-btn" data-event="windmix">Wind mixing</button>
       <button type="button" class="res-btn" data-event="cloud">Cloud cover</button>
-      <button type="button" class="res-btn" data-event="bloom">Algal bloom</button>
     </div>
   </section>
 
@@ -189,6 +162,58 @@
     </div>
   </div>
 
+  <section class="case-card">
+    <h2>Check your understanding</h2>
+    <p class="case-sub">One more activity connecting weather to what actually drives oxygen.</p>
+    <button type="button" class="play-btn" id="quizMeBtn">Quiz me!</button>
+
+    <div class="reveal-panel" id="quizPanel" hidden>
+      <h3 class="reveal-title">Activity 3 &middot; Match the process</h3>
+      <p class="case-sub">Drag (or tap) each lake response into the weather event that causes it.</p>
+
+      <div class="match-game" id="matchGame">
+        <div class="match-tray" id="matchTray">
+          <div class="match-chip" draggable="true" data-response="mixing">Increased mixing</div>
+          <div class="match-chip" draggable="true" data-response="lowerphoto">Lower photosynthesis</div>
+          <div class="match-chip" draggable="true" data-response="warming">Warming surface water</div>
+          <div class="match-chip" draggable="true" data-response="cooling">Cooling surface water</div>
+        </div>
+        <div class="match-rows">
+          <div class="match-row">
+            <div class="match-label">💨 Strong wind</div>
+            <div class="match-slot" data-event="wind"></div>
+          </div>
+          <div class="match-row">
+            <div class="match-label">☁️ Cloud cover</div>
+            <div class="match-slot" data-event="cloud"></div>
+          </div>
+          <div class="match-row">
+            <div class="match-label">☀️ Sunny day</div>
+            <div class="match-slot" data-event="sunny"></div>
+          </div>
+          <div class="match-row">
+            <div class="match-label">🥶 Cold front</div>
+            <div class="match-slot" data-event="coldfront"></div>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="reveal-title" style="margin-top:22px;">Now guess: photosynthesis rate</h3>
+      <p class="case-sub">For each event, would photosynthesis go up, go down, or stay about the same that day?</p>
+      <div class="predict-rows" id="photoPredictRows"></div>
+
+      <button type="button" class="play-btn" id="revealActivity3" style="margin-top:14px;">Reveal answers</button>
+      <div class="reveal-panel" id="activity3Panel" hidden>
+        <p class="reveal-note">
+          In the simple model from Modules 3 and 4, photosynthesis depends only on light (PAR), not on wind
+          directly. That's why a cloudy day lowers photosynthesis and a sunny day raises it, while a windy day
+          (which mostly mixes the water column) leaves photosynthesis about the same, even though wind clearly
+          changes the lake in other ways that affect phytoplankton dynamics.
+        </p>
+      </div>
+    </div>
+  </section>
+
 </main>
 
 <footer class="page-footer">
@@ -198,7 +223,7 @@
     <a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=129" target="_blank" rel="noopener">EDI knb-lter-ntl.129</a>,
     <a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=130" target="_blank" rel="noopener">130</a>).
     Rainfall from the <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noopener">Open-Meteo historical archive</a>.
-    The storm, wind-mixing, cloud-cover, and algal-bloom events in Part 5 are all real, dated events from this
+    The storm, wind-mixing, and cloud-cover events in Part 4 are all real, dated events from this
     record. The gray dashed equilibrium line is the oxygen level the lake would settle at from the atmosphere alone,
     set purely by water temperature (see Module 3).
   </p>
@@ -206,6 +231,6 @@
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="js/common.js?v=5"></script>
-<script src="js/module5.js?v=1"></script>
+<script src="js/module5.js?v=7"></script>
 </body>
 </html>
