@@ -59,8 +59,6 @@
       `${fmtSigned(gppRate)} × 15 hr = ${fmtSigned(calc.gppDay)} mg/L`;
     document.getElementById('sumErFormula').textContent =
       `${erRate.toFixed(2)} × 24 hr = ${calc.erDaily.toFixed(2)} mg/L`;
-    document.getElementById('sumNepFormula').textContent =
-      `${fmtSigned(calc.gppDay)} − ${calc.erDaily.toFixed(2)} = ${fmtSigned(calc.nep)} mg/L/day`;
   }
 
   fetch(DATA_URL)
@@ -194,6 +192,7 @@
     const step2Feedback = document.getElementById('m6Step2Feedback');
     const summary = document.getElementById('m6Summary');
     const verdict = document.getElementById('m6Verdict');
+    const nepSection = document.getElementById('m6Nep');
     const dayRateTrue = calc1.dayChange / 15;
 
     document.getElementById('m6Step2Check').addEventListener('click', () => {
@@ -220,6 +219,7 @@
           ? `Gross Primary Production beat Ecosystem Respiration on July 9–10: this stretch of lake was autotrophic, producing a bit more organic matter than it consumed.`
           : `Ecosystem Respiration beat Gross Primary Production on July 9–10: this stretch of lake was heterotrophic, consuming more organic matter than it produced that day.`;
         verdict.hidden = false;
+        nepSection.hidden = false;
         summary.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
     });
@@ -233,6 +233,42 @@
       q2rises: "Not quite — if more oxygen is being removed than added, the total can't be rising.",
       q2same: 'Not quite — that would only happen if GPP and ER exactly matched.',
       q2falls: 'Right. More oxygen is being consumed than produced, so the pool drains down: oxygen falls.',
+    });
+
+    initQuiz('recallQ1Grid', 'recallQ1Feedback', {
+      true: 'Right. Autotrophs build their own organic matter from CO₂ (via photosynthesis); heterotrophs get theirs by eating other organisms.',
+      false: 'Not quite — that description is correct. Autotrophs build their own organic matter from CO₂; heterotrophs get theirs by eating other organisms.',
+    });
+    initQuiz('recallQ2Grid', 'recallQ2Feedback', {
+      trout: "Not quite — a trout eats other organisms for its organic matter, which makes it a heterotroph.",
+      zooplankton: 'Not quite — zooplankton graze on algae and other organic matter, which makes them heterotrophs.',
+      algae: 'Right. Algae photosynthesize, building their own organic matter from CO₂ - that makes them autotrophs.',
+      bacteria: 'Not quite — bacteria that consume organic matter are heterotrophs, not autotrophs.',
+    });
+
+    // ---- gate: no peeking at autotrophic/heterotrophic or the farm analogy
+    // until the student has written their own answer ----
+    const recallNotes = document.getElementById('recallNotes');
+    const recallContinueBtn = document.getElementById('recallContinueBtn');
+    const autoHeteroSection = document.getElementById('m6AutoHetero');
+    const farmSection = document.getElementById('m6FarmAnalogy');
+
+    recallNotes.value = localStorage.getItem('everyLakeMetabolism.recallNotes') || '';
+    recallContinueBtn.disabled = recallNotes.value.trim().length === 0;
+    recallNotes.addEventListener('input', () => {
+      localStorage.setItem('everyLakeMetabolism.recallNotes', recallNotes.value);
+      recallContinueBtn.disabled = recallNotes.value.trim().length === 0;
+    });
+
+    recallContinueBtn.addEventListener('click', () => {
+      autoHeteroSection.hidden = false;
+      farmSection.hidden = false;
+      // These two charts were drawn earlier while their section was still
+      // display:none, so Plotly sized them at 0x0 - force a resize now that
+      // the container has real dimensions, or they'd stay invisible.
+      Plotly.Plots.resize('ex1Plot');
+      Plotly.Plots.resize('ex2Plot');
+      autoHeteroSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
   }
 

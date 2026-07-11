@@ -33,6 +33,12 @@
       ],
     },
     {
+      title: 'Module 6 — Every Lake Has a Metabolism',
+      fields: [
+        { key: 'everyLakeMetabolism.recallNotes', label: 'How do you think these definitions might apply to an entire lake rather than an individual organism?' },
+      ],
+    },
+    {
       title: 'Module 8 — Compare Lakes',
       fields: [
         { key: 'compareLakes.fingerprintNotes', label: 'What do you notice as you switch between lakes?' },
