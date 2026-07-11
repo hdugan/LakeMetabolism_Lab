@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Meet the Lake — Lake Metabolism Lab</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌊</text></svg>">
-<link rel="stylesheet" href="css/style.css?v=7">
+<link rel="stylesheet" href="css/style.css?v=8">
 </head>
 <body>
 
@@ -27,10 +27,11 @@
       <p class="eyebrow">Lake Metabolism Lab · Module 1</p>
       <h1>Meet the Lake</h1>
       <p class="lede">
-        Lake Mendota, Wisconsin, has a lake buoy (David Buoy) that records important water quality
-        parameters every one minute. Below is one real week from that buoy &mdash; July 9&ndash;15, 2023. Scrub the
-        slider or hover the charts and just <strong>watch</strong>. No formulas yet, no calculations.
-        Just notice what the lake does, day after day.
+        Lake Mendota, Wisconsin, is monitored by the David Buoy, which records water quality
+        measurements every minute. Below is one week of real observations (July 9&ndash;15, 2023).
+        Before learning how to calculate lake metabolism, spend a few minutes exploring these data.
+        Move the time slider, hover over the graphs, and look for patterns that repeat from day to day.
+        At this stage, your goal is simply to <strong>observe</strong> how the lake changes over time.
       </p>
     </div>
     <div class="header-photo">
@@ -103,13 +104,28 @@
   </section>
 
   <section class="lookfor" aria-label="Things to notice">
-    <h2>Look for&hellip;</h2>
-    <ul>
-      <li>What time does oxygen start climbing each morning? What time does it turn around and start falling?</li>
-      <li>What happens to oxygen overnight, every single night?</li>
-      <li>Compare the afternoon of <strong>July 9&ndash;10</strong> to <strong>July 12&ndash;13</strong>. Which days are warmer and sunnier &mdash; and which have the bigger swing in oxygen?</li>
-      <li>Does wind speed seem to line up with anything else on the page, or does it march to its own beat?</li>
-    </ul>
+    <h2>What do you see?</h2>
+
+    <div class="lookfor-question">
+      <label for="q1Notes">What time does oxygen start climbing each morning? What time does it turn around and start falling?</label>
+      <textarea class="notes-field" id="q1Notes" placeholder="Type your answer&hellip;"></textarea>
+    </div>
+
+    <div class="lookfor-question">
+      <label for="q2Notes">What happens to oxygen overnight, every single night?</label>
+      <textarea class="notes-field" id="q2Notes" placeholder="Type your answer&hellip;"></textarea>
+    </div>
+
+    <div class="lookfor-question">
+      <label for="q3Notes">Compare the afternoon of <strong>July 9&ndash;10</strong> to <strong>July 12&ndash;13</strong>. Which days are warmer and sunnier &mdash; and which have the bigger swing in oxygen?</label>
+      <textarea class="notes-field" id="q3Notes" placeholder="Type your answer&hellip;"></textarea>
+    </div>
+
+    <div class="lookfor-question">
+      <label for="q4Notes">Does wind speed seem to line up with any other data?</label>
+      <textarea class="notes-field" id="q4Notes" placeholder="Type your answer&hellip;"></textarea>
+    </div>
+    <div class="notes-hint">Saved automatically in this browser.</div>
   </section>
 
 </main>
@@ -125,6 +141,6 @@
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="js/common.js?v=5"></script>
-<script src="js/app.js?v=1"></script>
+<script src="js/app.js?v=2"></script>
 </body>
 </html>

@@ -336,6 +336,17 @@ a { color: var(--series-do); }
 }
 .lookfor li strong { color: var(--text-primary); }
 
+.lookfor-question { margin-bottom: 16px; }
+.lookfor-question:last-of-type { margin-bottom: 8px; }
+.lookfor-question label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.lookfor-question label strong { color: var(--text-primary); }
+
 /* ---------- Footer ---------- */
 .page-footer {
   max-width: 1180px;

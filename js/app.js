@@ -10,6 +10,19 @@
 
   const { cssVar, WEEKDAYS, DATA_URL, parseHM, fmtBadgeTime, buildNightLayer, cursorLineShape } = window.LakeCommon;
 
+  // ---- "Look for..." notes (localStorage) - independent of the chart data fetch ----
+  const NOTES = [
+    { id: 'q1Notes', key: 'meetTheLake.oxygenTiming' },
+    { id: 'q2Notes', key: 'meetTheLake.overnight' },
+    { id: 'q3Notes', key: 'meetTheLake.compareDays' },
+    { id: 'q4Notes', key: 'meetTheLake.windPattern' },
+  ];
+  NOTES.forEach((n) => {
+    const el = document.getElementById(n.id);
+    el.value = localStorage.getItem(n.key) || '';
+    el.addEventListener('input', () => localStorage.setItem(n.key, el.value));
+  });
+
   fetch(DATA_URL)
     .then((r) => r.json())
     .then(init)
