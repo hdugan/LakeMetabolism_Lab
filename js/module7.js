@@ -20,11 +20,13 @@
 
   // Five ways of turning the same oxygen curve into GPP/ER/NEP. `gpp`/`er`/
   // `nep` name the smoothed fields each method contributes to mendota_seasonal.json
-  // (bookkeeping's have no suffix - they're the original Module 6 fields).
+  // (bookkeeping's have no suffix - it's the original field, computed by
+  // scripts/build_seasonal.py; the other four are added by
+  // scripts/build_seasonal_methods.py).
   const METHODS = [
     {
       key: 'bookkeeping', label: 'Bookkeeping', gpp: 'gpp_smooth', er: 'er_smooth', nep: 'nep_smooth',
-      desc: 'Module 6’s method: the overnight DO slope is treated as pure respiration, and that respiration rate is added back onto the daytime slope to get GPP. Simple, but it folds any gas exchange with the atmosphere into ER.',
+      desc: 'LakeMetabolizer’s metab.bookkeep(): the same night/day-slope idea as Module 6, but a wind-based atmospheric flux is subtracted from every hourly DO change first, so gas exchange isn’t folded into ER the way Module 6’s by-hand version does.',
     },
     {
       key: 'ols', label: 'OLS', gpp: 'gpp_ols_smooth', er: 'er_ols_smooth', nep: 'nep_ols_smooth',
@@ -455,13 +457,12 @@
     const others = allStats.slice(1);
     const othersAllAgree = others.every((s) => s.mean != null && s.mean >= 0) && bkStats.mean != null && bkStats.mean < 0;
     document.getElementById('methodCompareText').textContent = othersAllAgree
-      ? `Bookkeeping is the outlier: it puts the season at ${bkStats.mean.toFixed(2)} mg/L/day (${bkStats.autoPct.toFixed(0)}% autotrophic days) - just barely net heterotrophic - ` +
+      ? `Bookkeeping is still the outlier, but only barely: it puts the season at ${bkStats.mean.toFixed(2)} mg/L/day (${bkStats.autoPct.toFixed(0)}% autotrophic days) - just barely net heterotrophic - ` +
         `while all four statistical methods agree the lake is net autotrophic, from ${Math.min(...others.map((s) => s.mean)).toFixed(2)} to ${Math.max(...others.map((s) => s.mean)).toFixed(2)} mg/L/day. ` +
-        `The reason: Lake Mendota runs supersaturated with oxygen much of the summer, so oxygen is constantly leaking out to the atmosphere overnight even with no respiration at all. ` +
-        `Bookkeeping has no way to tell that outgassing apart from true respiration, so it lumps both into ER - inflating ER just enough to flip the season's sign.`
+        `Unlike Module 6's by-hand version, this bookkeeping does subtract an estimated atmospheric flux before splitting day from night, and it tracks the other methods closely through summer, when the lake runs supersaturated. ` +
+        `The remaining gap traces to a simplification: the flux correction assumes a fixed 2-meter mixed layer all season, which overstates the correction once the lake mixes far deeper than that after fall turnover.`
       : `The five methods don't fully agree: season-mean NEP ranges from ${Math.min(...allStats.map((s) => s.mean)).toFixed(2)} to ${Math.max(...allStats.map((s) => s.mean)).toFixed(2)} mg/L/day. ` +
-        `Bookkeeping ignores gas exchange with the atmosphere entirely, folding any outgassing (common when the lake is supersaturated) into its respiration estimate - the other four methods ` +
-        `fit gas exchange explicitly, which is usually why they land closer to net autotrophic.`;
+        `Bookkeeping now subtracts an estimated atmospheric flux too (unlike Module 6's by-hand version), but assumes a fixed 2-meter mixed layer all season - a simplification that's roughest once the lake mixes deeper after fall turnover.`;
 
     // ---- initial render ----
     update(Number(slider.value));

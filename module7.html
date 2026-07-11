@@ -32,13 +32,17 @@
       metabolic year unfold.
     </p>
     <p class="lede">
-      Module 6's day-slope/night-slope approach is called the <strong>bookkeeping method</strong>. It is the
+      Module 6's day-slope/night-slope approach is called the <strong>bookkeeping method</strong>. It's the
       simplest way to estimate GPP and ER from an oxygen time series, making it an excellent tool for learning the
-      basic concepts. However, it relies on several simplifying assumptions, such as constant respiration through
-      the day and perfect estimates of atmospheric gas exchange, that are often violated in real lakes. As a result,
-      modern lake metabolism studies typically use statistical models that account for uncertainty and changing
-      environmental conditions. Below, compare the bookkeeping approach with four more advanced methods, all
-      implemented in the R package
+      basic concepts &mdash; but the by-hand version you used there skipped atmospheric gas exchange entirely. The
+      bookkeeping method below is the real thing: LakeMetabolizer's own implementation, which subtracts an
+      estimated lake-atmosphere oxygen flux &mdash; based on wind speed and how far the lake sits from oxygen
+      saturation &mdash; from every hourly change before splitting day from night. That correction still needs a
+      mixed-layer depth, which this buoy doesn't measure, so it's fixed at 2 meters all season here; reasonable for
+      summer, but a likely overcorrection once the lake mixes deeper after fall turnover (details in the footer).
+      Modern lake metabolism studies typically go a step further, fitting gas exchange directly from the data
+      instead of assuming a fixed depth, and accounting for uncertainty day to day. Below, compare bookkeeping with
+      four such methods, all implemented in the R package
       <a href="https://github.com/GLEON/LakeMetabolizer" target="_blank" rel="noopener">LakeMetabolizer</a>, using
       the exact same buoy data.
     </p>
@@ -206,10 +210,15 @@
 
 <footer class="page-footer">
   <p>
-    Bookkeeping GPP/ER come from the same automated night-slope / day-slope method used in Module 6; OLS, MLE, Kalman
-    filter, and Bayesian (Metropolis-Hastings MCMC) all fit the same alpha/R/gas-exchange model used in Modules 3
-    &amp; 4 to a 48-hour window around each day instead. All five are run once per day across the full 2024
-    open-water season
+    Bookkeeping GPP/ER use LakeMetabolizer's own metab.bookkeep() (Cole et al. 2000): hourly night/day DO changes
+    with an estimated atmospheric flux subtracted first, using k600 from wind speed (Cole &amp; Caraco 1998)
+    converted to a temperature-specific gas-exchange rate via the Schmidt number. That flux correction needs a
+    mixed-layer depth, which this buoy doesn't measure, so it's fixed at 2 meters all season &mdash; a
+    simplification that's reasonable for summer stratification but likely overstates the correction once the
+    lake mixes far deeper than that after fall turnover, so bookkeeping's September&ndash;November numbers should
+    be read with that caveat in mind. OLS, MLE, Kalman filter, and Bayesian (Metropolis-Hastings MCMC) all fit
+    the same alpha/R/gas-exchange model used in Modules 3 &amp; 4 to a 48-hour window around each day instead.
+    All five are run once per day across the full 2024 open-water season
     (<a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=129" target="_blank" rel="noopener">EDI knb-lter-ntl.129</a>).
     Every method is noisy day to day - a single sensor blip can throw off one day's number - so every line above
     shows a 7-day rolling median rather than the raw daily estimate.
@@ -217,7 +226,7 @@
 </footer>
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-<script src="js/common.js?v=5"></script>
-<script src="js/module7.js?v=8"></script>
+<script src="js/common.js?v=6"></script>
+<script src="js/module7.js?v=9"></script>
 </body>
 </html>

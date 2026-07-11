@@ -23,6 +23,12 @@ START = date(2024, 3, 13)
 END = date(2024, 11, 25)
 
 
+def do_sat(t):
+    # Same DO-saturation regression used everywhere else in this app
+    # (Modules 3, 4, 6, and build_seasonal_methods.py).
+    return 14.652 - 0.41022 * t + 0.007991 * t * t - 0.000077774 * t * t * t
+
+
 def sun_times(d):
     def calc(is_sunrise):
         jd_midnight = d.toordinal() + 1721424.5
@@ -88,6 +94,34 @@ def get(d, hour, key):
     return row[key] if row else None
 
 
+# ---- LakeMetabolizer's metab.bookkeep(), ported from R/metab.bookkeep.R
+# (Cole et al. 2000) ----
+# Unlike a bare night-slope/day-slope split, this subtracts an estimated
+# atmospheric flux from every hourly DO change before doing the day/night
+# split, so gas exchange doesn't get misread as respiration. k600 comes
+# from wind via Cole & Caraco (1998) (R/k.cole.R), converted to a
+# temperature-specific kO2 via the Schmidt number (R/getSchmidt.R,
+# R/k600.2.kGAS.R). z.mix (mixed-layer depth) isn't measured by this buoy
+# setup, so it's fixed at 2 m for the whole season - a rough stand-in for
+# the shallow near-surface layer the sensor sits in. This is a known
+# imperfect simplification: once the lake destratifies and mixes deeper in
+# fall, the true mixed layer is considerably deeper than 2 m, so the fall/
+# spring corrections here likely overstate the atmospheric flux's effect on
+# concentration (see the caveat in module7.html's footer).
+Z_MIX_M = 2.0
+
+
+def schmidt_o2(temp_c):
+    return 1568 - 86.04 * temp_c + 2.142 * temp_c ** 2 - 0.0216 * temp_c ** 3
+
+
+def k_gas_o2_m_per_day(wind_ms, temp_c):
+    k600_cm_hr = 2.07 + 0.215 * (wind_ms ** 1.7)
+    k600_m_day = k600_cm_hr * 24 / 100
+    sc600 = schmidt_o2(temp_c) / 600
+    return k600_m_day * (sc600 ** -0.5)
+
+
 days = [START + timedelta(days=i) for i in range((END - START).days + 1)]
 results = []
 n_ok = 0
@@ -96,21 +130,35 @@ for d in days:
     sr_next, _ = sun_times(d + timedelta(days=1))
     sr_h, ss_h, sr_next_h = round(sr) % 24, round(ss) % 24, round(sr_next) % 24
 
-    do_sunrise = get(d, sr_h, 'do_mgl')
-    do_sunset = get(d, ss_h, 'do_mgl')
-    do_sunrise_next = get(d + timedelta(days=1), sr_next_h, 'do_mgl')
+    # Full hourly sequence from this day's sunrise through the next day's
+    # sunrise, as (date, hour) pairs - the same day/night window Module 6
+    # teaches by hand, just walked hour by hour instead of endpoint-to-endpoint.
+    seq = [(d, h) for h in range(sr_h, 24)] + [(d + timedelta(days=1), h) for h in range(0, sr_next_h + 1)]
+
+    nep_day, nep_night = [], []
+    for (dt0, h0), (dt1, h1) in zip(seq, seq[1:]):
+        do0 = get(dt0, h0, 'do_mgl')
+        do1 = get(dt1, h1, 'do_mgl')
+        wind0 = get(dt0, h0, 'wind_ms')
+        temp0 = get(dt0, h0, 'wtemp_c')
+        if None in (do0, do1, wind0, temp0):
+            continue
+        delta_do = do1 - do0
+        sat0 = do_sat(temp0)
+        kgas0 = k_gas_o2_m_per_day(wind0, temp0)
+        gas_flux = (sat0 - do0) * (kgas0 / 24) / Z_MIX_M
+        delta_do_metab = delta_do - gas_flux
+        is_day = sr_h <= h0 < ss_h if dt0 == d else False
+        (nep_day if is_day else nep_night).append(delta_do_metab)
 
     gpp = er = nep = None
-    if None not in (do_sunrise, do_sunset, do_sunrise_next):
-        day_hours = ss_h - sr_h
-        night_hours = (24 - ss_h) + sr_next_h
-        if day_hours > 4 and night_hours > 2:
-            day_rate = (do_sunset - do_sunrise) / day_hours
-            night_rate = (do_sunrise_next - do_sunset) / night_hours
-            er = abs(night_rate) * 24
-            gpp = (day_rate + abs(night_rate)) * day_hours
-            nep = gpp - er
-            n_ok += 1
+    if len(nep_day) >= 4 and len(nep_night) >= 2:
+        mean_day = sum(nep_day) / len(nep_day)
+        mean_night = sum(nep_night) / len(nep_night)
+        er = abs(mean_night) * 24  # LakeMetabolizer's R is negative; this app reports ER as a positive magnitude
+        gpp = (mean_day - mean_night) * len(nep_day)
+        nep = gpp - er  # kept consistent with "NEP = GPP - ER" as taught elsewhere in the app
+        n_ok += 1
 
     def dmean(key):
         vals = [hourly[(d.isoformat(), h)][key] for h in range(24)
@@ -169,7 +217,9 @@ out = {
     'daily': results,
     'source': {
         'metabolism': 'EDI knb-lter-ntl.129 (Hourly Meteorological and Metabolism Data, Lake Mendota), 2024 open-water season',
-        'method': 'Automated per-day night-slope / day-slope diel oxygen method (as in Module 6), ignoring atmospheric gas exchange',
+        'method': "LakeMetabolizer's metab.bookkeep (Cole et al. 2000): hourly night/day DO changes, atmospheric flux "
+                  "subtracted using k600 from wind (Cole & Caraco 1998) scaled to kO2 via the Schmidt number, z.mix fixed at 2 m "
+                  "(a known simplification - likely overstates the flux correction once the lake mixes deeper than 2 m in fall)",
     },
 }
 with open('mendota_seasonal.json', 'w') as f:
