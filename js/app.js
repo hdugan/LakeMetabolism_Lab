@@ -15,7 +15,6 @@
     { id: 'q1Notes', key: 'meetTheLake.oxygenTiming' },
     { id: 'q2Notes', key: 'meetTheLake.overnight' },
     { id: 'q3Notes', key: 'meetTheLake.compareDays' },
-    { id: 'q4Notes', key: 'meetTheLake.windPattern' },
   ];
   NOTES.forEach((n) => {
     const el = document.getElementById(n.id);
