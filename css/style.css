@@ -89,12 +89,16 @@ a { color: var(--series-do); }
   gap: 8px;
 }
 .module-nav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   color: var(--text-secondary);
   text-decoration: none;
   font-size: 13px;
   font-weight: 600;
   padding: 6px 12px;
-  border-radius: 999px;
+  border-radius: 8px;
 }
 .module-nav a:hover { background: var(--border-hairline); }
 .module-nav a.current {
@@ -133,6 +137,7 @@ a { color: var(--series-do); }
   line-height: 1.55;
 }
 .lede strong { color: var(--text-primary); }
+.lede-wide { max-width: 80%; }
 
 /* ---------- Header photo (Module 1) ---------- */
 .header-flex {
@@ -1609,3 +1614,20 @@ a { color: var(--series-do); }
   transition: opacity 0.2s;
 }
 .copy-feedback.show { opacity: 1; }
+
+/* ==================================================================
+   Welcome page - term flashcards
+   ================================================================== */
+
+.flashcard-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: stretch;
+}
+.flashcard-options .quiz-option { height: 100%; }
+.flashcard-options .quiz-option:disabled { cursor: default; }
+
+@media (max-width: 600px) {
+  .flashcard-options { grid-template-columns: 1fr; }
+}
