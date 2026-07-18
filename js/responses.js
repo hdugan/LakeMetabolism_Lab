@@ -4,8 +4,10 @@
   const NAME_KEY = 'lakeMetab.studentName';
 
   // Every free-response note the lab saves, in the order they should be
-  // reviewed/turned in. Keys match what modules 2, 5 and 8 already write to
-  // localStorage - this page only reads them, never writes to another page's key.
+  // reviewed/turned in. Keys match what modules 1, 4, 5 and 7 already write
+  // to localStorage - this page only reads them, never writes to another
+  // page's key. Module 1 includes the former Module 2 (Lake Detective)
+  // fields, which merged into it when Module 2 was folded into Module 1.
   const SECTIONS = [
     {
       title: 'Module 1 — Meet the Lake',
@@ -14,32 +16,26 @@
         { key: 'meetTheLake.overnight', label: 'What happens to oxygen overnight (grey area on graphs), every single night?' },
         { key: 'meetTheLake.compareDays', label: 'Compare the afternoon of July 11 to July 12. Which day is warmer and sunnier — and which has the bigger swing in oxygen?' },
         { key: 'meetTheLake.windPattern', label: 'Does wind speed seem to line up with any other data?' },
-      ],
-    },
-    {
-      title: 'Module 2 — Become a Lake Detective',
-      fields: [
         { key: 'lakeDetective.notes.wtemp', label: 'Reflection: Temperature' },
         { key: 'lakeDetective.notes.wind', label: 'Reflection: Wind' },
         { key: 'lakeDetective.notes.par', label: 'Reflection: Sunlight' },
-        { key: 'lakeDetective.notes.rain', label: 'Reflection: Rainfall' },
-        { key: 'lakeDetective.verdict', label: 'Final verdict' },
+        { key: 'lakeDetective.verdict', label: 'Which variable appears to control oxygen? Final verdict' },
       ],
     },
     {
-      title: 'Module 5 — The Sensor Revolution',
+      title: 'Module 4 — The Sensor Revolution',
       fields: [
         { key: 'sensorRevolution.p1notes', label: 'Part 1 notes' },
       ],
     },
     {
-      title: 'Module 6 — Every Lake Has a Metabolism',
+      title: 'Module 5 — Every Lake Has a Metabolism',
       fields: [
         { key: 'everyLakeMetabolism.recallNotes', label: 'How do you think these definitions might apply to an entire lake rather than an individual organism?' },
       ],
     },
     {
-      title: 'Module 8 — Compare Lakes',
+      title: 'Module 7 — Compare Lakes',
       fields: [
         { key: 'compareLakes.fingerprintNotes', label: 'What do you notice as you switch between lakes?' },
         { key: 'compareLakes.reflection', label: 'Final reflection' },

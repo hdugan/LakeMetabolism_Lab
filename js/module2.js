@@ -3,36 +3,43 @@
 
   const { cssVar, buildNightLayer, DATA_URL } = window.LakeCommon;
 
-  const SUSPECTS = [
-    {
-      key: 'wtemp', label: 'Temperature', icon: '🌡️',
-      varKey: 'wtemp_c', unit: '°C', decimals: 1, colorVar: '--series-wtemp', mark: 'line',
-      observe: 'Water temperature and oxygen both rise and fall once a day. But look at the timing: water temperature usually peaks by mid-to-late afternoon, while oxygen keeps climbing for a few more hours, often not turning around until early evening.',
-      reflect: 'If temperature directly controlled oxygen, the two should peak at almost the same time. Instead there is a gap of several hours between them. What does that gap suggest about whether temperature is really driving oxygen, or just moving alongside something else that is?',
-    },
-    {
-      key: 'wind', label: 'Wind', icon: '💨',
-      varKey: 'wind_ms', unit: 'm/s', decimals: 1, colorVar: '--series-wind', mark: 'line',
-      observe: 'Wind speed jumps around hour to hour — sometimes calm at night, sometimes gusty at midday — with no repeating daily rhythm like oxygen has.',
-      reflect: "Oxygen rises and falls on a reliable daily schedule. Wind doesn't seem to. If wind isn't driving that schedule, what job might it still be doing for the lake?",
-    },
-    {
-      key: 'par', label: 'Sunlight', icon: '☀️',
-      varKey: 'par', unit: 'µmol/m²/s', decimals: 0, colorVar: '--series-par', mark: 'line',
-      observe: 'Both curves rise and fall every day, but not at the same moment. PAR peaks right around solar noon, while oxygen often keeps climbing for several more hours, sometimes not turning around until early evening.',
-      reflect: 'Why does oxygen continue increasing for hours after sunlight has already passed its maximum?',
-    },
-    {
-      key: 'rain', label: 'Rainfall', icon: '🌧️',
-      varKey: 'precip_mm', unit: 'mm', decimals: 1, colorVar: '--series-rain', mark: 'bar',
-      observe: 'Real rain fell only once this week: a heavy afternoon storm on July 12 (over 40 mm in a few hours) and a lighter shower the next two days. Most hours saw no rain at all, and none of it lines up with oxygen’s daily up-and-down.',
-      reflect: "Rain doesn't happen every day, but oxygen's cycle does — so rain can't be the direct cause. Could it still be an indirect cause of the smaller oxygen swings seen July 12–14?",
-    },
-  ];
+  // Simplified process rates, hand-tuned (see scripts/build_dataset.py sibling
+  // notes) so that with all three processes on the simulated curve lands in
+  // the same 8-13 mg/L ballpark as the real observed week, while each single
+  // process removed produces a clearly distinct "aha" shape.
+  const ALPHA = 0.0002;   // mg/L added per hour, per unit PAR (photosynthesis)
+  const R_CONST = 0.05;   // mg/L removed per hour, constant (respiration)
+  const K_GAS = 0.006;    // gas-exchange rate per hour, per unit wind (m/s)
 
-  const NOTES_PREFIX = 'lakeDetective.notes.';
-  const VERDICT_KEY = 'lakeDetective.verdict';
-  const triedSet = new Set();
+  function doSat(tempC) {
+    // Standard freshwater DO-saturation regression at 1 atm (mg/L).
+    return 14.652 - 0.41022 * tempC + 0.007991 * tempC * tempC - 0.000077774 * tempC * tempC * tempC;
+  }
+
+  function simulate(par, wind, temp, toggles) {
+    const n = par.length;
+    const DO = new Array(n);
+    DO[0] = doSat(temp[0]);
+    for (let i = 1; i < n; i++) {
+      const gpp = toggles.photo ? ALPHA * par[i - 1] : 0;
+      const resp = toggles.resp ? R_CONST : 0;
+      const sat = doSat(temp[i - 1]);
+      const gasFlux = toggles.gas ? K_GAS * wind[i - 1] * (sat - DO[i - 1]) : 0;
+      DO[i] = DO[i - 1] + gpp - resp + gasFlux;
+    }
+    return DO;
+  }
+
+  const CAPTIONS = {
+    '111': "This is the real balance: photosynthesis adds oxygen by day, respiration removes it around the clock, and gas exchange keeps both in check. The result looks like a real lake.",
+    '011': "With photosynthesis off, nothing is adding oxygen anymore. Respiration keeps consuming it, so oxygen only decreases, day after day.",
+    '101': "With respiration off, nothing is consuming oxygen. Photosynthesis keeps adding it every day, so oxygen only increases, day after day.",
+    '110': "With gas exchange off, oxygen has nowhere to go. Every day's gains and losses just keep piling up, and the swings become unrealistically large.",
+    '001': "With photosynthesis and respiration both off, nothing is adding or removing oxygen — gas exchange just holds it steady at equilibrium.",
+    '010': "No photosynthesis, no gas exchange to soften it — respiration runs unchecked, so oxygen falls and keeps falling.",
+    '100': "No respiration, no gas exchange to soften it — photosynthesis runs unchecked, so oxygen rises and keeps rising, completely unrealistically.",
+    '000': "All three processes are off. Nothing is adding or removing oxygen, so it just sits flat wherever it started.",
+  };
 
   fetch(DATA_URL)
     .then((r) => r.json())
@@ -42,168 +49,118 @@
         '<p style="padding:40px;color:var(--text-secondary)">Could not load lake data (' + err + ').</p>';
     });
 
-  function normalize(values, floorAtZero) {
-    const present = values.filter((v) => v !== null && v !== undefined);
-    const min = floorAtZero ? 0 : Math.min(...present);
-    const max = Math.max(...present);
-    const span = max - min || 1;
-    return values.map((v) => (v === null || v === undefined ? null : ((v - min) / span) * 100));
-  }
-
   function init(data) {
     const hourly = data.hourly;
+    const par = hourly.map((h) => h.par);
+    const wind = hourly.map((h) => h.wind_ms);
+    const temp = hourly.map((h) => h.wtemp_c);
     const { nightShapes, sunAnnotations, xAll } = buildNightLayer(data);
+    const equilibrium = temp.map(doSat);
 
-    const doRaw = hourly.map((h) => h.do_mgl);
-    const doNorm = normalize(doRaw, false);
+    const toggles = { photo: true, resp: true, gas: true };
+
+    const togglePhoto = document.getElementById('togglePhoto');
+    const toggleResp = document.getElementById('toggleResp');
+    const toggleGas = document.getElementById('toggleGas');
+    const stateCaptionText = document.getElementById('stateCaptionText');
+    const diagramPhotoArrow = document.getElementById('diagramPhotoArrow');
+    const diagramRespArrow = document.getElementById('diagramRespArrow');
+    const diagramGasArrow = document.getElementById('diagramGasArrow').closest('.diagram-atm');
+
     const doColor = cssVar('--series-do');
+    const eqColor = cssVar('--baseline');
 
-    const suspectGrid = document.getElementById('suspectGrid');
-    const emptyState = document.getElementById('emptyState');
-    const overlaySection = document.getElementById('overlaySection');
-    const analysisSection = document.getElementById('analysisSection');
-    const overlayTitle = document.getElementById('overlayTitle');
-    const overlayLegend = document.getElementById('overlayLegend');
-    const observeCallout = document.getElementById('observeCallout');
-    const observeText = document.getElementById('observeText');
-    const reflectText = document.getElementById('reflectText');
-    const reflectNotes = document.getElementById('reflectNotes');
-    const triedCount = document.getElementById('triedCount');
-    const verdictRow = document.getElementById('verdictRow');
-    const verdictNotes = document.getElementById('verdictNotes');
+    const doTrace = {
+      x: xAll, y: simulate(par, wind, temp, toggles),
+      type: 'scatter', mode: 'lines',
+      line: { color: doColor, width: 2.5, shape: 'spline', smoothing: 0.3 },
+      hovertemplate: '%{y:.2f} mg/L<extra>Simulated oxygen</extra>',
+      name: 'Simulated oxygen',
+    };
+    const eqTrace = {
+      x: xAll, y: equilibrium,
+      type: 'scatter', mode: 'lines',
+      line: { color: eqColor, width: 1.5, dash: 'dash' },
+      hovertemplate: '%{y:.2f} mg/L<extra>Equilibrium</extra>',
+      name: 'Equilibrium',
+    };
 
-    // ---- suspect buttons ----
-    SUSPECTS.forEach((s) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'suspect-btn';
-      btn.dataset.key = s.key;
-      btn.style.setProperty('--accent', cssVar(s.colorVar));
-      btn.innerHTML = `
-        <span class="suspect-check">✓ tested</span>
-        <span class="suspect-icon">${s.icon}</span>
-        <span class="suspect-label">${s.label}</span>`;
-      if (localStorage.getItem(NOTES_PREFIX + s.key)) btn.classList.add('tried');
-      btn.addEventListener('click', () => selectSuspect(s.key));
-      suspectGrid.appendChild(btn);
+    const layout = {
+      margin: { l: 44, r: 12, t: 26, b: 28 },
+      paper_bgcolor: 'transparent',
+      plot_bgcolor: 'transparent',
+      font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: cssVar('--text-secondary'), size: 11 },
+      showlegend: false,
+      shapes: nightShapes,
+      annotations: sunAnnotations,
+      xaxis: {
+        type: 'date',
+        range: [xAll[0], xAll[xAll.length - 1]],
+        gridcolor: cssVar('--gridline'),
+        linecolor: cssVar('--baseline'),
+        tickfont: { color: cssVar('--text-muted') },
+        tickformat: '%a %-d',
+        hoverformat: '%a %b %-d, %-I:%M %p',
+      },
+      yaxis: {
+        gridcolor: cssVar('--gridline'),
+        linecolor: cssVar('--baseline'),
+        tickfont: { color: cssVar('--text-muted') },
+        zeroline: false,
+      },
+      hovermode: 'x',
+    };
+
+    Plotly.newPlot('simPlot', [doTrace, eqTrace], layout, {
+      displayModeBar: false, responsive: true, scrollZoom: false,
     });
 
-    // ---- verdict / progress chips ----
-    function renderVerdictRow() {
-      verdictRow.innerHTML = '';
-      SUSPECTS.forEach((s) => {
-        const chip = document.createElement('span');
-        chip.className = 'verdict-chip';
-        chip.textContent = (triedSet.has(s.key) ? '✓ ' : '– ') + s.label;
-        verdictRow.appendChild(chip);
-      });
-      triedCount.textContent = String(triedSet.size);
+    function toggleKey() {
+      return (toggles.photo ? '1' : '0') + (toggles.resp ? '1' : '0') + (toggles.gas ? '1' : '0');
     }
-    // A suspect counts as "tried" if it has saved notes from an earlier
-    // visit, so the progress count survives a reload instead of resetting
-    // to 0 while the notes themselves are still there.
-    SUSPECTS.forEach((s) => {
-      if (localStorage.getItem(NOTES_PREFIX + s.key)) triedSet.add(s.key);
+
+    function updateDiagram() {
+      diagramPhotoArrow.classList.toggle('is-off', !toggles.photo);
+      diagramRespArrow.classList.toggle('is-off', !toggles.resp);
+      diagramGasArrow.classList.toggle('is-off', !toggles.gas);
+    }
+
+    function recompute() {
+      const y = simulate(par, wind, temp, toggles);
+      Plotly.restyle('simPlot', { y: [y] }, [0]);
+      stateCaptionText.textContent = CAPTIONS[toggleKey()];
+      updateDiagram();
+    }
+
+    togglePhoto.addEventListener('change', () => { toggles.photo = togglePhoto.checked; recompute(); });
+    toggleResp.addEventListener('change', () => { toggles.resp = toggleResp.checked; recompute(); });
+    toggleGas.addEventListener('change', () => { toggles.gas = toggleGas.checked; recompute(); });
+
+    recompute();
+    initQuiz();
+  }
+
+  const QUIZ_FEEDBACK = {
+    wave: "Not quite — that daily rise and fall is actually created by photosynthesis and respiration. Turn both off, and there's nothing left to produce that pattern.",
+    climb: "Not quite — oxygen only climbs when something is adding it faster than anything removes it. With photosynthesis off too, there's no source left to push it up.",
+    flat: "Exactly right. With nothing adding oxygen and nothing removing it, there's no engine left to move the line at all — it would sit flat at wherever it started, all week long.",
+  };
+
+  function initQuiz() {
+    const quizGrid = document.getElementById('quizGrid');
+    const quizFeedback = document.getElementById('quizFeedback');
+
+    Array.from(quizGrid.children).forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const correct = btn.dataset.correct === 'true';
+        Array.from(quizGrid.children).forEach((b) => b.classList.remove('is-correct', 'is-incorrect'));
+        btn.classList.add(correct ? 'is-correct' : 'is-incorrect');
+
+        quizFeedback.hidden = false;
+        quizFeedback.classList.toggle('is-correct', correct);
+        quizFeedback.classList.toggle('is-incorrect', !correct);
+        quizFeedback.textContent = (correct ? '✅ ' : '🤔 ') + QUIZ_FEEDBACK[btn.dataset.key];
+      });
     });
-    renderVerdictRow();
-
-    // ---- restore saved verdict notes ----
-    verdictNotes.value = localStorage.getItem(VERDICT_KEY) || '';
-    verdictNotes.addEventListener('input', () => {
-      localStorage.setItem(VERDICT_KEY, verdictNotes.value);
-    });
-
-    function selectSuspect(key) {
-      const s = SUSPECTS.find((x) => x.key === key);
-      const color = cssVar(s.colorVar);
-
-      Array.from(suspectGrid.children).forEach((btn) => {
-        btn.classList.toggle('active', btn.dataset.key === key);
-        if (btn.dataset.key === key) btn.classList.add('tried');
-      });
-      triedSet.add(key);
-      renderVerdictRow();
-
-      emptyState.hidden = true;
-      overlaySection.hidden = false;
-      analysisSection.hidden = false;
-
-      overlayTitle.textContent = `Oxygen vs. ${s.label}`;
-      observeCallout.style.setProperty('--accent', color);
-      overlayLegend.innerHTML = `
-        <span><span class="swatch" style="background:${doColor}"></span>Oxygen (DO)</span>
-        <span><span class="swatch" style="background:${color}"></span>${s.label} (${s.unit})</span>`;
-      observeText.textContent = s.observe;
-      reflectText.textContent = s.reflect;
-      reflectNotes.value = localStorage.getItem(NOTES_PREFIX + key) || '';
-      reflectNotes.oninput = () => localStorage.setItem(NOTES_PREFIX + key, reflectNotes.value);
-
-      drawOverlay(s);
-    }
-
-    function drawOverlay(s) {
-      const raw = hourly.map((h) => h[s.varKey]);
-      const norm = normalize(raw, s.key === 'rain');
-      const color = cssVar(s.colorVar);
-
-      const doTrace = {
-        x: xAll, y: doNorm, customdata: doRaw,
-        type: 'scatter', mode: 'lines',
-        line: { color: doColor, width: 2, shape: 'spline', smoothing: 0.3 },
-        hovertemplate: '%{customdata:.2f} mg/L<extra>Oxygen</extra>',
-        name: 'Oxygen (DO)',
-      };
-
-      const suspectTrace = s.mark === 'bar'
-        ? {
-            x: xAll, y: norm, customdata: raw,
-            type: 'bar',
-            marker: { color, opacity: 0.55 },
-            hovertemplate: `%{customdata:.${s.decimals}f} ${s.unit}<extra>${s.label}</extra>`,
-            name: s.label,
-          }
-        : {
-            x: xAll, y: norm, customdata: raw,
-            type: 'scatter', mode: 'lines',
-            line: { color, width: 2, shape: 'spline', smoothing: 0.3 },
-            hovertemplate: `%{customdata:.${s.decimals}f} ${s.unit}<extra>${s.label}</extra>`,
-            name: s.label,
-          };
-
-      const layout = {
-        margin: { l: 44, r: 12, t: 26, b: 28 },
-        paper_bgcolor: 'transparent',
-        plot_bgcolor: 'transparent',
-        font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: cssVar('--text-secondary'), size: 11 },
-        showlegend: false,
-        shapes: nightShapes,
-        annotations: sunAnnotations,
-        barmode: 'overlay',
-        xaxis: {
-          type: 'date',
-          range: [xAll[0], xAll[xAll.length - 1]],
-          gridcolor: cssVar('--gridline'),
-          linecolor: cssVar('--baseline'),
-          tickfont: { color: cssVar('--text-muted') },
-          showspikes: true, spikemode: 'across', spikesnap: 'cursor',
-          spikethickness: 1, spikedash: 'solid', spikecolor: cssVar('--text-muted'),
-          tickformat: '%a %-d',
-          hoverformat: '%a %b %-d, %-I:%M %p',
-        },
-        yaxis: {
-          title: { text: '% of week range', font: { size: 11, color: cssVar('--text-muted') } },
-          range: [-3, 103],
-          gridcolor: cssVar('--gridline'),
-          linecolor: cssVar('--baseline'),
-          tickfont: { color: cssVar('--text-muted') },
-          zeroline: false,
-        },
-        hovermode: 'x',
-      };
-
-      Plotly.react('overlayPlot', [doTrace, suspectTrace], layout, {
-        displayModeBar: false, responsive: true, scrollZoom: false,
-      });
-    }
   }
 })();

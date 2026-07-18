@@ -3,43 +3,53 @@
 
   const { cssVar, buildNightLayer, DATA_URL } = window.LakeCommon;
 
-  // Simplified process rates, hand-tuned (see scripts/build_dataset.py sibling
-  // notes) so that with all three processes on the simulated curve lands in
-  // the same 8-13 mg/L ballpark as the real observed week, while each single
-  // process removed produces a clearly distinct "aha" shape.
-  const ALPHA = 0.0002;   // mg/L added per hour, per unit PAR (photosynthesis)
-  const R_CONST = 0.05;   // mg/L removed per hour, constant (respiration)
-  const K_GAS = 0.006;    // gas-exchange rate per hour, per unit wind (m/s)
+  // Slider 0-100 maps linearly onto each parameter's real range. The maxima
+  // were chosen so the best-fit values (below) sit roughly mid-slider,
+  // not jammed against an edge.
+  const ALPHA_MAX = 0.00025; // mg/L added per hour, per unit PAR, at slider=100
+  const R_MAX = 0.12;        // mg/L removed per hour, constant, at slider=100
+  const K_MAX = 0.008;       // gas-exchange rate per hour per unit wind, at slider=100
+
+  // Best fit to the real observed week, found by grid search minimizing SSE
+  // between this same model and the real DO curve (see scripts/build_dataset.py
+  // sibling notes / conversation history — not re-derived client-side since a
+  // full search is unnecessary to ship).
+  const TRUE_PARAMS = { alpha: 0.000148, r: 0.063, k: 0.0042 };
+
+  // A flat, uninformative 0% floor for the match score. RMSE this bad or
+  // worse (mg/L) scores 0%; RMSE 0 scores 100%. The best-fit RMSE (~0.21
+  // mg/L) tops out around 91-92%, which is honest: even the best simple
+  // 3-process model doesn't perfectly reproduce a real lake.
+  const RMSE_FLOOR = 2.5;
 
   function doSat(tempC) {
-    // Standard freshwater DO-saturation regression at 1 atm (mg/L).
     return 14.652 - 0.41022 * tempC + 0.007991 * tempC * tempC - 0.000077774 * tempC * tempC * tempC;
   }
 
-  function simulate(par, wind, temp, toggles) {
+  function simulate(alpha, r, k, do0, par, wind, temp) {
     const n = par.length;
     const DO = new Array(n);
-    DO[0] = doSat(temp[0]);
+    DO[0] = do0;
+    let gasTotal = 0;
     for (let i = 1; i < n; i++) {
-      const gpp = toggles.photo ? ALPHA * par[i - 1] : 0;
-      const resp = toggles.resp ? R_CONST : 0;
+      const gpp = alpha * par[i - 1];
       const sat = doSat(temp[i - 1]);
-      const gasFlux = toggles.gas ? K_GAS * wind[i - 1] * (sat - DO[i - 1]) : 0;
-      DO[i] = DO[i - 1] + gpp - resp + gasFlux;
+      const gasFlux = k * wind[i - 1] * (sat - DO[i - 1]);
+      gasTotal += gasFlux;
+      DO[i] = DO[i - 1] + gpp - r + gasFlux;
     }
-    return DO;
+    return { DO, gasTotal };
   }
 
-  const CAPTIONS = {
-    '111': "This is the real balance: photosynthesis adds oxygen by day, respiration removes it around the clock, and gas exchange keeps both in check. The result looks like a real lake.",
-    '011': "With photosynthesis off, nothing is adding oxygen anymore. Respiration keeps consuming it, so oxygen only decreases, day after day.",
-    '101': "With respiration off, nothing is consuming oxygen. Photosynthesis keeps adding it every day, so oxygen only increases, day after day.",
-    '110': "With gas exchange off, oxygen has nowhere to go. Every day's gains and losses just keep piling up, and the swings become unrealistically large.",
-    '001': "With photosynthesis and respiration both off, nothing is adding or removing oxygen — gas exchange just holds it steady at equilibrium.",
-    '010': "No photosynthesis, no gas exchange to soften it — respiration runs unchecked, so oxygen falls and keeps falling.",
-    '100': "No respiration, no gas exchange to soften it — photosynthesis runs unchecked, so oxygen rises and keeps rising, completely unrealistically.",
-    '000': "All three processes are off. Nothing is adding or removing oxygen, so it just sits flat wherever it started.",
-  };
+  function rmse(a, b) {
+    let sum = 0;
+    for (let i = 0; i < a.length; i++) sum += (a[i] - b[i]) * (a[i] - b[i]);
+    return Math.sqrt(sum / a.length);
+  }
+
+  function scoreFromRmse(e) {
+    return Math.max(0, Math.round(100 * (1 - e / RMSE_FLOOR)));
+  }
 
   fetch(DATA_URL)
     .then((r) => r.json())
@@ -49,36 +59,94 @@
         '<p style="padding:40px;color:var(--text-secondary)">Could not load lake data (' + err + ').</p>';
     });
 
+  // ---- "Quiz me!" panel - independent of the chart data fetch ----
+  const quizMeBtn = document.getElementById('quizMeBtn');
+  const quizPanel = document.getElementById('quizPanel');
+  quizMeBtn.addEventListener('click', () => {
+    quizPanel.hidden = false;
+    quizPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  function initQuiz(gridId, feedbackId, messages) {
+    const grid = document.getElementById(gridId);
+    const feedback = document.getElementById(feedbackId);
+    Array.from(grid.children).forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const correct = btn.dataset.correct === 'true';
+        Array.from(grid.children).forEach((b) => b.classList.remove('is-correct', 'is-incorrect'));
+        btn.classList.add(correct ? 'is-correct' : 'is-incorrect');
+        feedback.hidden = false;
+        feedback.classList.toggle('is-correct', correct);
+        feedback.classList.toggle('is-incorrect', !correct);
+        feedback.textContent = (correct ? '✅ ' : '🤔 ') + messages[btn.dataset.key];
+      });
+    });
+  }
+
+  initQuiz('quizStep1Grid', 'quizStep1Feedback', {
+    into: 'Not quite — gas exchange always pushes oxygen toward equilibrium, so a lake with too much oxygen loses it, it doesn’t gain more.',
+    out: 'Right. The lake is supersaturated, so gas exchange pushes oxygen out toward the atmosphere, back toward equilibrium.',
+  });
+  initQuiz('quizStep2Grid', 'quizStep2Feedback', {
+    positive: 'Not quite — a positive atmospheric exchange term would mean oxygen is entering the lake, the opposite of what’s happening here.',
+    negative: 'Right. Oxygen leaving the lake means the atmospheric exchange term is negative, just like you saw in your model.',
+    zero: 'Not quite — zero would mean no exchange at all, but oxygen is actively leaving the lake here.',
+  });
+  initQuiz('quizBonusGrid', 'quizBonusFeedback', {
+    faster: 'Right. Wind strengthens gas exchange, so a supersaturated lake loses oxygen to the atmosphere even faster.',
+    slower: 'Not quite — more wind speeds up gas exchange, it doesn’t slow it down.',
+    enters: 'Not quite — wind speed changes how fast gas exchange happens, not which direction it pushes oxygen. The lake is still supersaturated, so oxygen keeps leaving.',
+  });
+
   function init(data) {
     const hourly = data.hourly;
     const par = hourly.map((h) => h.par);
     const wind = hourly.map((h) => h.wind_ms);
     const temp = hourly.map((h) => h.wtemp_c);
+    const doReal = hourly.map((h) => h.do_mgl);
     const { nightShapes, sunAnnotations, xAll } = buildNightLayer(data);
-    const equilibrium = temp.map(doSat);
 
-    const toggles = { photo: true, resp: true, gas: true };
+    const meanDailyPar = (() => {
+      let total = 0;
+      for (let d = 0; d < 7; d++) {
+        for (let hh = 0; hh < 24; hh++) total += par[d * 24 + hh];
+      }
+      return total / 7;
+    })();
 
-    const togglePhoto = document.getElementById('togglePhoto');
-    const toggleResp = document.getElementById('toggleResp');
-    const toggleGas = document.getElementById('toggleGas');
-    const stateCaptionText = document.getElementById('stateCaptionText');
-    const diagramPhotoArrow = document.getElementById('diagramPhotoArrow');
-    const diagramRespArrow = document.getElementById('diagramRespArrow');
-    const diagramGasArrow = document.getElementById('diagramGasArrow').closest('.diagram-atm');
+    const dailyGPP = (alpha) => alpha * meanDailyPar;
+    const dailyR = (r) => r * 24;
 
-    const doColor = cssVar('--series-do');
+    const sliderPhoto = document.getElementById('sliderPhoto');
+    const sliderResp = document.getElementById('sliderResp');
+    const sliderGas = document.getElementById('sliderGas');
+    const valuePhoto = document.getElementById('valuePhoto');
+    const valueResp = document.getElementById('valueResp');
+    const valueGas = document.getElementById('valueGas');
+    const matchScoreText = document.getElementById('matchScoreText');
+    const revealBtn = document.getElementById('revealBtn');
+    const revealPanel = document.getElementById('revealPanel');
+
+    const realColor = cssVar('--series-do');
+    const yourColor = cssVar('--series-rain');
     const eqColor = cssVar('--baseline');
 
-    const doTrace = {
-      x: xAll, y: simulate(par, wind, temp, toggles),
+    const realTrace = {
+      x: xAll, y: doReal,
       type: 'scatter', mode: 'lines',
-      line: { color: doColor, width: 2.5, shape: 'spline', smoothing: 0.3 },
-      hovertemplate: '%{y:.2f} mg/L<extra>Simulated oxygen</extra>',
-      name: 'Simulated oxygen',
+      line: { color: realColor, width: 2.5, shape: 'spline', smoothing: 0.3 },
+      hovertemplate: '%{y:.2f} mg/L<extra>Real oxygen</extra>',
+      name: 'Real oxygen',
+    };
+    const yourTrace = {
+      x: xAll, y: simulate(0, 0, 0, doReal[0], par, wind, temp).DO,
+      type: 'scatter', mode: 'lines',
+      line: { color: yourColor, width: 2.5, shape: 'spline', smoothing: 0.3 },
+      hovertemplate: '%{y:.2f} mg/L<extra>Your model</extra>',
+      name: 'Your model',
     };
     const eqTrace = {
-      x: xAll, y: equilibrium,
+      x: xAll, y: temp.map(doSat),
       type: 'scatter', mode: 'lines',
       line: { color: eqColor, width: 1.5, dash: 'dash' },
       hovertemplate: '%{y:.2f} mg/L<extra>Equilibrium</extra>',
@@ -111,56 +179,62 @@
       hovermode: 'x',
     };
 
-    Plotly.newPlot('simPlot', [doTrace, eqTrace], layout, {
+    Plotly.newPlot('matchPlot', [realTrace, yourTrace, eqTrace], layout, {
       displayModeBar: false, responsive: true, scrollZoom: false,
     });
 
-    function toggleKey() {
-      return (toggles.photo ? '1' : '0') + (toggles.resp ? '1' : '0') + (toggles.gas ? '1' : '0');
-    }
-
-    function updateDiagram() {
-      diagramPhotoArrow.classList.toggle('is-off', !toggles.photo);
-      diagramRespArrow.classList.toggle('is-off', !toggles.resp);
-      diagramGasArrow.classList.toggle('is-off', !toggles.gas);
+    function currentParams() {
+      return {
+        alpha: (Number(sliderPhoto.value) / 100) * ALPHA_MAX,
+        r: (Number(sliderResp.value) / 100) * R_MAX,
+        k: (Number(sliderGas.value) / 100) * K_MAX,
+      };
     }
 
     function recompute() {
-      const y = simulate(par, wind, temp, toggles);
-      Plotly.restyle('simPlot', { y: [y] }, [0]);
-      stateCaptionText.textContent = CAPTIONS[toggleKey()];
-      updateDiagram();
+      valuePhoto.textContent = sliderPhoto.value;
+      valueResp.textContent = sliderResp.value;
+      valueGas.textContent = sliderGas.value;
+
+      const p = currentParams();
+      const y = simulate(p.alpha, p.r, p.k, doReal[0], par, wind, temp).DO;
+      Plotly.restyle('matchPlot', { y: [y] }, [1]);
+
+      const e = rmse(y, doReal);
+      const score = scoreFromRmse(e);
+      matchScoreText.textContent = score + '%';
+      matchScoreText.classList.remove('is-good', 'is-warning');
+      if (score >= 80) matchScoreText.classList.add('is-good');
+      else if (score >= 50) matchScoreText.classList.add('is-warning');
     }
 
-    togglePhoto.addEventListener('change', () => { toggles.photo = togglePhoto.checked; recompute(); });
-    toggleResp.addEventListener('change', () => { toggles.resp = toggleResp.checked; recompute(); });
-    toggleGas.addEventListener('change', () => { toggles.gas = toggleGas.checked; recompute(); });
-
+    [sliderPhoto, sliderResp, sliderGas].forEach((s) => s.addEventListener('input', recompute));
     recompute();
-    initQuiz();
-  }
 
-  const QUIZ_FEEDBACK = {
-    wave: "Not quite — that daily rise and fall is actually created by photosynthesis and respiration. Turn both off, and there's nothing left to produce that pattern.",
-    climb: "Not quite — oxygen only climbs when something is adding it faster than anything removes it. With photosynthesis off too, there's no source left to push it up.",
-    flat: "Exactly right. With nothing adding oxygen and nothing removing it, there's no engine left to move the line at all — it would sit flat at wherever it started, all week long.",
-  };
+    revealBtn.addEventListener('click', () => {
+      const p = currentParams();
+      const gppYou = dailyGPP(p.alpha);
+      const rYou = dailyR(p.r);
+      const gppTrue = dailyGPP(TRUE_PARAMS.alpha);
+      const rTrue = dailyR(TRUE_PARAMS.r);
+      const gasYou = simulate(p.alpha, p.r, p.k, doReal[0], par, wind, temp).gasTotal / 7;
+      const gasTrue = simulate(TRUE_PARAMS.alpha, TRUE_PARAMS.r, TRUE_PARAMS.k, doReal[0], par, wind, temp).gasTotal / 7;
 
-  function initQuiz() {
-    const quizGrid = document.getElementById('quizGrid');
-    const quizFeedback = document.getElementById('quizFeedback');
+      const fmt = (v) => v.toFixed(2) + ' mg/L/day';
+      document.getElementById('revGppYou').textContent = fmt(gppYou);
+      document.getElementById('revGppTrue').textContent = fmt(gppTrue);
+      document.getElementById('revRYou').textContent = fmt(rYou);
+      document.getElementById('revRTrue').textContent = fmt(rTrue);
+      document.getElementById('revGasYou').textContent = fmt(gasYou);
+      document.getElementById('revGasTrue').textContent = fmt(gasTrue);
 
-    Array.from(quizGrid.children).forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const correct = btn.dataset.correct === 'true';
-        Array.from(quizGrid.children).forEach((b) => b.classList.remove('is-correct', 'is-incorrect'));
-        btn.classList.add(correct ? 'is-correct' : 'is-incorrect');
+      const note = gppTrue >= rTrue
+        ? `According to the best fit, the lake produced a bit more oxygen through photosynthesis than it consumed through respiration.`
+        : `According to the best fit, the lake consumed a bit more oxygen through respiration than it produced through photosynthesis.`;
+      document.getElementById('revealNote').innerHTML = note;
 
-        quizFeedback.hidden = false;
-        quizFeedback.classList.toggle('is-correct', correct);
-        quizFeedback.classList.toggle('is-incorrect', !correct);
-        quizFeedback.textContent = (correct ? '✅ ' : '🤔 ') + QUIZ_FEEDBACK[btn.dataset.key];
-      });
+      revealPanel.hidden = false;
+      revealPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
   }
 })();

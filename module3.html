@@ -3,169 +3,182 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>What's Making Oxygen Change? — Lake Metabolism Lab</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧪</text></svg>">
-<link rel="stylesheet" href="css/style.css?v=18">
+<title>Build the Oxygen Curve Yourself — Lake Metabolism Lab</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎛️</text></svg>">
+<link rel="stylesheet" href="css/style.css?v=19">
 </head>
 <body>
 
 <nav class="module-nav"><div class="module-nav-inner">
   <a href="index.html">Welcome</a>
   <a href="module1.html">1. Meet the Lake</a>
-  <a href="module2.html">2. Become a Lake Detective</a>
-  <a href="module3.html" class="current">3. What's Making Oxygen Change?</a>
-  <a href="module4.html">4. Build the Oxygen Curve</a>
-  <a href="module5.html">5. The Sensor Revolution</a>
-  <a href="module6.html">6. Every Lake Has a Metabolism</a>
-  <a href="module7.html">7. Seasonal Metabolism</a>
-  <a href="module8.html">8. Compare Lakes</a>
+  <a href="module2.html">2. What's Making Oxygen Change?</a>
+  <a href="module3.html" class="current">3. Build the Oxygen Curve</a>
+  <a href="module4.html">4. The Sensor Revolution</a>
+  <a href="module5.html">5. Every Lake Has a Metabolism</a>
+  <a href="module6.html">6. Seasonal Metabolism</a>
+  <a href="module7.html">7. Compare Lakes</a>
   <a href="responses.html">Your Responses</a>
 </div></nav>
 
 <header class="page-header">
   <div class="header-inner">
     <p class="eyebrow">Lake Metabolism Lab · Module 3</p>
-    <h1>What's Making Oxygen Change?</h1>
+    <h1>Build the Oxygen Curve Yourself</h1>
     <p class="lede lede-wide">
-      Underneath everything you've seen so far, think of dissolved oxygen as a pool with three pipes attached, shown
-      in the diagram below. <strong>Photosynthesis</strong> fills the pool whenever there's light. <strong>Respiration</strong>
-      drains it around the clock, day and night alike. And the <strong>atmosphere</strong> connects to the pool from
-      above, pushing oxygen in or pulling it out depending on which way the balance tips. Flip each process on and
-      off below and watch both the diagram and the simulated oxygen curve react &mdash; it's the same light, wind, and
-      temperature pattern from the real week you've been exploring.
+      You've watched oxygen rise and fall, hunted for the variable behind it, and taken apart the three-process
+      engine that drives it. Now flip it around: here are the same three dials, but as sliders you control. Start
+      from a flat guess and nudge <strong>photosynthesis</strong>, <strong>respiration</strong>, and
+      <strong>gas exchange</strong> until your model traces the same curve the real buoy recorded that week.
     </p>
   </div>
 </header>
 
 <main class="content">
 
-  <section class="chart-card diagram-card">
-    <div class="process-diagram" id="processDiagram">
-      <div class="diagram-atm">
-        <span class="diagram-icon">💨</span>
-        <span class="diagram-node-label">Atmosphere</span>
-        <span class="diagram-vert-arrow" id="diagramGasArrow">⇕</span>
-      </div>
-
-      <div class="diagram-surface" aria-hidden="true">
-        <svg viewBox="0 0 400 20" preserveAspectRatio="none">
-          <path d="M0,10 Q12.5,0 25,10 T50,10 T75,10 T100,10 T125,10 T150,10 T175,10 T200,10 T225,10 T250,10 T275,10 T300,10 T325,10 T350,10 T375,10 T400,10" />
-        </svg>
-      </div>
-
-      <div class="diagram-node">
-        <span class="diagram-icon">☀️</span>
-        <span class="diagram-node-label">Photosynthesis</span>
-      </div>
-      <div class="diagram-arrow diagram-arrow-add" id="diagramPhotoArrow">
-        <span class="diagram-arrow-glyph">&rarr;</span>
-        <span class="diagram-arrow-tag">+ O&#8322;</span>
-      </div>
-
-      <div class="diagram-node diagram-node-oxygen">
-        <span class="diagram-icon">O&#8322;</span>
-        <span class="diagram-node-label">Dissolved oxygen</span>
-      </div>
-
-      <div class="diagram-arrow diagram-arrow-remove" id="diagramRespArrow">
-        <span class="diagram-arrow-glyph">&rarr;</span>
-        <span class="diagram-arrow-tag">&minus; O&#8322;</span>
-      </div>
-      <div class="diagram-node">
-        <span class="diagram-icon">🐟</span>
-        <span class="diagram-node-label">Respiration</span>
-      </div>
-    </div>
-  </section>
-
   <section class="case-card">
-    <h2>Before you experiment&hellip;</h2>
-    <p class="case-sub">If <strong>none</strong> of these three processes were happening at all, what do you think a week of oxygen concentration in the lake would look like? Pick one.</p>
-    <div class="quiz-grid" id="quizGrid">
-      <button type="button" class="quiz-option" data-key="wave" data-correct="false">A smooth wave, rising and falling every day &mdash; just like a real lake</button>
-      <button type="button" class="quiz-option" data-key="climb" data-correct="false">A line that keeps climbing steadily higher, all week long</button>
-      <button type="button" class="quiz-option" data-key="flat" data-correct="true">A flat, unchanging line &mdash; no ups or downs at all</button>
-    </div>
-    <div class="quiz-feedback" id="quizFeedback" hidden></div>
-  </section>
-
-  <section class="case-card">
-    <h2>Three processes, one balance</h2>
-    <p class="case-sub">Toggle a process off to isolate what it's doing to oxygen.</p>
-    <div class="toggle-row">
-      <div class="toggle-card">
-        <div class="toggle-card-head">
-          <span class="toggle-card-title"><span class="toggle-card-icon">☀️</span>Photosynthesis</span>
-          <label class="switch"><input type="checkbox" id="togglePhoto" checked><span class="slider"></span></label>
-        </div>
-        <p>Algae and plants add oxygen whenever there's daylight.</p>
+    <h2>Tune the three processes</h2>
+    <p class="case-sub">Every dial starts at zero &mdash; a flat line, just like you predicted in Module 2.</p>
+    <div class="param-sliders">
+      <div class="param-slider-row">
+        <div class="param-slider-label"><span class="dot" style="background:var(--flux-add)"></span>☀️ Photosynthesis</div>
+        <input type="range" min="0" max="100" value="0" class="param-range" id="sliderPhoto" aria-label="Photosynthesis strength">
+        <span class="param-value" id="valuePhoto">0</span>
       </div>
-      <div class="toggle-card">
-        <div class="toggle-card-head">
-          <span class="toggle-card-title"><span class="toggle-card-icon">🌙</span>Respiration</span>
-          <label class="switch"><input type="checkbox" id="toggleResp" checked><span class="slider"></span></label>
-        </div>
-        <p>Everything living in the lake removes oxygen, around the clock &mdash; not just at night.</p>
+      <div class="param-slider-row">
+        <div class="param-slider-label"><span class="dot" style="background:var(--flux-remove)"></span>🐟 Respiration</div>
+        <input type="range" min="0" max="100" value="0" class="param-range" id="sliderResp" aria-label="Respiration strength">
+        <span class="param-value" id="valueResp">0</span>
       </div>
-      <div class="toggle-card">
-        <div class="toggle-card-head">
-          <span class="toggle-card-title"><span class="toggle-card-icon">💨</span>Atmospheric exchange</span>
-          <label class="switch"><input type="checkbox" id="toggleGas" checked><span class="slider"></span></label>
-        </div>
-        <p>Wind mixes oxygen between the lake surface and the air, nudging it toward equilibrium.</p>
+      <div class="param-slider-row">
+        <div class="param-slider-label"><span class="dot" style="background:var(--series-wind)"></span>💨 Gas exchange</div>
+        <input type="range" min="0" max="100" value="0" class="param-range" id="sliderGas" aria-label="Gas exchange strength">
+        <span class="param-value" id="valueGas">0</span>
       </div>
     </div>
   </section>
-
-  <div class="state-caption" id="stateCaption">
-    <span class="callout-label">What's happening</span>
-    <span id="stateCaptionText"></span>
-  </div>
 
   <section class="chart-card overlay-card">
     <div class="chart-card-head">
-      <h2>Simulated oxygen this week</h2>
+      <h2>Match the real curve</h2>
       <span class="chart-unit">mg/L</span>
     </div>
     <div class="overlay-legend">
-      <span><span class="swatch" style="background:var(--series-do)"></span>Simulated oxygen</span>
+      <span><span class="swatch" style="background:var(--series-do)"></span>Real oxygen (observed)</span>
+      <span><span class="swatch" style="background:var(--series-rain)"></span>Your model</span>
       <span><span class="swatch" style="background:var(--baseline); height:0; border-top:2px dashed var(--baseline)"></span>Equilibrium (100% saturation)</span>
     </div>
-    <div class="overlay-plot" id="simPlot"></div>
+    <div class="match-meter">
+      <span class="match-meter-label">Match score</span>
+      <span class="match-meter-value" id="matchScoreText">0%</span>
+    </div>
+    <div class="overlay-plot" id="matchPlot"></div>
   </section>
 
-  <div class="state-caption">
-    <span class="callout-label">Equilibrium &mdash; the gray dashed line</span>
-    <p style="margin:6px 0 0;">
-      Equilibrium is the oxygen level the lake would settle at if biology took a break and only the atmosphere were
-      involved &mdash; 100% air saturation, set purely by water temperature. It's not a fixed number: the line drifts a
-      little through the week as the water warms and cools.
-    </p>
-    <p style="margin:10px 0 0;">
-      <strong>So when the blue oxygen line sits above the gray equilibrium line, what does that mean?</strong>
-      It means the lake is <em>supersaturated</em> &mdash; there's more oxygen dissolved in the water than the
-      atmosphere alone would ever produce. That extra oxygen is the fingerprint of photosynthesis outpacing gas
-      exchange: algae and plants are making it faster than it can escape into the air. When oxygen dips
-      <em>below</em> the gray line instead, respiration is winning, and the lake is undersaturated &mdash; pulling
-      oxygen in from the air to catch up.
-    </p>
-  </div>
+  <section class="case-card">
+    <h2>Ready to see how you did?</h2>
+    <p class="case-sub">Reveal whenever you like &mdash; you can always keep adjusting afterward.</p>
+    <button type="button" class="play-btn" id="revealBtn">Reveal my estimate</button>
+
+    <div class="reveal-panel" id="revealPanel" hidden>
+      <p class="reveal-title">🎉 Nice work! You've reverse-engineered the oxygen curve.</p>
+      <p>
+        Starting with only the observed oxygen record, you adjusted photosynthesis, respiration, and gas exchange
+        until your model matched the data. In doing so, you've estimated the rates of oxygen production and oxygen
+        consumption that generated the pattern observed by the buoy. In the next few modules, you'll learn how
+        limnologists make these estimates mathematically.
+      </p>
+      <div class="reveal-table-wrap">
+        <table class="reveal-table">
+          <thead><tr><th></th><th>Your estimate</th><th>Best fit</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Gross primary production (GPP)</td>
+              <td id="revGppYou">&ndash;</td>
+              <td id="revGppTrue">&ndash;</td>
+            </tr>
+            <tr>
+              <td>Respiration (R)</td>
+              <td id="revRYou">&ndash;</td>
+              <td id="revRTrue">&ndash;</td>
+            </tr>
+            <tr>
+              <td>Atmospheric exchange</td>
+              <td id="revGasYou">&ndash;</td>
+              <td id="revGasTrue">&ndash;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="reveal-note" id="revealNote"></p>
+
+      <div class="state-caption" style="margin:14px 0 0;">
+        <span class="callout-label">Why is atmospheric exchange negative?</span>
+        <p style="margin:6px 0 0;">
+          This lake starts the week well above equilibrium &mdash; supersaturated with oxygen, the way Module 2
+          described. Gas exchange always pushes oxygen toward equilibrium (the gray dashed line), never away from
+          it. So when oxygen concentration is higher than equilibrium (supersaturated), gas exchange is pulling
+          oxygen out of the lake and into the air.
+        </p>
+        <p style="margin:10px 0 0;">
+          That's what a negative number means here: the lake is losing oxygen to the atmosphere, not gaining. It's
+          also why turning up your gas-exchange slider pulls your model curve down toward the gray line rather than
+          up.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="case-card">
+    <h2>Check your understanding</h2>
+    <p class="case-sub">A few quick questions about the gas-exchange process you just tuned.</p>
+    <button type="button" class="play-btn" id="quizMeBtn">Quiz me!</button>
+
+    <div class="reveal-panel" id="quizPanel" hidden>
+      <h3 class="reveal-title">Step 1 (qualitative)</h3>
+      <p class="case-sub">The lake contains more oxygen than it can hold at equilibrium. Which way will oxygen move?</p>
+      <div class="quiz-grid" id="quizStep1Grid">
+        <button type="button" class="quiz-option" data-key="into" data-correct="false">Into the lake</button>
+        <button type="button" class="quiz-option" data-key="out" data-correct="true">Out of the lake</button>
+      </div>
+      <div class="quiz-feedback" id="quizStep1Feedback" hidden></div>
+
+      <h3 class="reveal-title" style="margin-top:22px;">Step 2 (sign)</h3>
+      <p class="case-sub">If oxygen is leaving the lake, the atmospheric exchange term is&hellip;</p>
+      <div class="quiz-grid" id="quizStep2Grid">
+        <button type="button" class="quiz-option" data-key="positive" data-correct="false">Positive</button>
+        <button type="button" class="quiz-option" data-key="negative" data-correct="true">Negative</button>
+        <button type="button" class="quiz-option" data-key="zero" data-correct="false">Zero</button>
+      </div>
+      <div class="quiz-feedback" id="quizStep2Feedback" hidden></div>
+
+      <h3 class="reveal-title" style="margin-top:22px;">Bonus</h3>
+      <p class="case-sub">The wind suddenly doubles while the lake remains supersaturated. What happens?</p>
+      <div class="quiz-grid" id="quizBonusGrid">
+        <button type="button" class="quiz-option" data-key="faster" data-correct="true">Oxygen leaves faster.</button>
+        <button type="button" class="quiz-option" data-key="slower" data-correct="false">Oxygen leaves slower.</button>
+        <button type="button" class="quiz-option" data-key="enters" data-correct="false">Oxygen begins entering the lake.</button>
+      </div>
+      <div class="quiz-feedback" id="quizBonusFeedback" hidden></div>
+    </div>
+  </section>
 
 </main>
 
 <footer class="page-footer">
   <p>
-    This is a simplified teaching model, not a re-plot of the real observations from Modules 1 &amp; 2. It's driven by
-    the same week's real light (PAR), wind, and water temperature from the Lake Mendota buoy
+    Your model is the same production&ndash;respiration&ndash;gas-exchange equation from Module 2, driven by the same
+    week's real light, wind, and temperature data. "Best fit" is the combination of the three dials that comes
+    closest to the real observed oxygen curve
     (<a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=129" target="_blank" rel="noopener">EDI knb-lter-ntl.129</a>,
-    <a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=130" target="_blank" rel="noopener">130</a>),
-    combined with three textbook process terms (photosynthesis scaled to light, constant respiration, and wind-driven gas
-    exchange toward the temperature-dependent oxygen saturation concentration) integrated hour by hour across the week.
+    <a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=130" target="_blank" rel="noopener">130</a>)
+    &mdash; found the same way a computer would, by searching for the settings that minimize the gap between the two curves.
+    Even the best fit doesn't match perfectly: real lakes are messier than any three-process model.
   </p>
 </footer>
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-<script src="js/common.js?v=6"></script>
-<script src="js/module3.js?v=1"></script>
+<script src="js/common.js?v=7"></script>
+<script src="js/module3.js?v=3"></script>
 </body>
 </html>

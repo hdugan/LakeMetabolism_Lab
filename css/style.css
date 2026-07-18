@@ -441,7 +441,7 @@ a { color: var(--series-do); }
 }
 
 /* ==================================================================
-   Module 2 — Become a Lake Detective
+   Module 1 (cont.) — Become a Lake Detective
    ================================================================== */
 
 .case-card {
@@ -463,7 +463,7 @@ a { color: var(--series-do); }
 
 .suspect-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
 .suspect-btn {
@@ -608,7 +608,7 @@ a { color: var(--series-do); }
 }
 
 /* ==================================================================
-   Module 3 — What's Making Oxygen Change?
+   Module 2 — What's Making Oxygen Change?
    ================================================================== */
 
 /* ---- toggle switches ---- */
@@ -852,7 +852,7 @@ a { color: var(--series-do); }
 }
 
 /* ==================================================================
-   Module 4 — Build the Oxygen Curve Yourself
+   Module 3 — Build the Oxygen Curve Yourself
    ================================================================== */
 
 .param-sliders {
@@ -1019,7 +1019,7 @@ a { color: var(--series-do); }
 }
 
 /* ==================================================================
-   Module 6 — Every Lake Has a Metabolism
+   Module 5 — Every Lake Has a Metabolism
    ================================================================== */
 
 .organism-row {
@@ -1210,7 +1210,7 @@ a { color: var(--series-do); }
 }
 
 /* ==================================================================
-   Module 7 — Seasonal Metabolism: match-the-season drag game
+   Module 6 — Seasonal Metabolism: match-the-season drag game
    ================================================================== */
 
 .match-game {
@@ -1310,7 +1310,7 @@ a { color: var(--series-do); }
 }
 
 /* ==================================================================
-   Module 8 — Compare Lakes
+   Module 7 — Compare Lakes
    ================================================================== */
 
 .stat-row.cols-5 { grid-template-columns: repeat(5, 1fr); }
