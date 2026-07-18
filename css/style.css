@@ -394,11 +394,11 @@ a { color: var(--series-do); }
   background: var(--surface-1);
   border: 1px solid var(--border-hairline);
   border-radius: var(--card-radius);
-  padding: 16px 20px;
-  margin: 18px 0 24px;
+  padding: 18px 20px;
+  margin: 18px 0;
 }
 .lookfor h2 {
-  font-size: 15px;
+  font-size: 17px;
   margin: 0 0 8px;
 }
 .lookfor ul {
@@ -424,12 +424,29 @@ a { color: var(--series-do); }
 
 /* ---------- Footer ---------- */
 .page-footer {
+  background: var(--surface-1);
+  border-top: 1px solid var(--border-hairline);
+}
+.page-footer-inner {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 8px 24px 32px;
+  padding: 16px 24px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
   color: var(--text-muted);
   font-size: 12px;
   line-height: 1.6;
+}
+.page-footer-inner p { margin: 0; }
+.page-footer-logo {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+@media (max-width: 500px) {
+  .page-footer-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
 
 /* ---------- Responsive ---------- */
@@ -551,7 +568,7 @@ a { color: var(--series-do); }
   display: block;
 }
 .callout-think {
-  background: var(--page-plane);
+  background: color-mix(in srgb, var(--series-do) 10%, var(--surface-1));
   border: 1px solid var(--border-hairline);
 }
 .callout-think .callout-label {

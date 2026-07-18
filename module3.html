@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Build the Oxygen Curve Yourself — Lake Metabolism Lab</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎛️</text></svg>">
-<link rel="stylesheet" href="css/style.css?v=19">
+<link rel="stylesheet" href="css/style.css?v=24">
 </head>
 <body>
 
@@ -166,7 +166,9 @@
 </main>
 
 <footer class="page-footer">
-  <p>
+  <div class="page-footer-inner">
+    <img src="images/cfllogo_hd.png" alt="CFL logo" class="page-footer-logo">
+    <p>
     Your model is the same production&ndash;respiration&ndash;gas-exchange equation from Module 2, driven by the same
     week's real light, wind, and temperature data. "Best fit" is the combination of the three dials that comes
     closest to the real observed oxygen curve
@@ -175,6 +177,7 @@
     &mdash; found the same way a computer would, by searching for the settings that minimize the gap between the two curves.
     Even the best fit doesn't match perfectly: real lakes are messier than any three-process model.
   </p>
+  </div>
 </footer>
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>

@@ -230,7 +230,7 @@
 
     playBtn.addEventListener('click', () => setPlaying(!timer));
 
-    initDetective(hourly, nightShapes, sunAnnotations, xAll);
+    initDetective(hourly, nightShapes, sunAnnotations, xAll, days, dayLabelAnnotations);
   }
 
   // ==========================================================================
@@ -238,7 +238,7 @@
   // to control oxygen? Shares the week's data/night-shading already loaded
   // above instead of fetching DATA_URL a second time.
   // ==========================================================================
-  function initDetective(hourly, nightShapes, sunAnnotations, xAll) {
+  function initDetective(hourly, nightShapes, sunAnnotations, xAll, days, dayLabelAnnotations) {
     const SUSPECTS = [
       {
         key: 'wtemp', label: 'Temperature', icon: '🌡️',
@@ -349,7 +349,7 @@
       overlayTitle.textContent = `Oxygen vs. ${s.label}`;
       observeCallout.style.setProperty('--accent', color);
       overlayLegend.innerHTML = `
-        <span><span class="swatch" style="background:${doColor}"></span>Oxygen (DO)</span>
+        <span><span class="swatch" style="background:${doColor}"></span>Oxygen (DO, mg/L)</span>
         <span><span class="swatch" style="background:${color}"></span>${s.label} (${s.unit})</span>`;
       observeText.textContent = s.observe;
       reflectText.textContent = s.reflect;
@@ -387,16 +387,17 @@
         font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: cssVar('--text-secondary'), size: 11 },
         showlegend: false,
         shapes: nightShapes,
-        annotations: sunAnnotations,
+        annotations: sunAnnotations.concat(dayLabelAnnotations),
         xaxis: {
           type: 'date',
           range: [xAll[0], xAll[xAll.length - 1]],
+          dtick: 86400000,
+          tick0: `${days[0].date}T00:00:00`,
+          showticklabels: false,
           gridcolor: cssVar('--gridline'),
           linecolor: cssVar('--baseline'),
-          tickfont: { color: cssVar('--text-muted') },
           showspikes: true, spikemode: 'across', spikesnap: 'cursor',
           spikethickness: 1, spikedash: 'solid', spikecolor: cssVar('--text-muted'),
-          tickformat: '%a %-d',
           hoverformat: '%a %b %-d, %-I:%M %p',
         },
         yaxis: {
