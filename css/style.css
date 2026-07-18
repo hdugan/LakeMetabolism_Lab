@@ -320,6 +320,75 @@ a { color: var(--series-do); }
   height: 300px;
 }
 
+/* ---- compact single-column variant (Module 1: four charts, title
+   beside the plot instead of above it, so they can stack tightly) ---- */
+.chart-grid-stack {
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.chart-grid-stack .chart-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 14px;
+}
+.chart-grid-stack .chart-card-head {
+  flex: 0 0 168px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin-bottom: 0;
+}
+.chart-grid-stack .chart-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chart-grid-stack .chart-card-head h2 {
+  font-size: 13.5px;
+}
+.chart-grid-stack .stat-tile-value {
+  font-size: 17px;
+}
+.chart-grid-stack .stat-tile-value .unit {
+  color: var(--text-primary);
+}
+.chart-grid-stack .chart-card {
+  padding: 4px 14px;
+}
+.chart-grid-stack {
+  gap: 3px;
+}
+.chart-grid-stack .chart-plot {
+  flex: 1 1 auto;
+  height: 130px;
+}
+
+/* ---- shared bubble: time control + all four charts in one card ---- */
+.chart-panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+}
+.chart-panel .control-bar {
+  background: none;
+  border: none;
+  border-radius: 0;
+  margin-bottom: 0;
+}
+.chart-panel .chart-grid-stack .chart-card {
+  background: none;
+  border: none;
+  border-radius: 0;
+  border-top: 1px solid var(--border-hairline);
+}
+@media (max-width: 700px) {
+  .chart-grid-stack .chart-card { flex-direction: column; align-items: stretch; }
+  .chart-grid-stack .chart-card-head { flex: 0 0 auto; flex-direction: row; align-items: center; justify-content: space-between; }
+}
+
 /* ---------- Look for panel ---------- */
 .lookfor {
   background: var(--surface-1);
@@ -351,6 +420,7 @@ a { color: var(--series-do); }
   line-height: 1.6;
 }
 .lookfor-question label strong { color: var(--text-primary); }
+.lookfor-question .notes-field { min-height: 36px; }
 
 /* ---------- Footer ---------- */
 .page-footer {

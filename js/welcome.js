@@ -148,4 +148,59 @@
 
   startBtn.addEventListener('click', startDeck);
   restartBtn.addEventListener('click', startDeck);
+
+  // ---- example timeseries plot: purely illustrative (synthetic data,
+  // generic axis labels) - the point is just "time on x, variable on y",
+  // not any specific real measurement ----
+  (function drawExampleTimeseries() {
+    const el = document.getElementById('exampleTimeseriesPlot');
+    if (!el || typeof Plotly === 'undefined') return;
+
+    // Seeded PRNG so the "messy" jitter is stable across reloads instead of
+    // reshuffling every time the page loads.
+    let seed = 42;
+    function rand() {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return seed / 0x7fffffff;
+    }
+
+    const n = 97;
+    const x = [];
+    const y = [];
+    for (let i = 0; i < n; i++) {
+      const t = (i / (n - 1)) * 4; // 4 "days"
+      x.push(t);
+      const smooth = 5 + 2.6 * Math.sin(2 * Math.PI * t - Math.PI / 2) + 0.3 * t;
+      y.push(smooth + (rand() - 0.5) * 1.1);
+    }
+
+    const styles = getComputedStyle(document.documentElement);
+    const cssVar = (name) => styles.getPropertyValue(name).trim();
+
+    Plotly.newPlot(el, [{
+      x, y, type: 'scatter', mode: 'lines',
+      line: { color: cssVar('--series-do'), width: 2, shape: 'linear' },
+      hoverinfo: 'skip',
+    }], {
+      margin: { l: 46, r: 12, t: 10, b: 36 },
+      paper_bgcolor: 'transparent',
+      plot_bgcolor: 'transparent',
+      font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: cssVar('--text-secondary'), size: 11 },
+      showlegend: false,
+      xaxis: {
+        title: { text: 'Time', font: { size: 14, color: cssVar('--text-primary') } },
+        showticklabels: false,
+        gridcolor: cssVar('--gridline'),
+        linecolor: cssVar('--baseline'),
+        zeroline: false,
+      },
+      yaxis: {
+        title: { text: 'Variable', font: { size: 14, color: cssVar('--text-primary') } },
+        showticklabels: false,
+        gridcolor: cssVar('--gridline'),
+        linecolor: cssVar('--baseline'),
+        zeroline: false,
+      },
+    }, { displayModeBar: false, responsive: true, staticPlot: true });
+  })();
 })();

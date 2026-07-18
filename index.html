@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lake Metabolism Lab</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
-<link rel="stylesheet" href="css/style.css?v=13">
+<link rel="stylesheet" href="css/style.css?v=18">
 </head>
 <body>
 
@@ -84,6 +84,23 @@
     </ul>
   </section>
 
+  <section class="case-card">
+    <h2>What's a Timeseries?</h2>
+    <div style="display:flex; gap:28px; align-items:center; flex-wrap:wrap;">
+      <div style="flex:1 1 340px; min-width:0;">
+        <p style="font-size:14px; color:var(--text-secondary); line-height:1.6;">
+          Buoys collect data continuously through time &mdash; and when we plot those measurements, the
+          result is called a <strong style="color:var(--text-primary);">timeseries</strong>. Every timeseries
+          graph in this lab follows the same convention: time always runs along the x-axis, and the variable
+          being measured always runs along the y-axis.
+        </p>
+      </div>
+      <div style="flex:0 0 450px; max-width:100%;">
+        <div id="exampleTimeseriesPlot" style="width:100%; height:170px;"></div>
+      </div>
+    </div>
+  </section>
+
   <section class="case-card" style="text-align:center; background:color-mix(in srgb, var(--series-do) 10%, var(--surface-1));">
     <button type="button" class="play-btn" id="flashcardStartBtn">Before we begin, review some terms</button>
 
@@ -130,6 +147,7 @@
   </p>
 </footer>
 
-<script src="js/welcome.js?v=1"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="js/welcome.js?v=4"></script>
 </body>
 </html>

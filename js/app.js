@@ -36,11 +36,27 @@
     const days = data.days;
     const n = hourly.length;
 
-    const { nightShapes, sunAnnotations, xAll } = buildNightLayer(data);
+    const { nightShapes, xAll } = buildNightLayer(data);
     // Built from the offset-stripped naive string (not h.t) so that Date's
     // local getters replay the original Central-time wall clock regardless
     // of the browser's own timezone.
     const dateObjs = xAll.map((x) => new Date(x));
+
+    // Day labels ("Mon 10") are rendered as annotations centered at each
+    // day's noon, decoupled from the axis ticks - the gridlines themselves
+    // stay at midnight (set via xaxis.dtick below), which is where they
+    // should be to mark day boundaries, while the label reads better
+    // centered under the day it names rather than sitting on the boundary.
+    const dayLabelAnnotations = days.map((d) => {
+      const noon = new Date(`${d.date}T12:00:00`);
+      return {
+        x: `${d.date}T12:00:00`, y: 0, xref: 'x', yref: 'paper',
+        yanchor: 'top', yshift: -6,
+        text: `${WEEKDAYS[noon.getDay()]} ${noon.getDate()}`,
+        showarrow: false,
+        font: { size: 11, color: cssVar('--text-muted') },
+      };
+    });
 
     // ---- build the four charts ----
     const plots = {};
@@ -65,28 +81,34 @@
       };
 
       const layout = {
-        margin: { l: 44, r: 12, t: 26, b: 28 },
+        margin: { l: 8, r: 10, t: 6, b: 20 },
         paper_bgcolor: 'transparent',
         plot_bgcolor: 'transparent',
         font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: cssVar('--text-secondary'), size: 11 },
         showlegend: false,
         shapes: nightShapes.concat([cursorLineShape(xAll[36])]),
-        annotations: sunAnnotations,
+        // No sun/moon annotations here (unlike other modules) - they need
+        // top margin this compact layout doesn't have room for, and the
+        // current-value readout beside the title already gives an at-a-
+        // glance number, so the y-axis labels are dropped too for the
+        // same reason (hover still shows exact values).
+        annotations: dayLabelAnnotations,
         xaxis: {
           type: 'date',
           range: [xAll[0], xAll[xAll.length - 1]],
+          dtick: 86400000,
+          tick0: `${days[0].date}T00:00:00`,
+          showticklabels: false,
           gridcolor: cssVar('--gridline'),
           linecolor: cssVar('--baseline'),
-          tickfont: { color: cssVar('--text-muted') },
           showspikes: true, spikemode: 'across', spikesnap: 'cursor',
           spikethickness: 1, spikedash: 'solid', spikecolor: cssVar('--text-muted'),
-          tickformat: '%a %-d',
           hoverformat: '%a %b %-d, %-I:%M %p',
         },
         yaxis: {
+          showticklabels: false,
           gridcolor: cssVar('--gridline'),
           linecolor: cssVar('--baseline'),
-          tickfont: { color: cssVar('--text-muted') },
           zeroline: false,
         },
         hovermode: 'x',
@@ -97,17 +119,6 @@
       });
 
       plots[s.key] = { el: document.getElementById(s.elId), y };
-    });
-
-    // ---- stat row ----
-    const statRow = document.getElementById('statRow');
-    SERIES.forEach((s) => {
-      const tile = document.createElement('div');
-      tile.className = 'stat-tile';
-      tile.innerHTML = `
-        <div class="stat-tile-label"><span class="dot" style="background:${cssVar(s.varName)}"></span>${s.label}</div>
-        <div class="stat-tile-value" id="stat-${s.key}">&ndash;<span class="unit">${s.unit}</span></div>`;
-      statRow.appendChild(tile);
     });
 
     // ---- slider day labels ----

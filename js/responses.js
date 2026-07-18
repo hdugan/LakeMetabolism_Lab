@@ -11,8 +11,8 @@
       title: 'Module 1 — Meet the Lake',
       fields: [
         { key: 'meetTheLake.oxygenTiming', label: 'What time does oxygen start climbing each morning? What time does it turn around and start falling?' },
-        { key: 'meetTheLake.overnight', label: 'What happens to oxygen overnight, every single night?' },
-        { key: 'meetTheLake.compareDays', label: 'Compare the afternoon of July 9–10 to July 12–13. Which days are warmer and sunnier — and which have the bigger swing in oxygen?' },
+        { key: 'meetTheLake.overnight', label: 'What happens to oxygen overnight (grey area on graphs), every single night?' },
+        { key: 'meetTheLake.compareDays', label: 'Compare the afternoon of July 11 to July 12. Which day is warmer and sunnier — and which has the bigger swing in oxygen?' },
         { key: 'meetTheLake.windPattern', label: 'Does wind speed seem to line up with any other data?' },
       ],
     },
