@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const { cssVar, buildNightLayer, DATA_URL } = window.LakeCommon;
+  const { cssVar, buildNightLayer, DATA_URL, WEEKDAYS } = window.LakeCommon;
 
   // Simplified process rates, hand-tuned (see scripts/build_dataset.py sibling
   // notes) so that with all three processes on the simulated curve lands in
@@ -10,6 +10,14 @@
   const ALPHA = 0.0002;   // mg/L added per hour, per unit PAR (photosynthesis)
   const R_CONST = 0.05;   // mg/L removed per hour, constant (respiration)
   const K_GAS = 0.006;    // gas-exchange rate per hour, per unit wind (m/s)
+
+  function hexToRgba(hex, alpha) {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
 
   function doSat(tempC) {
     // Standard freshwater DO-saturation regression at 1 atm (mg/L).
@@ -51,11 +59,26 @@
 
   function init(data) {
     const hourly = data.hourly;
+    const days = data.days;
     const par = hourly.map((h) => h.par);
     const wind = hourly.map((h) => h.wind_ms);
     const temp = hourly.map((h) => h.wtemp_c);
     const { nightShapes, sunAnnotations, xAll } = buildNightLayer(data);
     const equilibrium = temp.map(doSat);
+
+    // Day labels ("Mon 10") are rendered as annotations centered at each
+    // day's noon, decoupled from the axis ticks - the gridlines themselves
+    // stay at midnight (set via xaxis.dtick below).
+    const dayLabelAnnotations = days.map((d) => {
+      const noon = new Date(`${d.date}T12:00:00`);
+      return {
+        x: `${d.date}T12:00:00`, y: 0, xref: 'x', yref: 'paper',
+        yanchor: 'top', yshift: -6,
+        text: `${WEEKDAYS[noon.getDay()]} ${noon.getDate()}`,
+        showarrow: false,
+        font: { size: 11, color: cssVar('--text-muted') },
+      };
+    });
 
     const toggles = { photo: true, resp: true, gas: true };
 
@@ -63,9 +86,6 @@
     const toggleResp = document.getElementById('toggleResp');
     const toggleGas = document.getElementById('toggleGas');
     const stateCaptionText = document.getElementById('stateCaptionText');
-    const diagramPhotoArrow = document.getElementById('diagramPhotoArrow');
-    const diagramRespArrow = document.getElementById('diagramRespArrow');
-    const diagramGasArrow = document.getElementById('diagramGasArrow').closest('.diagram-atm');
 
     const doColor = cssVar('--series-do');
     const eqColor = cssVar('--baseline');
@@ -92,17 +112,20 @@
       font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: cssVar('--text-secondary'), size: 11 },
       showlegend: false,
       shapes: nightShapes,
-      annotations: sunAnnotations,
+      annotations: sunAnnotations.concat(dayLabelAnnotations),
       xaxis: {
         type: 'date',
         range: [xAll[0], xAll[xAll.length - 1]],
+        dtick: 86400000,
+        tick0: `${days[0].date}T00:00:00`,
+        showticklabels: false,
         gridcolor: cssVar('--gridline'),
         linecolor: cssVar('--baseline'),
         tickfont: { color: cssVar('--text-muted') },
-        tickformat: '%a %-d',
         hoverformat: '%a %b %-d, %-I:%M %p',
       },
       yaxis: {
+        title: { text: 'Dissolved Oxygen (mg/L)', font: { size: 12, color: cssVar('--text-secondary') } },
         gridcolor: cssVar('--gridline'),
         linecolor: cssVar('--baseline'),
         tickfont: { color: cssVar('--text-muted') },
@@ -119,17 +142,10 @@
       return (toggles.photo ? '1' : '0') + (toggles.resp ? '1' : '0') + (toggles.gas ? '1' : '0');
     }
 
-    function updateDiagram() {
-      diagramPhotoArrow.classList.toggle('is-off', !toggles.photo);
-      diagramRespArrow.classList.toggle('is-off', !toggles.resp);
-      diagramGasArrow.classList.toggle('is-off', !toggles.gas);
-    }
-
     function recompute() {
       const y = simulate(par, wind, temp, toggles);
       Plotly.restyle('simPlot', { y: [y] }, [0]);
       stateCaptionText.textContent = CAPTIONS[toggleKey()];
-      updateDiagram();
     }
 
     togglePhoto.addEventListener('change', () => { toggles.photo = togglePhoto.checked; recompute(); });
@@ -138,6 +154,130 @@
 
     recompute();
     initQuiz();
+    initPhysicsDemo();
+  }
+
+  function initPhysicsDemo() {
+    const tempSlider = document.getElementById('physTempSlider');
+    const windSlider = document.getElementById('physWindSlider');
+    const tempValue = document.getElementById('physTempValue');
+    const windValue = document.getElementById('physWindValue');
+    const eqValue = document.getElementById('physEqValue');
+
+    const eqColor = cssVar('--baseline');
+    const HOURS = 72;
+    const tArr = Array.from({ length: HOURS + 1 }, (_, i) => i);
+
+    // Three fixed initial conditions, always shown together, so students can
+    // compare all three at once instead of picking one at a time.
+    const STARTS = [
+      { pct: 120, color: cssVar('--critical'), label: 'Starts at 120% saturation' },
+      { pct: 80, color: cssVar('--series-do'), label: 'Starts at 80% saturation' },
+    ];
+
+    function equilibrium() {
+      return doSat(Number(tempSlider.value));
+    }
+
+    // Closed-form solution of dO2/dt = k * (E - O2): O2 always relaxes
+    // exponentially toward equilibrium E, at a rate set by wind.
+    function relaxCurve(pct) {
+      const E = equilibrium();
+      const k = K_GAS * Number(windSlider.value);
+      const O0 = E * (pct / 100);
+      return tArr.map((t) => E + (O0 - E) * Math.exp(-k * t));
+    }
+
+    const physLayout = {
+      margin: { l: 48, r: 12, t: 10, b: 36 },
+      paper_bgcolor: 'transparent',
+      plot_bgcolor: 'transparent',
+      font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: cssVar('--text-secondary'), size: 11 },
+      showlegend: false,
+      xaxis: {
+        title: { text: 'Hours', font: { size: 12, color: cssVar('--text-secondary') } },
+        range: [0, HOURS],
+        gridcolor: cssVar('--gridline'),
+        linecolor: cssVar('--baseline'),
+        tickfont: { color: cssVar('--text-muted') },
+      },
+      yaxis: {
+        title: { text: 'Dissolved oxygen (mg/L)', font: { size: 12, color: cssVar('--text-secondary') } },
+        range: [5.5, 17.5],
+        gridcolor: cssVar('--gridline'),
+        linecolor: cssVar('--baseline'),
+        tickfont: { color: cssVar('--text-muted') },
+        zeroline: false,
+      },
+      hovermode: 'x',
+    };
+
+    function drawChart() {
+      const E = equilibrium();
+      const [yMin, yMax] = physLayout.yaxis.range;
+      const traces = STARTS.map((s) => ({
+        x: tArr, y: relaxCurve(s.pct), type: 'scatter', mode: 'lines',
+        line: { color: s.color, width: 2.5 },
+        hovertemplate: `%{y:.2f} mg/L<extra>${s.label}</extra>`,
+      }));
+      traces.push({
+        x: [0, HOURS], y: [E, E], type: 'scatter', mode: 'lines',
+        line: { color: eqColor, width: 1.5, dash: 'dash' },
+        hovertemplate: '%{y:.2f} mg/L<extra>Equilibrium</extra>',
+      });
+      const annotations = [
+        {
+          x: HOURS, y: 1, xref: 'x', yref: 'paper',
+          xanchor: 'right', yanchor: 'top', yshift: -4,
+          text: '<b>Supersaturated</b> —<br>O₂ leaving the lake',
+          showarrow: false,
+          font: { size: 13, color: STARTS[0].color },
+        },
+        {
+          x: HOURS, y: 0, xref: 'x', yref: 'paper',
+          xanchor: 'right', yanchor: 'bottom', yshift: 4,
+          text: '<b>Undersaturated</b> —<br>O₂ entering the lake',
+          showarrow: false,
+          font: { size: 13, color: STARTS[1].color },
+        },
+      ];
+      // Background tint tracks the equilibrium line, splitting the plot into
+      // a supersaturated zone (above) and undersaturated zone (below).
+      const shapes = [
+        {
+          type: 'rect', xref: 'x', yref: 'y', layer: 'below', line: { width: 0 },
+          x0: 0, x1: HOURS, y0: E, y1: yMax,
+          fillcolor: hexToRgba(STARTS[0].color, 0.08),
+        },
+        {
+          type: 'rect', xref: 'x', yref: 'y', layer: 'below', line: { width: 0 },
+          x0: 0, x1: HOURS, y0: yMin, y1: E,
+          fillcolor: hexToRgba(STARTS[1].color, 0.08),
+        },
+      ];
+      Plotly.newPlot('physPlot', traces, { ...physLayout, annotations, shapes }, {
+        displayModeBar: false, responsive: true, scrollZoom: false,
+      });
+    }
+
+    function updateReadouts() {
+      const t = Number(tempSlider.value);
+      const w = Number(windSlider.value);
+      tempValue.textContent = (Number.isInteger(t) ? t : t.toFixed(1)) + '°C';
+      windValue.textContent = (Number.isInteger(w) ? w : w.toFixed(1)) + ' m/s';
+      eqValue.textContent = equilibrium().toFixed(2);
+    }
+
+    function onControlsChanged() {
+      updateReadouts();
+      drawChart();
+    }
+
+    tempSlider.addEventListener('input', onControlsChanged);
+    windSlider.addEventListener('input', onControlsChanged);
+
+    updateReadouts();
+    drawChart();
   }
 
   const QUIZ_FEEDBACK = {
@@ -163,4 +303,105 @@
       });
     });
   }
+
+  const FINAL_QUESTIONS = [
+    {
+      scenario: "At 2:00 PM on a sunny day, the lake is 110% air saturation, and dissolved oxygen is still increasing.",
+      question: 'Which process must be strongest at that moment?',
+      options: [
+        { text: 'Respiration', correct: false, why: "Not quite — respiration only removes oxygen, it never adds it. If respiration were the strongest process, oxygen would be falling, not rising." },
+        { text: 'Photosynthesis', correct: true, why: "Right. Gas exchange is actually removing oxygen because the lake is supersaturated, and respiration is also removing oxygen. The only way oxygen can still be increasing is if photosynthesis is adding it faster than both of those processes combined." },
+        { text: 'Gas exchange', correct: false, why: "Not quite — the lake is supersaturated (110%), so gas exchange is pulling oxygen out toward equilibrium, not adding it. That works against the increase you're seeing." },
+        { text: 'Wind mixing', correct: false, why: "Not quite — wind controls the speed of gas exchange, and since the lake is supersaturated, faster wind would only pull oxygen out faster, not add it." },
+      ],
+    },
+    {
+      scenario: 'A lake is 120% air saturation just before sunset. The wind stays the same overnight.',
+      question: 'What will happen to dissolved oxygen during the night?',
+      options: [
+        { text: 'Oxygen will continue increasing because the lake is supersaturated.', correct: false, why: "Not quite — being supersaturated doesn't cause oxygen to keep rising by itself. Once the sun sets, photosynthesis (the only process that adds oxygen) shuts off." },
+        { text: 'Oxygen will stay constant until sunrise.', correct: false, why: "Not quite — respiration never stops, and gas exchange keeps pulling oxygen out of a supersaturated lake. With photosynthesis off overnight, nothing is left to balance those losses." },
+        { text: 'Oxygen will decrease because photosynthesis stops while respiration and gas exchange continue.', correct: true, why: "Right. Once the sun sets, photosynthesis stops. Respiration continues using oxygen, and because the lake is supersaturated, gas exchange also removes oxygen. Both processes work in the same direction, so dissolved oxygen decreases through the night." },
+        { text: 'Oxygen will immediately fall to 100% air saturation.', correct: false, why: "Not quite — gas exchange and respiration remove oxygen gradually, not instantly. The lake will drift toward equilibrium over the course of the night, not jump there right away." },
+      ],
+    },
+    {
+      scenario: 'The lake is at 120% air saturation. You can only change one thing.',
+      question: 'Which change will cause oxygen to leave the lake fastest?',
+      options: [
+        { text: 'Turn on photosynthesis.', correct: false, why: "Not quite — photosynthesis only adds oxygen, it never removes it. Turning it on would work against oxygen leaving the lake." },
+        { text: 'Increase wind speed.', correct: true, why: "Right. The lake is already supersaturated, so gas exchange is already pulling oxygen out toward equilibrium. Increasing wind speed speeds up gas exchange, so oxygen leaves fastest." },
+        { text: 'Cool the lake.', correct: false, why: "Not quite — cooling the lake raises the equilibrium target (colder water can hold more oxygen), which would slow oxygen loss, not speed it up." },
+        { text: 'Add more algae.', correct: false, why: "Not quite — more algae means more photosynthesis, which adds oxygen. That's the opposite of what you want." },
+      ],
+    },
+  ];
+
+  function initFinalQuiz() {
+    const startBtn = document.getElementById('finalQuizStartBtn');
+    const panel = document.getElementById('finalQuizPanel');
+    const deck = document.getElementById('finalQuizDeck');
+    const progressEl = document.getElementById('finalQuizProgress');
+    const scenarioEl = document.getElementById('finalQuizScenario');
+    const questionEl = document.getElementById('finalQuizQuestion');
+    const optionsEl = document.getElementById('finalQuizOptions');
+    const feedbackEl = document.getElementById('finalQuizFeedback');
+    const nextBtn = document.getElementById('finalQuizNextBtn');
+    const doneEl = document.getElementById('finalQuizDone');
+
+    let qIdx = 0;
+
+    function renderQuestion() {
+      const q = FINAL_QUESTIONS[qIdx];
+      progressEl.textContent = `Question ${qIdx + 1} of ${FINAL_QUESTIONS.length}`;
+      scenarioEl.textContent = q.scenario;
+      questionEl.textContent = q.question;
+      feedbackEl.hidden = true;
+      nextBtn.hidden = true;
+
+      optionsEl.innerHTML = '';
+      q.options.forEach((opt) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'quiz-option';
+        btn.textContent = opt.text;
+        btn.addEventListener('click', () => {
+          // Match Module 3's quiz behavior: only the clicked option is
+          // marked, buttons stay enabled, so a wrong guess can be retried.
+          Array.from(optionsEl.children).forEach((b) => b.classList.remove('is-correct', 'is-incorrect'));
+          btn.classList.add(opt.correct ? 'is-correct' : 'is-incorrect');
+
+          feedbackEl.hidden = false;
+          feedbackEl.classList.toggle('is-correct', opt.correct);
+          feedbackEl.classList.toggle('is-incorrect', !opt.correct);
+          feedbackEl.textContent = (opt.correct ? '✅ ' : '🤔 ') + opt.why;
+
+          nextBtn.hidden = !opt.correct;
+          if (opt.correct) {
+            nextBtn.textContent = qIdx < FINAL_QUESTIONS.length - 1 ? 'Next question →' : 'See results →';
+          }
+        });
+        optionsEl.appendChild(btn);
+      });
+    }
+
+    startBtn.addEventListener('click', () => {
+      startBtn.hidden = true;
+      panel.hidden = false;
+      qIdx = 0;
+      renderQuestion();
+    });
+
+    nextBtn.addEventListener('click', () => {
+      qIdx++;
+      if (qIdx < FINAL_QUESTIONS.length) {
+        renderQuestion();
+      } else {
+        deck.hidden = true;
+        doneEl.hidden = false;
+      }
+    });
+  }
+
+  initFinalQuiz();
 })();

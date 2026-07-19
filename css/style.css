@@ -836,6 +836,10 @@ a { color: var(--series-do); }
   border-color: var(--flux-remove);
   background: color-mix(in srgb, var(--flux-remove) 8%, var(--surface-1));
 }
+.quiz-option.is-active {
+  border-color: var(--series-do);
+  background: color-mix(in srgb, var(--series-do) 10%, var(--surface-1));
+}
 .quiz-feedback {
   margin-top: 10px;
   padding: 12px 14px;
@@ -866,6 +870,76 @@ a { color: var(--series-do); }
   color: var(--text-muted);
   margin-bottom: 4px;
   display: block;
+}
+
+/* ---- gas exchange demo ---- */
+.gas-demo {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.gas-demo-block { flex: 1 1 260px; min-width: 0; }
+.gas-demo-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.gas-surface {
+  position: relative;
+  height: 120px;
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  border: 1px solid var(--border-hairline);
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--series-wind) 12%, var(--surface-1)) 0%,
+    color-mix(in srgb, var(--series-wind) 12%, var(--surface-1)) 50%,
+    color-mix(in srgb, var(--series-do) 14%, var(--surface-1)) 50%,
+    color-mix(in srgb, var(--series-do) 14%, var(--surface-1)) 100%
+  );
+}
+.gas-zone-label {
+  position: absolute;
+  left: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.gas-zone-label-atm { top: 8px; }
+.gas-zone-label-lake { bottom: 8px; }
+.gas-wave {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  text-align: center;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--series-do);
+  white-space: nowrap;
+  overflow: hidden;
+  user-select: none;
+}
+.gas-bubble {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border-radius: 50%;
+  background: var(--series-do);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--series-do) 30%, transparent);
+  pointer-events: none;
+}
+.gas-demo-caption {
+  margin: 10px 0 0;
+  min-height: 20px;
+  font-size: 13.5px;
+  color: var(--text-secondary);
 }
 
 /* ==================================================================
