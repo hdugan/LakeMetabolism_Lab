@@ -101,21 +101,42 @@
     </div>
   </section>
 
-  <div class="state-caption">
-    <span class="callout-label">Equilibrium &mdash; the gray dashed line</span>
-    <p style="margin:6px 0 0;">
-      Equilibrium is the oxygen level the lake would settle at if biology took a break and only the atmosphere were
-      involved &mdash; 100% air saturation, set purely by water temperature. It's not a fixed number: the line drifts a
-      little through the week as the water warms and cools.
-    </p>
-    <p style="margin:10px 0 0;">
-      <strong>So when the blue oxygen line sits above the gray equilibrium line, what does that mean?</strong>
-      It means the lake is <em>supersaturated</em> &mdash; there's more oxygen dissolved in the water than the
-      atmosphere alone would ever produce. That extra oxygen is the fingerprint of photosynthesis outpacing gas
-      exchange: algae and plants are making it faster than it can escape into the air. When oxygen dips
-      <em>below</em> the gray line instead, respiration is winning, and the lake is undersaturated &mdash; pulling
-      oxygen in from the air to catch up.
-    </p>
+  <div style="display:flex; gap:20px; align-items:stretch; flex-wrap:wrap;">
+    <div class="state-caption" style="flex:1 1 320px; margin:0;">
+      <span class="callout-label">Concentration vs. Solubility vs. Saturation</span>
+      <p style="margin:6px 0 0;">Dissolved oxygen can be described in three related ways.</p>
+      <ul style="margin:8px 0 0; padding-left:20px; line-height:1.6;">
+        <li><strong>Concentration</strong> (mg/L) is the actual amount of oxygen dissolved in one liter of water.</li>
+        <li><strong>Solubility</strong> is the maximum amount of oxygen that water can hold at a given temperature.</li>
+        <li><strong>Saturation</strong> (%) compares the current concentration to the water's solubility. A lake at
+          100% saturation contains exactly as much oxygen as the atmosphere would maintain at that temperature.
+          Values above 100% are supersaturated, while values below 100% are undersaturated.</li>
+      </ul>
+      <p style="margin:10px 0 0;">
+        Because solubility changes with temperature, the same dissolved oxygen concentration (mg/L) can represent
+        different saturation values in cold versus warm water. Likewise, two lakes at 100% saturation can have
+        different oxygen concentrations if their temperatures are different.
+      </p>
+    </div>
+    <div class="state-caption" style="flex:1 1 320px; margin:0;">
+      <span class="callout-label">Equilibrium (100% saturation) &mdash; the gray dashed line</span>
+      <p style="margin:6px 0 0;">
+        Equilibrium is the oxygen level the lake would settle at if biology took a break and only the atmosphere were
+        involved &mdash; 100% air saturation, set purely by water temperature. It's not a fixed number: the line drifts a
+        little through the week as the water warms and cools.
+      </p>
+      <p style="margin:10px 0 0;">
+        <strong>So what does it mean when the blue oxygen line sits above the gray equilibrium line?</strong> The lake is
+        <strong>supersaturated</strong> &mdash; it contains more oxygen than the atmosphere would maintain at that
+        temperature. Gas exchange always acts to move the lake back toward equilibrium, so oxygen moves from the
+        lake into the atmosphere until the excess is removed.
+      </p>
+      <p style="margin:10px 0 0;">
+        When the blue line is below the equilibrium line, the lake is <strong>undersaturated</strong>, and oxygen
+        flows from the atmosphere into the lake. The farther the lake is from equilibrium, the stronger this
+        exchange becomes.
+      </p>
+    </div>
   </div>
 
   <section class="case-card" id="physicsSection">
@@ -153,6 +174,21 @@
         <div class="overlay-plot" id="physPlot"></div>
       </div>
     </div>
+  </section>
+
+  <section class="case-card" style="background:color-mix(in srgb, var(--series-do) 10%, var(--surface-1));">
+    <h2>Case notes</h2>
+    <p style="margin:0 0 6px; font-size:14px; color:var(--text-secondary);">
+      What's the relationship between water temperature and how much oxygen the lake can hold?
+    </p>
+    <textarea class="notes-field" id="tempSolubilityNotes" placeholder="Write your answer here&hellip;"></textarea>
+
+    <p style="margin:16px 0 6px; font-size:14px; color:var(--text-secondary);">
+      At a water temperature of 15&deg;C, what dissolved oxygen concentration (mg/L) corresponds to 110%
+      saturation? Show your calculations and explain how you arrived at your answer.
+    </p>
+    <textarea class="notes-field" id="satCalcNotes" placeholder="Write your answer here&hellip;"></textarea>
+    <div class="notes-hint">Saved automatically in this browser.</div>
   </section>
 
   <section class="case-card" style="text-align:center; background:color-mix(in srgb, var(--series-do) 10%, var(--surface-1));">
@@ -194,6 +230,6 @@
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="js/common.js?v=7"></script>
-<script src="js/module2.js?v=15"></script>
+<script src="js/module2.js?v=17"></script>
 </body>
 </html>

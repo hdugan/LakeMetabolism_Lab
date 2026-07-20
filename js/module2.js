@@ -404,4 +404,19 @@
   }
 
   initFinalQuiz();
+
+  // ---- "Case notes" (localStorage) - independent of the chart data fetch ----
+  const TEMP_SOLUBILITY_KEY = 'oxygenBudget.tempSolubilityNotes';
+  const tempSolubilityNotes = document.getElementById('tempSolubilityNotes');
+  tempSolubilityNotes.value = localStorage.getItem(TEMP_SOLUBILITY_KEY) || '';
+  tempSolubilityNotes.addEventListener('input', () => {
+    localStorage.setItem(TEMP_SOLUBILITY_KEY, tempSolubilityNotes.value);
+  });
+
+  const SAT_CALC_KEY = 'oxygenBudget.satCalcNotes';
+  const satCalcNotes = document.getElementById('satCalcNotes');
+  satCalcNotes.value = localStorage.getItem(SAT_CALC_KEY) || '';
+  satCalcNotes.addEventListener('input', () => {
+    localStorage.setItem(SAT_CALC_KEY, satCalcNotes.value);
+  });
 })();

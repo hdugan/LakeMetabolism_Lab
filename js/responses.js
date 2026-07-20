@@ -4,10 +4,12 @@
   const NAME_KEY = 'lakeMetab.studentName';
 
   // Every free-response note the lab saves, in the order they should be
-  // reviewed/turned in. Keys match what modules 1, 4, 5 and 7 already write
-  // to localStorage - this page only reads them, never writes to another
-  // page's key. Module 1 includes the former Module 2 (Lake Detective)
-  // fields, which merged into it when Module 2 was folded into Module 1.
+  // reviewed/turned in. Keys match what modules 1, 2, 4, 5 and 7 already
+  // write to localStorage - this page only reads them, never writes to
+  // another page's key. Module 1 includes the former standalone Module 2
+  // (Lake Detective) fields, which merged into it when that module was
+  // folded into Module 1; the current Module 2 ("The Oxygen Budget") is a
+  // separate, later rebuild with its own fields.
   const SECTIONS = [
     {
       title: 'Module 1 — Meet the Lake',
@@ -19,6 +21,13 @@
         { key: 'lakeDetective.notes.wind', label: 'Reflection: Wind' },
         { key: 'lakeDetective.notes.par', label: 'Reflection: Sunlight' },
         { key: 'lakeDetective.verdict', label: 'Which variable appears to control oxygen? Final verdict' },
+      ],
+    },
+    {
+      title: 'Module 2 — The Oxygen Budget',
+      fields: [
+        { key: 'oxygenBudget.tempSolubilityNotes', label: "What's the relationship between water temperature and how much oxygen the lake can hold?" },
+        { key: 'oxygenBudget.satCalcNotes', label: 'At a water temperature of 15°C, what dissolved oxygen concentration (mg/L) corresponds to 110% saturation? Show your calculations and explain how you arrived at your answer.' },
       ],
     },
     {
