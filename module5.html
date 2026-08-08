@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Every Lake Has a Metabolism — Lake Metabolism Lab</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🫁</text></svg>">
-<link rel="stylesheet" href="css/style.css?v=24">
+<link rel="stylesheet" href="css/style.css?v=25">
 </head>
 <body>
 
@@ -205,10 +205,12 @@
     </div>
     <p class="calc-feedback" id="m6NepFeedback" hidden></p>
     <div class="balance-net" id="verdictNet" style="margin-top:12px;" hidden>Net = 0.00</div>
+    <p class="reveal-title" id="m6NepCongrats" style="margin-top:12px;" hidden>&#127881; Nice work &mdash; you've calculated NEP!</p>
+    <button type="button" class="play-btn" id="m6NepContinueBtn" style="margin-top:14px;" hidden>Continue</button>
   </section>
 
   <!-- ===================== Section 4c: why high-frequency data matter ===================== -->
-  <section class="case-card">
+  <section class="case-card" id="m6HighFreq" hidden>
     <h2>Why high-frequency data matter</h2>
     <p class="case-sub">
       Pick one real night (July 9&ndash;10) and ask a very specific question: from whatever data survives at each
@@ -223,20 +225,22 @@
     </div>
   </section>
 
-  <section class="chart-card overlay-card">
+  <section class="chart-card overlay-card" id="m6HighFreqPlot" hidden>
     <div class="chart-card-head">
       <h2 id="p4Title">One night, sampled daily</h2>
     </div>
-    <div class="overlay-plot" id="p4Plot"></div>
-    <div class="match-meter">
-      <span class="match-meter-label">Estimated respiration rate</span>
-      <span class="match-meter-value" id="p4RateOut">&ndash;</span>
+    <div style="display:flex; gap:20px; align-items:stretch; flex-wrap:wrap;">
+      <div class="overlay-plot" id="p4Plot" style="flex:1 1 420px; min-width:0;"></div>
+      <div class="state-caption" style="flex:0 0 260px; margin:0;">
+        <span class="callout-label">Estimated respiration rate</span>
+        <span class="match-meter-value" id="p4RateOut">&ndash;</span>
+        <p id="p4Explain" style="margin:6px 0 0; font-size:13.5px; color:var(--text-secondary);"></p>
+      </div>
     </div>
-    <p id="p4Explain" style="margin:6px 0 0; font-size:13.5px; color:var(--text-secondary);"></p>
   </section>
 
   <!-- ===================== Section 4d: recall definitions ===================== -->
-  <section class="case-card" style="background:color-mix(in srgb, var(--series-do) 10%, var(--surface-1));">
+  <section class="case-card" id="m6Recall" hidden style="background:color-mix(in srgb, var(--series-do) 10%, var(--surface-1));">
     <h2>Recall some definitions from introductory biology</h2>
     <button type="button" class="play-btn" id="recallStartBtn">Before moving on, review some terms</button>
 
@@ -271,6 +275,21 @@
   </section>
 
   <!-- ===================== Section 5: autotrophic / heterotrophic ===================== -->
+  <!-- ===================== Section 6: farm analogy ===================== -->
+  <section class="case-card" id="m6FarmAnalogy" hidden style="background:color-mix(in srgb, var(--series-par) 10%, var(--surface-1));">
+    <h2>The farm analogy</h2>
+    <p style="font-size:14px; color:var(--text-secondary); line-height:1.6;">
+      Think of a farm. A productive farm grows more food than its residents can eat, creating a surplus. A less
+      productive farm can't feed itself and has to bring food in from elsewhere.
+    </p>
+    <p style="font-size:14px; color:var(--text-secondary); line-height:1.6;">
+      A lake has a similar "carbon economy." An <strong>autotrophic</strong> lake produces more organic matter than
+      it consumes, building a surplus. A <strong>heterotrophic</strong> lake consumes more than it produces and must
+      rely on organic matter imported from the surrounding landscape or stored from previous production &mdash; like
+      living on imports or savings.
+    </p>
+  </section>
+
   <section class="case-card" id="m6AutoHetero" hidden>
     <h2>Autotrophic vs. heterotrophic</h2>
     <p class="case-sub">Two real nights from the same week, two very different verdicts.</p>
@@ -290,7 +309,7 @@
     </div>
     <div class="balance-net" id="ex1Net">Net = &ndash;</div>
     <p style="font-size:14px; color:var(--text-secondary); margin-top:10px;">
-      Ecosystem Respiration beat Gross Primary Production that day. The lake consumed more oxygen than it produced:
+      Ecosystem Respiration was higher than Gross Primary Production that day. The lake consumed more oxygen than it produced:
       it's <strong>heterotrophic</strong>. It's living off stored food &mdash; instead of producing enough new
       organic matter, organisms are consuming material that already exists: dead leaves, algae from an earlier
       bloom, or carbon washed in from the surrounding watershed.
@@ -311,26 +330,15 @@
     </div>
     <div class="balance-net" id="ex2Net">Net = &ndash;</div>
     <p style="font-size:14px; color:var(--text-secondary); margin-top:10px;">
-      Five days later, the balance flipped. Gross Primary Production beat Ecosystem Respiration: the lake is
+      Five days later, the balance flipped. Gross Primary Production was higher than Ecosystem Respiration: the lake is
       <strong>autotrophic</strong>. It's acting like a factory &mdash; it builds more organic material than it
       burns, and there's extra production left over.
     </p>
   </section>
 
-  <!-- ===================== Section 6: farm analogy ===================== -->
-  <section class="case-card" id="m6FarmAnalogy" hidden>
-    <h2>The farm analogy</h2>
-    <p style="font-size:14px; color:var(--text-secondary); line-height:1.6;">
-      Think of a farm. A productive farm grows more food than its residents can eat, creating a surplus. A less
-      productive farm can't feed itself and has to bring food in from elsewhere.
-    </p>
-    <p style="font-size:14px; color:var(--text-secondary); line-height:1.6;">
-      A lake has a similar "carbon economy." An <strong>autotrophic</strong> lake produces more organic matter than
-      it consumes, building a surplus. A <strong>heterotrophic</strong> lake consumes more than it produces and must
-      rely on organic matter imported from the surrounding landscape or stored from previous production &mdash; like
-      living on imports or savings.
-    </p>
-  </section>
+  <div style="text-align:center; margin:24px 0;">
+    <a href="module6.html" class="play-btn" style="display:inline-flex; text-decoration:none;">Take me to the next module &rarr;</a>
+  </div>
 
 </main>
 
@@ -349,6 +357,6 @@
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="js/common.js?v=7"></script>
-<script src="js/module5.js?v=12"></script>
+<script src="js/module5.js?v=16"></script>
 </body>
 </html>

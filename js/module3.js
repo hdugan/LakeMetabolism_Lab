@@ -59,6 +59,13 @@
         '<p style="padding:40px;color:var(--text-secondary)">Could not load lake data (' + err + ').</p>';
     });
 
+  // ---- "Case notes" (localStorage) - independent of the chart data fetch ----
+  const bestFitNotes = document.getElementById('bestFitNotes');
+  bestFitNotes.value = localStorage.getItem('buildOxygenCurve.bestFitNotes') || '';
+  bestFitNotes.addEventListener('input', () => {
+    localStorage.setItem('buildOxygenCurve.bestFitNotes', bestFitNotes.value);
+  });
+
   // ---- "Quiz me!" panel - independent of the chart data fetch ----
   const quizMeBtn = document.getElementById('quizMeBtn');
   const quizPanel = document.getElementById('quizPanel');

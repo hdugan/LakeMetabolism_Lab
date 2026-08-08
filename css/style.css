@@ -65,6 +65,12 @@
 
 * { box-sizing: border-box; }
 
+/* Author rules that set `display` on an element (e.g. .play-btn's
+   display:flex) otherwise beat the browser's default [hidden]{display:none}
+   UA style, silently un-hiding anything with both a hidden attribute and a
+   class like that. Force it back. */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   padding: 0;

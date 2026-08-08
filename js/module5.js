@@ -136,7 +136,7 @@
       });
 
       Plotly.newPlot(plotId, traces, {
-        margin: compact ? { l: 36, r: 8, t: 6, b: 22 } : { l: 44, r: 12, t: 26, b: 28 },
+        margin: compact ? { l: 50, r: 8, t: 6, b: 22 } : { l: 44, r: 12, t: 26, b: 28 },
         paper_bgcolor: 'transparent',
         plot_bgcolor: 'transparent',
         font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: cssVar('--text-secondary'), size: 11 },
@@ -150,7 +150,7 @@
           gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') },
         },
         yaxis: {
-          title: compact ? undefined : { text: 'Dissolved oxygen (mg/L)', font: { size: 12, color: cssVar('--text-secondary') } },
+          title: { text: 'Dissolved oxygen (mg/L)', font: { size: compact ? 10 : 12, color: cssVar('--text-secondary') } },
           gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false,
         },
         hovermode: 'x',
@@ -203,6 +203,11 @@
     const nepInput = document.getElementById('m6NepInput');
     const nepFeedback = document.getElementById('m6NepFeedback');
     const verdictNetEl = document.getElementById('verdictNet');
+    const nepCongrats = document.getElementById('m6NepCongrats');
+    const nepContinueBtn = document.getElementById('m6NepContinueBtn');
+    const highFreqSection = document.getElementById('m6HighFreq');
+    const highFreqPlotSection = document.getElementById('m6HighFreqPlot');
+    const recallSection = document.getElementById('m6Recall');
     const dayRateTrue = calc1.dayChange / 15;
 
     document.getElementById('m6Step2Check').addEventListener('click', () => {
@@ -226,8 +231,8 @@
         summary.hidden = false;
         fillBalance('verdict', calc1);
         document.getElementById('verdictText').textContent = calc1.nep >= 0
-          ? `Gross Primary Production beat Ecosystem Respiration on July 9–10: this stretch of lake was autotrophic, producing a bit more organic matter than it consumed.`
-          : `Ecosystem Respiration beat Gross Primary Production on July 9–10: the lake ecosystem was consuming more organic matter than it produced that day.`;
+          ? `Gross Primary Production was higher than Ecosystem Respiration on July 9–10: this stretch of lake was autotrophic, producing a bit more organic matter than it consumed.`
+          : `Ecosystem Respiration was higher than Gross Primary Production on July 9–10: the lake ecosystem was consuming more organic matter than it produced that day.`;
         verdict.hidden = false;
         nepSection.hidden = false;
         nepQuestion.hidden = false;
@@ -250,9 +255,22 @@
       if (correct) {
         nepFeedback.textContent = `Yes: NEP = GPP − ER = ${fmtSigned(calc1.gppDay)} − ${calc1.erDaily.toFixed(2)} = ${fmtSigned(calc1.nep)} mg/L/day.`;
         verdictNetEl.hidden = false;
+        nepCongrats.hidden = false;
+        nepContinueBtn.hidden = false;
       } else {
         nepFeedback.textContent = `Not quite. NEP = GPP − ER, using the values from the verdict above. Try again.`;
       }
+    });
+
+    nepContinueBtn.addEventListener('click', () => {
+      highFreqSection.hidden = false;
+      highFreqPlotSection.hidden = false;
+      recallSection.hidden = false;
+      // p4Plot was drawn earlier (by its own independent data fetch) while
+      // its section was still display:none, so Plotly sized it at 0x0 -
+      // force a resize now that the container has real dimensions.
+      Plotly.Plots.resize('p4Plot');
+      highFreqSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 
     initQuiz('q1Grid', 'q1Feedback', {
@@ -308,7 +326,7 @@
       // the container has real dimensions, or they'd stay invisible.
       Plotly.Plots.resize('ex1Plot');
       Plotly.Plots.resize('ex2Plot');
-      autoHeteroSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      farmSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
   }
 

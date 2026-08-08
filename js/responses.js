@@ -4,11 +4,11 @@
   const NAME_KEY = 'lakeMetab.studentName';
 
   // Every free-response note the lab saves, in the order they should be
-  // reviewed/turned in. Keys match what modules 1, 2, 4, 5 and 7 already
-  // write to localStorage - this page only reads them, never writes to
-  // another page's key. Module 1 includes the former standalone Module 2
-  // (Lake Detective) fields, which merged into it when that module was
-  // folded into Module 1; the current Module 2 ("The Oxygen Budget") is a
+  // reviewed/turned in. Keys match what modules 1-5 and 7 already write to
+  // localStorage - this page only reads them, never writes to another
+  // page's key. Module 1 includes the former standalone Module 2 (Lake
+  // Detective) fields, which merged into it when that module was folded
+  // into Module 1; the current Module 2 ("The Oxygen Budget") is a
   // separate, later rebuild with its own fields.
   const SECTIONS = [
     {
@@ -28,6 +28,12 @@
       fields: [
         { key: 'oxygenBudget.tempSolubilityNotes', label: "What's the relationship between water temperature and how much oxygen the lake can hold?" },
         { key: 'oxygenBudget.satCalcNotes', label: 'At a water temperature of 15°C, what dissolved oxygen concentration (mg/L) corresponds to 110% saturation? Show your calculations and explain how you arrived at your answer.' },
+      ],
+    },
+    {
+      title: 'Module 3 — Build the Oxygen Curve',
+      fields: [
+        { key: 'buildOxygenCurve.bestFitNotes', label: 'Even the "best fit" of these three rates doesn\'t match the observed data perfectly over an entire week. Why do you think that might be?' },
       ],
     },
     {
