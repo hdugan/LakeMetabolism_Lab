@@ -171,6 +171,7 @@
         hoverformat: '%a %b %-d, %-I:%M %p',
       },
       yaxis: {
+        title: { text: 'Dissolved oxygen (mg/L)', font: { size: 12, color: cssVar('--text-secondary') } },
         gridcolor: cssVar('--gridline'),
         linecolor: cssVar('--baseline'),
         tickfont: { color: cssVar('--text-muted') },
@@ -191,16 +192,20 @@
       };
     }
 
+    function fmtRate(v) {
+      return (v > 0 ? '+' : '') + v.toFixed(2) + ' mg/L/day';
+    }
+
     function recompute() {
-      valuePhoto.textContent = sliderPhoto.value;
-      valueResp.textContent = sliderResp.value;
-      valueGas.textContent = sliderGas.value;
-
       const p = currentParams();
-      const y = simulate(p.alpha, p.r, p.k, doReal[0], par, wind, temp).DO;
-      Plotly.restyle('matchPlot', { y: [y] }, [1]);
+      const result = simulate(p.alpha, p.r, p.k, doReal[0], par, wind, temp);
+      Plotly.restyle('matchPlot', { y: [result.DO] }, [1]);
 
-      const e = rmse(y, doReal);
+      valuePhoto.textContent = fmtRate(dailyGPP(p.alpha));
+      valueResp.textContent = fmtRate(-dailyR(p.r));
+      valueGas.textContent = fmtRate(result.gasTotal / 7);
+
+      const e = rmse(result.DO, doReal);
       const score = scoreFromRmse(e);
       matchScoreText.textContent = score + '%';
       matchScoreText.classList.remove('is-good', 'is-warning');

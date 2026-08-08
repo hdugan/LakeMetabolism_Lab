@@ -55,19 +55,6 @@
     return out;
   }
 
-  function dailyAverage(series, valKey) {
-    const buckets = {};
-    series.forEach((p) => {
-      const day = p.t.slice(0, 10);
-      buckets[day] = buckets[day] || [];
-      if (p[valKey] !== null && p[valKey] !== undefined) buckets[day].push(p[valKey]);
-    });
-    return Object.keys(buckets).sort().map((day) => ({
-      t: `${day}T12:00:00`,
-      [valKey]: buckets[day].length ? buckets[day].reduce((a, b) => a + b, 0) / buckets[day].length : null,
-    }));
-  }
-
   function normalize(values) {
     const present = values.filter((v) => v !== null && v !== undefined);
     const min = Math.min(...present);
@@ -130,8 +117,7 @@
 
     initPart1(data, fiveMinDo, fiveMinMinutes);
     initPart2(fiveMinDo, fiveMinMinutes, xRange, yRangeFull);
-    initPart3(data, fiveMinDo, fiveMinMinutes);
-    initPart4(data, doColor);
+    initPart3(data, doColor);
   }
 
   // ==========================================================================
@@ -157,16 +143,12 @@
       hovertemplate: '%{y:.2f} mg/L<extra></extra>',
     }], basePlotLayout({
       xaxis: { type: 'date', tickformat: '%b %-d', gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') } },
-      yaxis: { range: [0, 16], gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
+      yaxis: { title: { text: 'Dissolved oxygen (mg/L)', font: { size: 12, color: cssVar('--text-secondary') } }, range: [0, 16], gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
     }), { displayModeBar: false, responsive: true, scrollZoom: false });
 
     const notes = document.getElementById('p1Notes');
     notes.value = localStorage.getItem('sensorRevolution.p1notes') || '';
     notes.addEventListener('input', () => localStorage.setItem('sensorRevolution.p1notes', notes.value));
-
-    document.getElementById('p1RevealBtn').addEventListener('click', () => {
-      document.getElementById('p1RevealPanel').hidden = false;
-    });
   }
 
   // ==========================================================================
@@ -191,7 +173,7 @@
         hovertemplate: '%{y:.2f} mg/L<extra></extra>',
       }], basePlotLayout({
         xaxis: { type: 'date', range: xRange, tickformat: '%b %-d', gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') } },
-        yaxis: { range: yRangeFull, gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
+        yaxis: { title: { text: 'Dissolved oxygen (mg/L)', font: { size: 12, color: cssVar('--text-secondary') } }, range: yRangeFull, gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
       }), { displayModeBar: false, responsive: true, scrollZoom: false });
 
       const n = sampled.length;
@@ -214,117 +196,18 @@
   }
 
   // ==========================================================================
-  // Part 3 - the night shift
+  // Part 3 - weather events
   // ==========================================================================
-  function initPart3(data, fiveMinDo, fiveMinMinutes) {
-    const titleEl = document.getElementById('p4Title');
-    const rateEl = document.getElementById('p4RateOut');
-    const explainEl = document.getElementById('p4Explain');
-    const switchEl = document.getElementById('p4Switch');
-
-    const day1 = data.days.find((d) => d.date === '2023-07-09');
-    const day2 = data.days.find((d) => d.date === '2023-07-10');
-    const nightStartM = toMinutes(`2023-07-09T${day1.sunset}:00`);
-    const nightEndM = toMinutes(`2023-07-10T${day2.sunrise}:00`);
-    // pad the plotted window a couple hours either side of the night itself,
-    // so the sparser rungs have a fighting chance of landing a point nearby
-    const viewStartM = nightStartM - 120;
-    const viewEndM = nightEndM + 120;
-    const nightShape = {
-      type: 'rect', xref: 'x', yref: 'paper',
-      x0: fromMinutes(nightStartM), x1: fromMinutes(nightEndM), y0: 0, y1: 1,
-      fillcolor: cssVar('--night-fill'),
-      line: { width: 0 },
-      layer: 'below',
-    };
-
-    const trueNight = fiveMinDo.filter((p) => {
-      const m = toMinutes(p.t);
-      return m >= nightStartM && m <= nightEndM;
-    });
-    const trueRate = (trueNight[trueNight.length - 1].do_mgl - trueNight[0].do_mgl) /
-      ((nightEndM - nightStartM) / 60);
-
-    function draw(rungIdx) {
-      const rung = RUNGS[rungIdx];
-      titleEl.textContent = `One night, sampled ${rung.label}`;
-
-      // Sample the whole record on this rung's grid, then keep only the
-      // points that land inside the plotted window - this mirrors exactly
-      // what Part 2 does, so "daily" here means the same thing it did there.
-      const sampledAll = sampleRegular(fiveMinDo, fiveMinMinutes, rung.minutes);
-      const windowed = sampledAll.filter((p) => {
-        const m = toMinutes(p.t);
-        return m >= viewStartM && m <= viewEndM;
-      });
-      const nightPoints = sampledAll.filter((p) => {
-        const m = toMinutes(p.t);
-        return m >= nightStartM && m <= nightEndM;
-      });
-
-      Plotly.react('p4Plot', [
-        {
-          x: trueNight.map((p) => p.t), y: trueNight.map((p) => p.do_mgl),
-          type: 'scatter', mode: 'lines',
-          line: { color: cssVar('--baseline'), width: 1.5, dash: 'dot' },
-          hoverinfo: 'skip', name: 'True record (reference)',
-        },
-        {
-          x: windowed.map((p) => p.t), y: windowed.map((p) => p.do_mgl),
-          type: 'scatter', mode: 'markers+lines',
-          line: { color: cssVar('--series-do'), width: 1.8 },
-          marker: { size: 9, color: cssVar('--series-do') },
-          name: 'Your data', hovertemplate: '%{y:.2f} mg/L<extra></extra>',
-        },
-      ], basePlotLayout({
-        shapes: [nightShape],
-        xaxis: { type: 'date', range: [fromMinutes(viewStartM), fromMinutes(viewEndM)], tickformat: '%-I %p', gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') } },
-        yaxis: { gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
-      }), { displayModeBar: false, responsive: true, scrollZoom: false });
-
-      if (nightPoints.length >= 2) {
-        const hours = (toMinutes(nightPoints[nightPoints.length - 1].t) - toMinutes(nightPoints[0].t)) / 60;
-        const rate = (nightPoints[nightPoints.length - 1].do_mgl - nightPoints[0].do_mgl) / hours;
-        rateEl.textContent = `${rate.toFixed(2)} mg/L/hr`;
-        rateEl.classList.remove('is-warning');
-        rateEl.classList.add('is-good');
-        explainEl.textContent = `Estimated from ${nightPoints.length} points that fall within this one night. True overnight rate from the full 5-minute record: ${trueRate.toFixed(2)} mg/L/hr.`;
-      } else if (nightPoints.length === 1) {
-        rateEl.textContent = 'Not enough data';
-        rateEl.classList.remove('is-good');
-        rateEl.classList.add('is-warning');
-        explainEl.textContent = `Only one point falls inside this night - a rate needs at least two. This resolution simply never visits the lake between sunset and sunrise on this date.`;
-      } else {
-        rateEl.textContent = 'No data at all';
-        rateEl.classList.remove('is-good', 'is-warning');
-        explainEl.textContent = `Zero points fall inside this night at this resolution. There is no way to know what happened between sunset and sunrise - the night is a total blind spot.`;
-      }
-    }
-
-    Array.from(switchEl.children).forEach((btn) => {
-      btn.addEventListener('click', () => {
-        Array.from(switchEl.children).forEach((b) => b.classList.toggle('active', b === btn));
-        draw(Number(btn.dataset.rung));
-      });
-    });
-    draw(1);
-  }
-
-  // ==========================================================================
-  // Part 4 - weather events
-  // ==========================================================================
-  function doSat(tempC) {
-    // Standard freshwater DO-saturation regression at 1 atm (mg/L) - same
-    // formula used in Modules 2 and 3.
-    return 14.652 - 0.41022 * tempC + 0.007991 * tempC * tempC - 0.000077774 * tempC * tempC * tempC;
-  }
-
-  function initPart4(data, doColor) {
+  function initPart3(data, doColor) {
     const switchEl = document.getElementById('p5Switch');
     const fineTitle = document.getElementById('p5FineTitle');
     const fineLegend = document.getElementById('p5FineLegend');
     const captionLabel = document.getElementById('p5CaptionLabel');
     const captionText = document.getElementById('p5CaptionText');
+
+    const weatherNotes = document.getElementById('weatherEventsNotes');
+    weatherNotes.value = localStorage.getItem('sensorRevolution.weatherEventsNotes') || '';
+    weatherNotes.addEventListener('input', () => localStorage.setItem('sensorRevolution.weatherEventsNotes', weatherNotes.value));
 
     const EVENTS = {
       storm: {
@@ -373,27 +256,6 @@
       ], basePlotLayout({
         xaxis: { type: 'date', tickformat: '%b %-d %-I%p', gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') } },
         yaxis: { title: { text: '% of window range', font: { size: 11, color: cssVar('--text-muted') } }, range: [-3, 103], gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
-      }), { displayModeBar: false, responsive: true, scrollZoom: false });
-
-      const daily = dailyAverage(win.map((p) => ({ t: p.t, do_mgl: p.do_mgl })), 'do_mgl');
-      const dailyTemp = dailyAverage(win.map((p) => ({ t: p.t, wtemp_c: p.wtemp_c })), 'wtemp_c');
-      Plotly.react('p5DailyPlot', [
-        {
-          x: dailyTemp.map((p) => p.t), y: dailyTemp.map((p) => (p.wtemp_c === null ? null : doSat(p.wtemp_c))),
-          type: 'scatter', mode: 'lines',
-          line: { color: cssVar('--baseline'), width: 1.5, dash: 'dash' },
-          hovertemplate: '%{y:.2f} mg/L<extra>Equilibrium</extra>',
-        },
-        {
-          x: daily.map((p) => p.t), y: daily.map((p) => p.do_mgl),
-          type: 'scatter', mode: 'lines+markers',
-          line: { color: doColor, width: 2 },
-          marker: { size: 10, color: doColor },
-          hovertemplate: '%{y:.2f} mg/L<extra>Oxygen</extra>',
-        },
-      ], basePlotLayout({
-        xaxis: { type: 'date', tickformat: '%b %-d', gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') } },
-        yaxis: { gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
       }), { displayModeBar: false, responsive: true, scrollZoom: false });
     }
 

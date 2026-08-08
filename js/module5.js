@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const { cssVar, stripOffset, buildNightLayer, DATA_URL } = window.LakeCommon;
+  const { cssVar, stripOffset, buildNightLayer, DATA_URL, EXTENDED_DATA_URL } = window.LakeCommon;
 
   function pad(n) { return String(n).padStart(2, '0'); }
 
@@ -45,20 +45,23 @@
   // number - but subtracting out the respiration rate the night slope just
   // revealed (assumed to hold steady through daylight too) separates them.
   function fillSummary(calc) {
-    const erRate = Math.abs(calc.rate);
+    // Respiration is kept as a signed (negative) rate throughout this
+    // summary, matching how it's plotted and how the verdict boxes already
+    // display it - GPP adds oxygen (+), ER removes it (−).
     const dayRate = calc.dayChange / 15;
-    const gppRate = dayRate + erRate;
+    const gppRate = dayRate - calc.rate;
+    const erDailySigned = calc.rate * 24;
 
-    document.getElementById('sumNightFormula').textContent =
-      `(${calc.nightEnd.toFixed(2)} − ${calc.nightStart.toFixed(2)}) ÷ 8 = ${calc.rate.toFixed(2)} mg/L/hr → ER rate = ${erRate.toFixed(2)} mg/L/hr`;
-    document.getElementById('sumDayFormula').textContent =
-      `(${calc.dayEnd.toFixed(2)} − ${calc.nightEnd.toFixed(2)}) ÷ 15 = ${fmtSigned(dayRate)} mg/L/hr`;
-    document.getElementById('sumGppRateFormula').textContent =
-      `${fmtSigned(dayRate)} + ${erRate.toFixed(2)} = ${fmtSigned(gppRate)} mg/L/hr`;
-    document.getElementById('sumGppFormula').textContent =
-      `${fmtSigned(gppRate)} × 15 hr = ${fmtSigned(calc.gppDay)} mg/L`;
-    document.getElementById('sumErFormula').textContent =
-      `${erRate.toFixed(2)} × 24 hr = ${calc.erDaily.toFixed(2)} mg/L`;
+    document.getElementById('sumNightFormula').innerHTML =
+      `(${calc.nightEnd.toFixed(2)} − ${calc.nightStart.toFixed(2)}) ÷ 8 = <strong>${fmtSigned(calc.rate)} mg/L/hr</strong>`;
+    document.getElementById('sumDayFormula').innerHTML =
+      `(${calc.dayEnd.toFixed(2)} − ${calc.nightEnd.toFixed(2)}) ÷ 15 = <strong>${fmtSigned(dayRate)} mg/L/hr</strong>`;
+    document.getElementById('sumGppRateFormula').innerHTML =
+      `${fmtSigned(dayRate)} − (${fmtSigned(calc.rate)}) = <strong>${fmtSigned(gppRate)} mg/L/hr</strong>`;
+    document.getElementById('sumGppFormula').innerHTML =
+      `${fmtSigned(gppRate)} × 15 hr = <strong>${fmtSigned(calc.gppDay)} mg/L</strong>`;
+    document.getElementById('sumErFormula').innerHTML =
+      `${fmtSigned(calc.rate)} × 24 hr = <strong>${fmtSigned(erDailySigned)} mg/L</strong>`;
   }
 
   fetch(DATA_URL)
@@ -122,7 +125,7 @@
         traces.push({
           x: [markerT[1], markerT[2]], y: [markerY[1], markerY[2]],
           type: 'scatter', mode: 'lines',
-          line: { color: '#7f1d1d', width: 3 },
+          line: { color: '#b8860b', width: 3 },
           name: 'Day slope', hovertemplate: '%{y:.2f} mg/L<extra>Day slope</extra>',
         });
       }
@@ -146,7 +149,10 @@
           tickformat: '%a %-I%p',
           gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') },
         },
-        yaxis: { gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
+        yaxis: {
+          title: compact ? undefined : { text: 'Dissolved oxygen (mg/L)', font: { size: 12, color: cssVar('--text-secondary') } },
+          gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false,
+        },
         hovermode: 'x',
       }, { displayModeBar: false, responsive: true, scrollZoom: false });
     }
@@ -175,7 +181,7 @@
       step1Feedback.classList.toggle('is-correct', correct);
       step1Feedback.classList.toggle('is-incorrect', !correct);
       if (correct) {
-        step1Feedback.textContent = `Yes: (${calc1.nightEnd.toFixed(2)} − ${calc1.nightStart.toFixed(2)}) / 8 hours ≈ ${calc1.rate.toFixed(2)} mg/L/hr. Since nothing produces oxygen at night, this whole rate is respiration: ER ≈ ${Math.abs(calc1.rate).toFixed(2)} mg/L/hr.`;
+        step1Feedback.textContent = `Yes: (${calc1.nightEnd.toFixed(2)} − ${calc1.nightStart.toFixed(2)}) / 8 hours ≈ ${calc1.rate.toFixed(2)} mg/L/hr. Since nothing produces oxygen at night, this whole rate is respiration: ER ≈ ${fmtSigned(calc1.rate)} mg/L/hr.`;
       } else {
         step1Feedback.textContent = `Not quite. Rate = change ÷ time = (${calc1.nightEnd.toFixed(2)} − ${calc1.nightStart.toFixed(2)}) ÷ 8. Try again.`;
       }
@@ -193,6 +199,10 @@
     const summary = document.getElementById('m6Summary');
     const verdict = document.getElementById('m6Verdict');
     const nepSection = document.getElementById('m6Nep');
+    const nepQuestion = document.getElementById('m6NepQuestion');
+    const nepInput = document.getElementById('m6NepInput');
+    const nepFeedback = document.getElementById('m6NepFeedback');
+    const verdictNetEl = document.getElementById('verdictNet');
     const dayRateTrue = calc1.dayChange / 15;
 
     document.getElementById('m6Step2Check').addEventListener('click', () => {
@@ -217,10 +227,31 @@
         fillBalance('verdict', calc1);
         document.getElementById('verdictText').textContent = calc1.nep >= 0
           ? `Gross Primary Production beat Ecosystem Respiration on July 9–10: this stretch of lake was autotrophic, producing a bit more organic matter than it consumed.`
-          : `Ecosystem Respiration beat Gross Primary Production on July 9–10: this stretch of lake was heterotrophic, consuming more organic matter than it produced that day.`;
+          : `Ecosystem Respiration beat Gross Primary Production on July 9–10: the lake ecosystem was consuming more organic matter than it produced that day.`;
         verdict.hidden = false;
         nepSection.hidden = false;
+        nepQuestion.hidden = false;
         summary.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+
+    // ---- NEP question ----
+    document.getElementById('m6NepCheck').addEventListener('click', () => {
+      const guess = Number(nepInput.value);
+      nepFeedback.hidden = false;
+      if (!Number.isFinite(guess)) {
+        nepFeedback.textContent = 'Enter a number to check.';
+        nepFeedback.classList.remove('is-correct', 'is-incorrect');
+        return;
+      }
+      const correct = Math.abs(guess - calc1.nep) <= 0.05;
+      nepFeedback.classList.toggle('is-correct', correct);
+      nepFeedback.classList.toggle('is-incorrect', !correct);
+      if (correct) {
+        nepFeedback.textContent = `Yes: NEP = GPP − ER = ${fmtSigned(calc1.gppDay)} − ${calc1.erDaily.toFixed(2)} = ${fmtSigned(calc1.nep)} mg/L/day.`;
+        verdictNetEl.hidden = false;
+      } else {
+        nepFeedback.textContent = `Not quite. NEP = GPP − ER, using the values from the verdict above. Try again.`;
       }
     });
 
@@ -244,6 +275,15 @@
       zooplankton: 'Not quite — zooplankton graze on algae and other organic matter, which makes them heterotrophs.',
       algae: 'Right. Algae photosynthesize, building their own organic matter from CO₂ - that makes them autotrophs.',
       bacteria: 'Not quite — bacteria that consume organic matter are heterotrophs, not autotrophs.',
+    });
+
+    // ---- reveal: keep the recall quiz collapsed until requested ----
+    const recallStartBtn = document.getElementById('recallStartBtn');
+    const recallPanel = document.getElementById('recallPanel');
+    recallStartBtn.addEventListener('click', () => {
+      recallPanel.hidden = false;
+      recallStartBtn.hidden = true;
+      recallPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 
     // ---- gate: no peeking at autotrophic/heterotrophic or the farm analogy
@@ -286,5 +326,181 @@
         feedback.textContent = (correct ? '✅ ' : '🤔 ') + messages[btn.dataset.key];
       });
     });
+  }
+
+  // ==========================================================================
+  // Why high-frequency data matter - moved here from Module 4, since it uses
+  // the same July 9-10 night as the GPP/ER calculation above. Runs on the
+  // two-month extended dataset (5-minute resolution), independent of the
+  // one-week fetch the rest of this module uses.
+  // ==========================================================================
+
+  // All timestamps in data/mendota_extended.json are naive "YYYY-MM-DDTHH:MM:SS"
+  // strings (no timezone). Rather than round-trip them through `new Date()`
+  // (whose wall-clock interpretation depends on the browser's own timezone),
+  // these convert to/from a plain "minutes since 2023-01-01" integer using
+  // Date.UTC purely as a calendar day-counter - safe regardless of the
+  // reader's own timezone, since no wall-clock interpretation is involved.
+  const HF_EPOCH_Y = 2023;
+  function hfToMinutes(ts) {
+    const y = +ts.slice(0, 4), mo = +ts.slice(5, 7), d = +ts.slice(8, 10);
+    const hh = +ts.slice(11, 13), mm = +ts.slice(14, 16);
+    const dayIndex = Math.round((Date.UTC(y, mo - 1, d) - Date.UTC(HF_EPOCH_Y, 0, 1)) / 86400000);
+    return dayIndex * 1440 + hh * 60 + mm;
+  }
+  function hfFromMinutes(total) {
+    const dayIndex = Math.floor(total / 1440);
+    const rem = total - dayIndex * 1440;
+    const hh = Math.floor(rem / 60), mm = rem % 60;
+    const dt = new Date(Date.UTC(HF_EPOCH_Y, 0, 1) + dayIndex * 86400000);
+    const pad2 = (n) => String(n).padStart(2, '0');
+    return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}T${pad2(hh)}:${pad2(mm)}:00`;
+  }
+  function hfNearestIndex(sortedMinutes, target) {
+    let lo = 0, hi = sortedMinutes.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (sortedMinutes[mid] < target) lo = mid + 1; else hi = mid;
+    }
+    if (lo > 0 && Math.abs(sortedMinutes[lo - 1] - target) <= Math.abs(sortedMinutes[lo] - target)) return lo - 1;
+    return lo;
+  }
+  // Regular-interval sampling: picks the nearest real observation to each
+  // target time on a fixed grid, starting at the series' first timestamp -
+  // exactly what a technician visiting on a fixed schedule would collect.
+  function hfSampleRegular(series, minutesArr, intervalMinutes, toleranceMinutes) {
+    const tol = toleranceMinutes || Math.max(15, intervalMinutes / 2);
+    const startM = minutesArr[0];
+    const endM = minutesArr[minutesArr.length - 1];
+    const out = [];
+    for (let t = startM; t <= endM; t += intervalMinutes) {
+      const idx = hfNearestIndex(minutesArr, t);
+      if (Math.abs(minutesArr[idx] - t) <= tol) out.push(series[idx]);
+    }
+    return out;
+  }
+
+  const HF_RUNGS = [
+    { key: 'weekly', label: 'weekly', minutes: 7 * 24 * 60 },
+    { key: 'daily', label: 'daily', minutes: 24 * 60 },
+    { key: '6hourly', label: 'every 6 hours', minutes: 6 * 60 },
+    { key: 'hourly', label: 'hourly', minutes: 60 },
+    { key: '15min', label: 'every 15 minutes', minutes: 15 },
+  ];
+
+  fetch(EXTENDED_DATA_URL)
+    .then((r) => r.json())
+    .then(initHighFreqDemo)
+    .catch(() => {
+      // Silent: this demo is a supplementary section: the rest of the page
+      // (which fetches its own, separate week of data) still works fine.
+    });
+
+  function initHighFreqDemo(data) {
+    const titleEl = document.getElementById('p4Title');
+    const rateEl = document.getElementById('p4RateOut');
+    const explainEl = document.getElementById('p4Explain');
+    const switchEl = document.getElementById('p4Switch');
+
+    const fiveMinDo = data.five_min_do;
+    const fiveMinMinutes = fiveMinDo.map((p) => hfToMinutes(p.t));
+
+    const day1 = data.days.find((d) => d.date === '2023-07-09');
+    const day2 = data.days.find((d) => d.date === '2023-07-10');
+    const nightStartM = hfToMinutes(`2023-07-09T${day1.sunset}:00`);
+    const nightEndM = hfToMinutes(`2023-07-10T${day2.sunrise}:00`);
+    // pad the plotted window a couple hours either side of the night itself,
+    // so the sparser rungs have a fighting chance of landing a point nearby
+    const viewStartM = nightStartM - 120;
+    const viewEndM = nightEndM + 120;
+    const nightShape = {
+      type: 'rect', xref: 'x', yref: 'paper',
+      x0: hfFromMinutes(nightStartM), x1: hfFromMinutes(nightEndM), y0: 0, y1: 1,
+      fillcolor: cssVar('--night-fill'),
+      line: { width: 0 },
+      layer: 'below',
+    };
+
+    const trueNight = fiveMinDo.filter((p) => {
+      const m = hfToMinutes(p.t);
+      return m >= nightStartM && m <= nightEndM;
+    });
+    const trueRate = (trueNight[trueNight.length - 1].do_mgl - trueNight[0].do_mgl) /
+      ((nightEndM - nightStartM) / 60);
+
+    function draw(rungIdx) {
+      const rung = HF_RUNGS[rungIdx];
+      titleEl.textContent = `One night, sampled ${rung.label}`;
+
+      // Sample the whole record on this rung's grid, then keep only the
+      // points that land inside the plotted window.
+      const sampledAll = hfSampleRegular(fiveMinDo, fiveMinMinutes, rung.minutes);
+      const windowed = sampledAll.filter((p) => {
+        const m = hfToMinutes(p.t);
+        return m >= viewStartM && m <= viewEndM;
+      });
+      const nightPoints = sampledAll.filter((p) => {
+        const m = hfToMinutes(p.t);
+        return m >= nightStartM && m <= nightEndM;
+      });
+
+      Plotly.react('p4Plot', [
+        {
+          x: trueNight.map((p) => p.t), y: trueNight.map((p) => p.do_mgl),
+          type: 'scatter', mode: 'lines',
+          line: { color: cssVar('--baseline'), width: 1.5, dash: 'dot' },
+          hoverinfo: 'skip', name: 'True record (reference)',
+        },
+        {
+          x: windowed.map((p) => p.t), y: windowed.map((p) => p.do_mgl),
+          type: 'scatter', mode: 'markers+lines',
+          line: { color: cssVar('--series-do'), width: 1.8 },
+          marker: { size: 9, color: cssVar('--series-do') },
+          name: 'Your data', hovertemplate: '%{y:.2f} mg/L<extra></extra>',
+        },
+      ], {
+        margin: { l: 48, r: 12, t: 10, b: 28 },
+        paper_bgcolor: 'transparent',
+        plot_bgcolor: 'transparent',
+        font: { family: 'system-ui, -apple-system, "Segoe UI", sans-serif', color: cssVar('--text-secondary'), size: 11 },
+        showlegend: false,
+        shapes: [nightShape],
+        xaxis: {
+          type: 'date', range: [hfFromMinutes(viewStartM), hfFromMinutes(viewEndM)], tickformat: '%-I %p',
+          gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') },
+        },
+        yaxis: {
+          title: { text: 'Dissolved oxygen (mg/L)', font: { size: 12, color: cssVar('--text-secondary') } },
+          gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false,
+        },
+        hovermode: 'x',
+      }, { displayModeBar: false, responsive: true, scrollZoom: false });
+
+      if (nightPoints.length >= 2) {
+        const hours = (hfToMinutes(nightPoints[nightPoints.length - 1].t) - hfToMinutes(nightPoints[0].t)) / 60;
+        const rate = (nightPoints[nightPoints.length - 1].do_mgl - nightPoints[0].do_mgl) / hours;
+        rateEl.textContent = `${rate.toFixed(2)} mg/L/hr`;
+        rateEl.classList.remove('is-warning');
+        rateEl.classList.add('is-good');
+        explainEl.textContent = `Estimated from ${nightPoints.length} points that fall within this one night. True overnight rate from the full 5-minute record: ${trueRate.toFixed(2)} mg/L/hr.`;
+      } else if (nightPoints.length === 1) {
+        rateEl.textContent = 'Not enough data';
+        rateEl.classList.remove('is-good');
+        rateEl.classList.add('is-warning');
+        explainEl.textContent = `Only one point falls inside this night - a rate needs at least two. This resolution simply never visits the lake between sunset and sunrise on this date.`;
+      } else {
+        rateEl.textContent = 'No data at all';
+        rateEl.classList.remove('is-good', 'is-warning');
+        explainEl.textContent = `Zero points fall inside this night at this resolution. There is no way to know what happened between sunset and sunrise - the night is a total blind spot.`;
+      }
+    }
+
+    Array.from(switchEl.children).forEach((btn) => {
+      btn.addEventListener('click', () => {
+        Array.from(switchEl.children).forEach((b) => b.classList.toggle('active', b === btn));
+        draw(Number(btn.dataset.rung));
+      });
+    });
+    draw(1);
   }
 })();

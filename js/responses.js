@@ -34,6 +34,7 @@
       title: 'Module 4 — The Sensor Revolution',
       fields: [
         { key: 'sensorRevolution.p1notes', label: 'Part 1 notes' },
+        { key: 'sensorRevolution.weatherEventsNotes', label: 'Of the three weather events you explored, which one changed oxygen the most — and why do you think it had a bigger effect than the others?' },
       ],
     },
     {
