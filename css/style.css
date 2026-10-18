@@ -1881,3 +1881,30 @@ a { color: var(--series-do); }
 @media (prefers-reduced-motion: reduce) {
   .flip-inner { transition: none; }
 }
+
+/* Module 7 — ranking match game (three slots per row) */
+.match-slots3 { flex: 1 1 auto; display: flex; gap: 8px; }
+.match-slots3 .match-slot { flex: 1 1 0; min-width: 0; }
+.match-slots3 .match-slot:empty::before {
+  content: attr(data-hint);
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+/* Module 7 — graded prediction buttons */
+.res-btn.metab-right { border-color: var(--good); background: color-mix(in srgb, var(--good) 14%, var(--surface-1)); }
+.res-btn.metab-wrong { border-color: var(--flux-remove); background: color-mix(in srgb, var(--flux-remove) 10%, var(--surface-1)); }
+.metab-mark { color: var(--good); font-weight: 700; }
+
+/* Module 7 — experiment summary table */
+.exp-table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 6px 0 0; }
+.exp-table th, .exp-table td { border: 1px solid var(--border-hairline); padding: 6px 8px; text-align: left; vertical-align: top; }
+.exp-table th { background: var(--surface-1); color: var(--text-secondary); font-weight: 600; }
+
+/* Module 7 — photo floated to the right of the text, stacked on narrow screens */
+.float-photo { float: right; width: min(38%, 340px); margin: 4px 0 12px 20px; text-align: center; }
+.float-photo img { width: 100%; height: auto; border-radius: 10px; display: block; }
+.float-photo figcaption { font-size: 12.5px; line-height: 1.5; color: var(--text-muted); margin-top: 6px; }
+@media (max-width: 640px) {
+  .float-photo { float: none; width: 100%; max-width: 360px; margin: 12px auto; }
+}

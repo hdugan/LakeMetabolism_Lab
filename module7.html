@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Compare Lakes — Lake Metabolism Lab</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
-<link rel="stylesheet" href="css/style.css?v=28">
+<link rel="stylesheet" href="css/style.css?v=32">
 </head>
 <body>
 
@@ -24,250 +24,293 @@
 <header class="page-header">
   <div class="header-inner">
     <p class="eyebrow">Lake Metabolism Lab · Module 7</p>
-    <h1>Compare Lakes: From Oxygen Curves to the Global Carbon Cycle</h1>
+    <h1>Compare Lakes</h1>
     <p class="lede lede-wide">
-      Every lake you've studied so far has been Lake Mendota. But no two lakes breathe alike. Below are five
-      illustrative lake "archetypes" &mdash; built from typical patterns reported across the limnology literature,
-      not real buoy measurements &mdash; each with its own high-frequency oxygen, temperature, and light signal.
-      Pick a lake below and everything on this page updates to match it.
+      Every lake you've studied so far has been Lake Mendota. But no two lakes breathe alike. In this module
+      you'll compare Mendota with two very different lakes from the same research network in northern
+      Wisconsin &mdash; first by predicting how each lake's oxygen behaves, then by looking at what the buoys
+      actually recorded.
     </p>
   </div>
 </header>
 
 <main class="content">
 
-  <!-- ===================== Lake selector ===================== -->
-  <section class="control-bar" aria-label="Lake selector" style="flex-direction:column; align-items:stretch; gap:10px;">
-    <div class="res-switch" id="lakeSwitch"></div>
+  <!-- ===================== Meet the lakes ===================== -->
+  <section class="case-card">
+    <h2>Three lakes, three personalities</h2>
+    <p class="case-sub" style="margin-bottom:0;">
+      Limnologists describe lakes by their <strong>trophic state</strong> &mdash; how productive they are, which
+      depends mostly on how many nutrients (like phosphorus) and how much dissolved organic matter the lake
+      receives. The three lakes below sit at very different points on that scale. All three are monitored by the
+      <a href="https://lter.limnology.wisc.edu/" target="_blank" rel="noopener">North Temperate Lakes LTER</a>,
+      and all three have buoys that record oxygen every hour or faster.
+    </p>
   </section>
 
-  <!-- ===================== Part 1: Discover metabolic fingerprints ===================== -->
+  <div class="season-grid" id="lakeCards">
+    <div class="season-card" style="--season-color:var(--series-wind);">
+      <h3>&#127811; Lake Mendota</h3>
+      <p class="season-months">Eutrophic &middot; Madison, southern Wisconsin</p>
+      <p class="season-verdict">Nutrient-rich and green.</p>
+      <p>A large (about 40 km&sup2;), fairly deep (25 m maximum) lake surrounded by farms and a city. Runoff delivers lots of nutrients, so algae grow thick every summer, and the water is often green and murky.</p>
+      <p>Lots of algae means lots of photosynthesis &mdash; and lots of organic matter that decomposes.</p>
+    </div>
+    <div class="season-card" style="--season-color:var(--series-wtemp);">
+      <h3>&#127809; Trout Bog</h3>
+      <p class="season-months">Dystrophic (bog) &middot; northern Wisconsin</p>
+      <p class="season-verdict">Small, dark, and tea-colored.</p>
+      <p>A tiny lake (about 1 hectare, 8 m deep) ringed by peat and spruce. Water draining through the bog carries dissolved organic carbon, which stains it brown and absorbs most of the light a few centimeters down.</p>
+      <p>The forest shelters it from wind, so the surface stirs and trades gas with the air very little.</p>
+    </div>
+    <div class="season-card" style="--season-color:var(--series-do);">
+      <h3>&#128142; Trout Lake</h3>
+      <p class="season-months">Oligotrophic &middot; northern Wisconsin</p>
+      <p class="season-verdict">Big, deep, clear, and nutrient-poor.</p>
+      <p>A large (about 16 km&sup2;), deep (35 m maximum) lake fed mostly by groundwater and rain, with very few nutrients. Few algae grow, so the water is clear and sunlight reaches deep.</p>
+      <p>There's a lot of water but not much life to change its chemistry.</p>
+    </div>
+  </div>
+
+  <!-- ===================== Predict the oxygen curves ===================== -->
   <section class="case-card">
-    <h2>Part 1 &middot; Every lake "breathes" differently</h2>
+    <h2>Predict the oxygen</h2>
     <p class="case-sub">
-      Explore each lake below and just <strong>describe what you notice</strong>. Don't worry about explaining
-      <em>why</em> yet &mdash; that's Part 2. Three synthetic days of high-frequency data are shown for whichever
-      lake is selected above.
+      You know how Mendota's oxygen behaves from Module 1: it climbs during the day as algae photosynthesize and
+      falls overnight as everything respires. Based on what you just read, how do you think oxygen behaves in
+      each of the three lakes over a typical day in July?
+    </p>
+    <p class="case-sub" style="margin-bottom:0;">
+      <strong>Sketch it:</strong> for each lake, click and drag <em>up or down</em> inside its column to mark the
+      range of a typical day &mdash; from the day's lowest oxygen to its highest. Oxygen is shown as
+      <strong>% saturation</strong> (100% means the water holds exactly as much oxygen as it would in balance
+      with the air). Think about <em>how high</em> each lake sits and <em>how wide</em> its daily range is.
     </p>
   </section>
 
-  <section class="stat-row cols-5" id="statRow" aria-label="Current lake readings"></section>
-
-  <section class="chart-grid chart-grid-3" id="dielGrid">
-    <div class="chart-card" data-series="do">
-      <div class="chart-card-head">
-        <span class="dot" id="dotDo"></span>
-        <h2>Dissolved oxygen</h2>
-        <span class="chart-unit">mg/L</span>
-      </div>
-      <div class="chart-plot" id="plot-do"></div>
-    </div>
-    <div class="chart-card" data-series="wtemp">
-      <div class="chart-card-head">
-        <span class="dot" id="dotTemp"></span>
-        <h2>Water temperature</h2>
-        <span class="chart-unit">&deg;C, surface</span>
-      </div>
-      <div class="chart-plot" id="plot-wtemp"></div>
-    </div>
-    <div class="chart-card" data-series="par">
-      <div class="chart-card-head">
-        <span class="dot" id="dotPar"></span>
-        <h2>Light (PAR)</h2>
-        <span class="chart-unit">&micro;mol/m&sup2;/s</span>
-      </div>
-      <div class="chart-plot" id="plot-par"></div>
-    </div>
-  </section>
-
-  <section class="case-card">
-    <h3 style="margin:0 0 6px;">Zoomed out: season and annual balance for this lake</h3>
-    <p class="case-sub" style="margin-bottom:10px;">
-      The three days above are just a snapshot. Here's the same lake's whole year &mdash; daily GPP and ER,
-      shown as a 7-day-style smooth curve across every day it's ice-free (or, for the tropical lake, every day
-      of the year).
-    </p>
-    <div class="overlay-legend">
-      <span><span class="swatch" style="background:var(--flux-add)"></span>GPP</span>
-      <span><span class="swatch" style="background:var(--flux-remove)"></span>ER</span>
-    </div>
-    <div class="overlay-plot" id="seasonalPlot" style="height:200px;"></div>
-    <p class="rank-note" id="seasonalCaption" style="margin-top:8px;"></p>
-  </section>
-
-  <section class="case-card">
-    <label for="fingerprintNotes" style="font-size:14px; font-weight:600; display:block; margin-bottom:6px;">
-      What do you notice as you switch between lakes?
-    </label>
-    <textarea class="notes-field" id="fingerprintNotes" placeholder="Describe the patterns you see&hellip;"></textarea>
-    <div class="notes-hint">Saved automatically in this browser.</div>
-
-    <button type="button" class="play-btn" id="revealNotice" style="margin-top:14px;">See what other scientists have noticed</button>
-    <div class="reveal-panel" id="noticePanel" hidden>
-      <h3 class="reveal-title" id="noticeTitle"></h3>
-      <ul id="noticeList" style="margin:0; padding-left:20px; color:var(--text-secondary); font-size:14px; line-height:1.7;"></ul>
-    </div>
-  </section>
-
-  <!-- ===================== Part 2: Why do they differ? ===================== -->
-  <section class="case-card">
-    <h2>Part 2 &middot; Why do they differ?</h2>
-    <p class="case-sub">
-      Every oxygen curve above is downstream of the environment it grew in. Here's what makes each of these five
-      lakes different &mdash; the currently selected lake is highlighted.
-    </p>
-    <div class="env-table-wrap">
-      <table class="env-table" id="envTable">
-        <thead>
-          <tr>
-            <th>Lake</th>
-            <th>Nutrients (Total P)</th>
-            <th>Water clarity</th>
-            <th>Dissolved organic carbon</th>
-            <th>Summer temperature</th>
-            <th>Ice-free season</th>
-          </tr>
-        </thead>
-        <tbody id="envTableBody"></tbody>
-      </table>
-    </div>
-    <p style="font-size:14px; color:var(--text-secondary); margin:14px 0 0;">
-      <strong>Which environmental factors appear to control metabolism in each lake?</strong> Think about which
-      column best explains the oxygen pattern you noticed in Part 1 for the selected lake.
-    </p>
-  </section>
-
-  <!-- ===================== Part 3: Daily metabolism ===================== -->
-  <section class="case-card">
-    <h2>Part 3 &middot; Daily metabolism, side by side</h2>
-    <p class="case-sub">
-      One representative summer day's Gross Primary Production, Ecosystem Respiration, and Net Ecosystem
-      Production for every lake at once &mdash; regardless of which lake is selected above.
-    </p>
-  </section>
-
-  <section class="chart-card">
+  <section class="chart-card overlay-card">
     <div class="chart-card-head">
-      <h2>GPP, ER &amp; NEP by lake type</h2>
-      <span class="chart-unit">mg O&#8322;/L/day</span>
+      <h2>Your prediction: daily oxygen range</h2>
+      <span class="chart-unit">% saturation &middot; real = July 2019 daily lows and highs</span>
     </div>
-    <div class="overlay-plot" id="dailyBarPlot"></div>
-    <button type="button" class="play-btn" id="revealDailyAnswers" style="margin-top:12px;">Reveal the answers</button>
-    <div class="reveal-panel" id="dailyAnswersPanel" hidden>
-      <p id="dailyAnswersText" style="margin:0;"></p>
+    <div class="overlay-legend">
+      <span><span class="swatch" style="background:var(--series-wind)"></span>Lake Mendota</span>
+      <span><span class="swatch" style="background:var(--series-wtemp)"></span>Trout Bog</span>
+      <span><span class="swatch" style="background:var(--series-do)"></span>Trout Lake</span>
+      <span id="drawRealKey" hidden><span class="swatch" style="background:var(--text-muted)"></span>Boxes: left = daily lows, right = daily highs (July 2019)</span>
     </div>
+    <div class="draw-wrap">
+      <div class="overlay-plot" id="drawPlot" style="height:300px;"></div>
+      <div class="draw-surface" id="drawSurface" aria-label="Drawing area" role="img"></div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+      <button type="button" class="play-btn" id="drawReveal">Reveal the real data</button>
+      <button type="button" class="play-btn" id="drawClear" style="background:var(--surface-2, var(--page-plane)); color:var(--text-primary); border:1px solid var(--border-hairline);">Clear my lines</button>
+    </div>
+    <p id="drawFeedback" style="margin:12px 0 0; font-size:14px; line-height:1.6;" hidden></p>
   </section>
 
-  <!-- ===================== Part 4: What does NEP mean? ===================== -->
-  <section class="case-card">
-    <h2>Part 4 &middot; What does NEP mean?</h2>
-    <p class="case-sub">An ecosystem's carbon balance, in one equation:</p>
-    <p style="text-align:center; font-size:20px; font-weight:700; margin:6px 0 18px;">
-      NEP &nbsp;=&nbsp; GPP &nbsp;&minus;&nbsp; ER
-    </p>
-
-    <div class="budget-wrap">
-      <div class="budget-flows">
-        <div class="budget-flow-row">
-          <div class="budget-flow-label">GPP (in)</div>
-          <div class="budget-flow-track"><div class="budget-flow-fill is-gpp" id="fillGpp"></div></div>
-          <div class="budget-flow-value" id="valGpp">&ndash;</div>
-        </div>
-        <div class="budget-flow-row">
-          <div class="budget-flow-label">ER (out)</div>
-          <div class="budget-flow-track"><div class="budget-flow-fill is-er" id="fillEr"></div></div>
-          <div class="budget-flow-value" id="valEr">&ndash;</div>
-        </div>
-        <p class="budget-equation" id="budgetEquationText"></p>
-      </div>
-      <div class="budget-tank-wrap">
-        <div class="budget-tank">
-          <div class="budget-tank-mid"></div>
-          <div class="budget-tank-fill" id="tankFill"></div>
-        </div>
-        <div class="budget-tank-label" id="tankLabel">Carbon storage</div>
-      </div>
+  <section class="lookfor" aria-label="Explain your sketch" style="background:color-mix(in srgb, var(--series-do) 10%, var(--surface-1));">
+    <div class="lookfor-question">
+      <label for="sketchWhyNotes">Why did you draw each lake the way you did? Compare the three daily ranges, and say what you think causes the differences.</label>
+      <textarea class="notes-field" id="sketchWhyNotes" placeholder="Type your answer&hellip;"></textarea>
     </div>
-
-    <div class="budget-analogy">
-      <p style="margin:0 0 8px;">
-        <strong>Positive NEP</strong>: carbon entering storage exceeds carbon losses &mdash; the lake is
-        accumulating organic carbon, like <strong>earning more than you spend</strong>.
-      </p>
-      <p style="margin:0;">
-        <strong>Negative NEP</strong>: respiration exceeds production &mdash; the lake is consuming stored or
-        imported organic matter, like <strong>spending more than you earn</strong>.
-      </p>
-    </div>
-  </section>
-
-  <!-- ===================== Part 5: Which lakes store carbon? ===================== -->
-  <section class="case-card">
-    <h2>Part 5 &middot; Which lakes store carbon?</h2>
-    <p class="case-sub">
-      Before you see the answer, predict each lake's annual carbon balance: does it <strong>store carbon</strong>,
-      <strong>lose carbon</strong>, or stay <strong>close to balance</strong> over a whole year?
-    </p>
-    <div class="predict-rows" id="predictRows"></div>
-    <button type="button" class="play-btn" id="revealRanking" style="margin-top:14px;">Reveal annual NEP</button>
-    <div class="reveal-panel" id="rankingPanel" hidden>
-      <h3 class="reveal-title">Ranked: strongest carbon sink &rarr; strongest carbon source</h3>
-      <div class="rank-list" id="rankList"></div>
-      <p class="rank-note" id="rankSummary" style="margin-top:12px;"></p>
-    </div>
-  </section>
-
-  <!-- ===================== Part 6: Scale up ===================== -->
-  <section class="case-card">
-    <h2>Part 6 &middot; Scale up: from one lake to the planet</h2>
-    <p class="case-sub">
-      These five archetypes exist across every latitude on Earth &mdash; from ice-locked Arctic ponds to
-      sun-drenched tropical reservoirs. A simplified latitude diagram (not to scale): arrows show each lake's
-      annual carbon exchange with the atmosphere.
-    </p>
-    <div class="carbon-map">
-      <span class="carbon-map-pole-label">Pole</span>
-      <span class="carbon-map-eq-label">Equator</span>
-      <div class="carbon-map-atm">Atmosphere</div>
-      <div class="carbon-map-band" id="carbonMapBand"></div>
-    </div>
-    <p class="carbon-map-note">Arrows animate the direction of net CO&#8322; exchange, based on each lake's annual NEP.</p>
-    <p style="font-size:14px; color:var(--text-secondary); line-height:1.6; margin-top:16px;">
-      <strong>If many lakes have negative NEP, what does that imply about their role in Earth's carbon cycle?</strong>
-      Many lakes receive large amounts of organic carbon from their watersheds. Microbes respire much of this
-      carbon, producing carbon dioxide. As a result, many lakes emit CO&#8322; to the atmosphere &mdash; even lakes,
-      like the eutrophic archetype above, that are among the most biologically productive ecosystems on Earth.
-    </p>
-  </section>
-
-  <!-- ===================== Part 7: Sources or sinks? ===================== -->
-  <section class="case-card">
-    <h2>Part 7 &middot; Are lakes carbon sources or carbon sinks?</h2>
-    <p class="case-sub">Based on everything you've explored, cast your vote:</p>
-    <div class="vote-row">
-      <button type="button" class="quiz-option" data-vote="sources">Lakes mostly <strong>release</strong> carbon (sources)</button>
-      <button type="button" class="quiz-option" data-vote="sinks">Lakes mostly <strong>remove</strong> carbon (sinks)</button>
-    </div>
-    <div class="quiz-feedback" id="voteFeedback" hidden>
-      Although individual lakes vary widely, many lakes around the world are <strong>net heterotrophic</strong>
-      because they receive substantial organic carbon from surrounding forests, wetlands, and soils. Microbial
-      respiration converts this imported carbon into CO&#8322;, making many lakes net emitters of carbon to the
-      atmosphere. At the same time, lakes also bury organic carbon in their sediments, making them important
-      long-term carbon storage sites. Understanding the balance between these two processes &mdash; emission and
-      burial &mdash; is one of the central questions in aquatic ecology.
-    </div>
-  </section>
-
-  <!-- ===================== Final reflection ===================== -->
-  <section class="case-card">
-    <h2>Final reflection</h2>
-    <p style="font-size:14px; color:var(--text-secondary); line-height:1.6; margin:0 0 10px;">
-      You began this activity by exploring oxygen measurements from a single buoy. How can those same measurements
-      help scientists understand the global carbon cycle?
-    </p>
-    <textarea class="notes-field" id="reflectionNotes" placeholder="Write your reflection here&hellip;"></textarea>
     <div class="notes-hint">Saved automatically in this browser.</div>
   </section>
+
+  <div id="exploreWrap" hidden style="margin:4px 0 22px; text-align:center;">
+    <button type="button" class="play-btn" id="exploreBtn">Explore the oxygen dynamics &darr;</button>
+  </div>
+
+  <!-- ===================== Oxygen dynamics (revealed) ===================== -->
+  <div id="dynamicsBlock" hidden>
+
+    <section class="case-card">
+      <h2>What's driving each lake's oxygen?</h2>
+      <p class="case-sub">
+        A lake's oxygen is set by how much photosynthesis and respiration are going on, and those depend on a few
+        key ingredients: <strong>nutrients</strong> (nitrogen, <strong>N</strong>, and phosphorus, <strong>P</strong>,
+        feed algae), <strong>sunlight</strong> (PAR) to power photosynthesis, and
+        <strong>water temperature</strong>, which speeds up life, including respiration.
+      </p>
+      <p class="case-sub" style="margin-bottom:0;">
+        <strong>Match game:</strong> for each ingredient, rank the three lakes from lowest to highest. Drag a lake
+        into a slot (or tap a lake, then tap a slot). A lake can be used more than once. Then reveal the real
+        summer 2019 values.
+      </p>
+
+      <div class="match-game" id="driverGame" style="margin-top:14px;">
+        <div class="match-tray" id="driverTray">
+          <div class="match-chip" draggable="true" data-lake="mendota">&#127811; Lake Mendota</div>
+          <div class="match-chip" draggable="true" data-lake="troutbog">&#127809; Trout Bog</div>
+          <div class="match-chip" draggable="true" data-lake="troutlake">&#128142; Trout Lake</div>
+        </div>
+        <div class="match-rows" id="driverRows"></div>
+      </div>
+
+      <button type="button" class="play-btn" id="revealDrivers" style="margin-top:14px;">Reveal the real values</button>
+
+      <div class="reveal-panel" id="driversPanel" hidden>
+        <div class="chart-grid" style="margin-top:10px;">
+          <div class="chart-card"><div class="chart-card-head"><h2>Nitrogen (N)</h2><span class="chart-unit">total N, &micro;g/L &middot; 0&ndash;2 m</span></div><div class="overlay-plot" id="plot-tn" style="height:200px;"></div></div>
+          <div class="chart-card"><div class="chart-card-head"><h2>Phosphorus (P)</h2><span class="chart-unit">total P, &micro;g/L &middot; 0&ndash;2 m</span></div><div class="overlay-plot" id="plot-tp" style="height:200px;"></div></div>
+          <div class="chart-card"><div class="chart-card-head"><h2>Sunlight (PAR)</h2><span class="chart-unit">&micro;mol/m&sup2;/s, July mean &middot; depth varies*</span></div><div class="overlay-plot" id="plot-parmean" style="height:200px;"></div></div>
+          <div class="chart-card"><div class="chart-card-head"><h2>Water temperature</h2><span class="chart-unit">&deg;C, July mean</span></div><div class="overlay-plot" id="plot-tempmean" style="height:200px;"></div></div>
+        </div>
+        <p style="margin:12px 0 0; font-size:12.5px; line-height:1.5; color:var(--text-muted);">
+          N and P: means of June&ndash;August 2019 samples taken at 0&ndash;2 m depth. *PAR is the July 2019 mean at the depth each
+          lake's sensor measures it: surface (above the water) for Mendota, 25 cm below the surface for Trout Bog (a lux
+          logger converted to PAR), and the buoy's PAR sensor for Trout Lake. Because the depths differ, light is not
+          perfectly comparable &mdash; especially for the dark-water bog.
+        </p>
+        <p id="driversText" style="margin:12px 0 0; font-size:14px; line-height:1.6;"></p>
+      </div>
+    </section>
+
+    <section class="lookfor" aria-label="What do you notice" style="background:color-mix(in srgb, var(--series-do) 10%, var(--surface-1));">
+      <div class="lookfor-question">
+        <label for="fingerprintNotes">What do you notice? Which lake's nutrients, light, and temperature would you expect to make the most oxygen, and does that match what you saw in each lake's oxygen?</label>
+        <textarea class="notes-field" id="fingerprintNotes" placeholder="Describe the patterns you see&hellip;"></textarea>
+      </div>
+      <div class="notes-hint">Saved automatically in this browser.</div>
+    </section>
+
+    <!-- ===================== GPP, ER & NEP by lake type ===================== -->
+    <section class="case-card">
+      <h2>GPP, ER &amp; NEP by lake type</h2>
+      <p class="case-sub">
+        Put the ingredients together. Remember from Modules 5&ndash;6: <strong>GPP</strong> is oxygen made by
+        photosynthesis, <strong>ER</strong> is oxygen used by respiration, and <strong>NEP = GPP &minus; ER</strong>.
+        A lake with more GPP than ER is <strong>autotrophic</strong> (it makes more organic matter than it burns); one
+        with more ER than GPP is <strong>heterotrophic</strong>.
+      </p>
+      <p class="case-sub" style="margin-bottom:0;">
+        <strong>Predict:</strong> for each lake, what do you expect its July metabolism to look like? Then reveal
+        what the buoy oxygen data say.
+      </p>
+
+      <div class="match-rows" id="metabPredict" style="margin-top:14px;"></div>
+
+      <button type="button" class="play-btn" id="revealMetab" style="margin-top:14px;">Reveal the metabolism</button>
+
+      <div class="reveal-panel" id="metabPanel" hidden>
+        <div class="chart-card overlay-card" style="margin-top:10px;">
+          <div class="chart-card-head">
+            <h2>July 2019 metabolism by lake</h2>
+            <span class="chart-unit">mg O&#8322;/L/day &middot; bars = mean, whiskers = day-to-day spread (1 SD)</span>
+          </div>
+          <div class="overlay-legend">
+            <span><span class="swatch" style="background:var(--flux-add)"></span>GPP</span>
+            <span><span class="swatch" style="background:var(--flux-remove)"></span>ER</span>
+            <span><span class="swatch" style="background:var(--series-do)"></span>NEP (GPP &minus; ER)</span>
+          </div>
+          <div class="overlay-plot" id="plot-metab" style="height:280px;"></div>
+        </div>
+        <p id="metabText" style="margin:12px 0 0; font-size:14px; line-height:1.6;"></p>
+        <p id="metabCaveat" style="margin:10px 0 0; font-size:12.5px; line-height:1.5; color:var(--text-muted);"></p>
+      </div>
+    </section>
+
+    <!-- ===================== Can we manipulate metabolism? ===================== -->
+    <section class="lookfor" aria-label="Can we manipulate metabolism" style="background:color-mix(in srgb, var(--series-do) 10%, var(--surface-1));">
+      <h2>Can we manipulate metabolism?</h2>
+      <div class="lookfor-question">
+        <label for="manipulateNotes">You've seen what controls GPP in different lakes. How would you change GPP in a lake?</label>
+        <textarea class="notes-field" id="manipulateNotes" placeholder="Type your answer&hellip;"></textarea>
+      </div>
+      <div class="notes-hint">Saved automatically in this browser. Answer to unlock the reveal.</div>
+      <button type="button" class="play-btn" id="manipulateReveal" style="margin-top:12px;" disabled>Reveal</button>
+      <p id="manipulateText" style="margin:14px 0 0; font-size:15px; line-height:1.6; font-weight:600;" hidden>
+        Limnologists test these mechanisms by conducting whole lake experiments.
+      </p>
+    </section>
+
+    <div id="expBlock" hidden>
+    <!-- ===================== Whole-lake nutrient experiment ===================== -->
+    <section class="case-card">
+      <h2>A whole-lake experiment: add nutrients, watch the metabolism</h2>
+      <figure class="float-photo">
+        <img src="images/Peter_Paul_Carpenter.jpg" alt="Aerial view of two small dark forest lakes: Paul Lake in the foreground and the larger Peter Lake behind it.">
+        <figcaption>
+          Lake Paul (reference lake) is the smaller lake and Lake Peter (manipulated lake) is in the background.
+          Credit: Steve Carpenter
+        </figcaption>
+      </figure>
+      <p class="case-sub">
+        You've seen that lakes with more nutrients tend to make more algae. But is that cause and effect? Ecologists
+        tested it directly in the <strong>Cascade</strong> project at the University of Notre Dame Environmental Research
+        Center (UNDERC) in Michigan's Upper Peninsula. Two neighboring lakes were monitored with sondes that recorded
+        temperature, oxygen, pH, chlorophyll, and phycocyanin every few minutes from May 9 to September 4, 2015.
+        <strong>Paul Lake</strong> was left alone as the unfertilized reference. In <strong>Peter Lake</strong>, inorganic
+        nitrogen and phosphorus were added every day for four weeks, <strong>June 1 &ndash; June 29</strong>, then stopped.
+      </p>
+      <div style="overflow-x:auto; clear:both;">
+        <table class="exp-table">
+          <thead><tr><th>Lake</th><th>Treatment</th><th>N:P of addition</th><th>P loading</th><th>Nutrients added</th></tr></thead>
+          <tbody>
+            <tr><td>Paul</td><td>Unfertilized reference</td><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td></tr>
+            <tr><td>Peter</td><td>Fertilized</td><td>15:1</td><td>3 mg P/m&sup2;/day</td><td>June 1 &ndash; June 29, 2015</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="case-sub" style="margin:14px 0 0;">
+        <strong>Sketch it:</strong> draw daily <strong>GPP</strong> from May to September for the unfertilized lake and for
+        the fertilized lake. The shaded band shows when nutrients were being added to Peter Lake. Pick a line, then
+        click and drag across the chart. Think about <em>when</em> the lines separate and what happens
+        <em>after</em> the nutrients stop.
+      </p>
+    </section>
+
+    <section class="chart-card overlay-card">
+      <div class="chart-card-head">
+        <h2>Your prediction: GPP in 2015</h2>
+        <span class="chart-unit">mg O&#8322;/L/day &middot; shaded = nutrients added to Peter (Jun 1&ndash;29)</span>
+      </div>
+      <div class="res-switch" id="expDrawSwitch" style="margin-bottom:10px;">
+        <button type="button" class="res-btn active" data-draw="paul">Draw unfertilized lake (Paul)</button>
+        <button type="button" class="res-btn" data-draw="fert">Draw fertilized lake (Peter)</button>
+      </div>
+      <div class="overlay-legend">
+        <span><span class="swatch" style="background:var(--series-do)"></span>Your unfertilized lake</span>
+        <span><span class="swatch" style="background:var(--series-wtemp)"></span>Your fertilized lake</span>
+        <span id="expDrawKey" hidden><span class="swatch" style="background:var(--text-muted)"></span>Dashed = real data: Paul (blue), Peter (green)</span>
+      </div>
+      <div class="draw-wrap">
+        <div class="overlay-plot" id="expDrawPlot" style="height:280px;"></div>
+        <div class="draw-surface" id="expDrawSurface" aria-label="Drawing area" role="img"></div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+        <button type="button" class="play-btn" id="expDrawReveal">Reveal the real data</button>
+        <button type="button" class="play-btn" id="expDrawClear" style="background:var(--surface-2, var(--page-plane)); color:var(--text-primary); border:1px solid var(--border-hairline);">Clear my lines</button>
+      </div>
+    </section>
+
+    <div id="expExplore" hidden>
+      <section class="chart-grid">
+        <div class="chart-card"><div class="chart-card-head"><h2>Chlorophyll</h2><span class="chart-unit">sonde units (algae)</span></div><div class="overlay-plot" id="plot-expchl" style="height:210px;"></div></div>
+        <div class="chart-card"><div class="chart-card-head"><h2>GPP</h2><span class="chart-unit">mg O&#8322;/L/day</span></div><div class="overlay-plot" id="plot-expgpp" style="height:210px;"></div></div>
+        <div class="chart-card"><div class="chart-card-head"><h2>ER</h2><span class="chart-unit">mg O&#8322;/L/day</span></div><div class="overlay-plot" id="plot-exper" style="height:210px;"></div></div>
+        <div class="chart-card"><div class="chart-card-head"><h2>NEP (GPP &minus; ER)</h2><span class="chart-unit">mg O&#8322;/L/day</span></div><div class="overlay-plot" id="plot-expnep" style="height:210px;"></div></div>
+      </section>
+      <div class="overlay-legend" style="margin:10px 0 0;">
+        <span><span class="swatch" style="background:var(--series-do)"></span>Paul (unfertilized)</span>
+        <span><span class="swatch" style="background:var(--series-wind)"></span>Peter (fertilized)</span>
+        <span>Shaded band = nutrients added to Peter, Jun 1&ndash;29</span>
+      </div>
+      <p id="expText" style="margin:12px 0 0; font-size:14px; line-height:1.6;"></p>
+      <p id="expCaveat" style="margin:10px 0 0; font-size:12.5px; line-height:1.5; color:var(--text-muted);"></p>
+
+      <section class="lookfor" aria-label="Experiment reflection" style="background:color-mix(in srgb, var(--series-do) 10%, var(--surface-1)); margin-top:18px;">
+        <div class="lookfor-question">
+          <label for="experimentNotes">What changed in Peter Lake compared with Paul Lake while nutrients were being added, and what happened after they stopped? Both GPP and ER changed &mdash; why do you think respiration responded too?</label>
+          <textarea class="notes-field" id="experimentNotes" placeholder="Type your answer&hellip;"></textarea>
+        </div>
+        <div class="notes-hint">Saved automatically in this browser.</div>
+      </section>
+    </div>
+    </div>
+
+  </div>
 
 </main>
 
@@ -275,18 +318,22 @@
   <div class="page-footer-inner">
     <img src="images/cfllogo_hd.png" alt="CFL logo" class="page-footer-logo">
     <p>
-    Unlike Modules 1&ndash;6, the five lakes on this page are <strong>illustrative archetypes</strong>, not real
-    buoy measurements &mdash; Lake Mendota doesn't have a bog, Arctic, or tropical twin. Diel oxygen curves are
-    generated with the same 3-process alpha/R/gas-exchange model from Modules 2 &amp; 3, parameterized to match
-    typical published GPP/ER magnitudes and environmental conditions for each lake type; seasonal and annual
-    values scale those same daily rates across each lake's ice-free season. The goal is to illustrate real,
-    well-documented patterns across lake types &mdash; not to stand in for a specific measured lake.
+    All data are real buoy measurements from the North Temperate Lakes LTER, July 2019 (the one summer where all
+    three lakes have oxygen plus a light measurement): Lake Mendota
+    (<a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=129" target="_blank" rel="noopener">EDI knb-lter-ntl.129</a>),
+    Trout Lake (<a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=117" target="_blank" rel="noopener">knb-lter-ntl.117</a>),
+    and Trout Bog (<a href="https://portal.edirepository.org/nis/mapbrowse?scope=knb-lter-ntl&identifier=69" target="_blank" rel="noopener">knb-lter-ntl.69</a>).
+    Trout Bog has no PAR sensor, so its light is a HOBO lux logger hanging 25 cm below the surface, converted
+    to PAR with the standard sunlight factor of 0.0185 &micro;mol/m&sup2;/s per lux; it therefore measures light
+    at 25 cm, not at the surface, and isn't directly comparable to the other lakes' surface PAR. Trout Bog's
+    high-resolution oxygen is averaged to the hour, and obviously bad sensor values (for example negative
+    oxygen) were removed.
   </p>
   </div>
 </footer>
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-<script src="js/common.js?v=7"></script>
-<script src="js/module7.js?v=2"></script>
+<script src="js/common.js?v=13"></script>
+<script src="js/module7.js?v=20"></script>
 </body>
 </html>

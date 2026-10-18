@@ -62,8 +62,10 @@
     {
       title: 'Module 7 — Compare Lakes',
       fields: [
-        { key: 'compareLakes.fingerprintNotes', label: 'What do you notice as you switch between lakes?' },
-        { key: 'compareLakes.reflection', label: 'Final reflection' },
+        { key: 'compareLakes.sketchWhyNotes', label: "Why did you draw each lake the way you did? Compare the three daily ranges, and say what you think causes the differences." },
+        { key: 'compareLakes.fingerprintNotes', label: "What do you notice? Which lake's nutrients, light, and temperature would you expect to make the most oxygen, and does that match what you saw in each lake's oxygen?" },
+        { key: 'compareLakes.manipulateNotes', label: "You've seen what controls GPP in different lakes. How would you change GPP in a lake?" },
+        { key: 'compareLakes.experimentNotes', label: "What changed in Peter Lake compared with Paul Lake while nutrients were being added, and what happened after they stopped? Both GPP and ER changed - why do you think respiration responded too?" },
       ],
     },
   ];
