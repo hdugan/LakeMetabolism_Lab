@@ -4,7 +4,7 @@
   const NAME_KEY = 'lakeMetab.studentName';
 
   // Every free-response note the lab saves, in the order they should be
-  // reviewed/turned in. Keys match what modules 1-5 and 7 already write to
+  // reviewed/turned in. Keys match what modules 1-7 already write to
   // localStorage - this page only reads them, never writes to another
   // page's key. Module 1 includes the former standalone Module 2 (Lake
   // Detective) fields, which merged into it when that module was folded
@@ -47,6 +47,16 @@
       title: 'Module 5 — Every Lake Has a Metabolism',
       fields: [
         { key: 'everyLakeMetabolism.recallNotes', label: 'How do you think these definitions might apply to an entire lake rather than an individual organism?' },
+      ],
+    },
+    {
+      title: 'Module 6 — Seasonal Metabolism',
+      fields: [
+        { key: 'seasonalMetabolism.springNotes', label: 'Spring (March – May): what is the lake like, and what is changing?' },
+        { key: 'seasonalMetabolism.summerNotes', label: 'Summer (June – August): what is the lake like, and what is changing?' },
+        { key: 'seasonalMetabolism.fallNotes', label: 'Fall (September – November): what is the lake like, and what is changing?' },
+        { key: 'seasonalMetabolism.sketchWhyNotes', label: 'Why did you draw GPP and ER the way you did? Describe how each one changes across spring, summer, and fall, and what you think drives it.' },
+        { key: 'seasonalMetabolism.mayLowNotes', label: 'Knowing how lakes work, why are GPP and algal biomass so low in mid-May?' },
       ],
     },
     {
