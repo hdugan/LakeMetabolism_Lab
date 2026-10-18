@@ -35,8 +35,7 @@
 
   // Bookkeeping fields in mendota_seasonal.json: the average across 2021-2025 of
   // each year's 7-day-smoothed daily estimate (scripts/add_multiyear_metabolism.py).
-  // The file also carries the 2024-only series (gpp_smooth etc.) and
-  // OLS/MLE/Kalman/Bayesian columns; this module doesn't use them.
+  // (Trimmed to just these fields by scripts/prune_seasonal.py.)
   const BK = { gpp: 'gpp_avg', er: 'er_avg', nep: 'nep_avg' };
 
   // Per-season means and share of autotrophic days - shared by the match-game
@@ -127,9 +126,9 @@
 
     // ---- stat tiles ----
     const STATS = [
-      { stat: 'gpp', label: 'GPP', unit: 'mg/L/day', color: '--flux-add' },
-      { stat: 'er', label: 'ER', unit: 'mg/L/day', color: '--flux-remove' },
-      { stat: 'nep', label: 'NEP', unit: 'mg/L/day', color: '--series-do' },
+      { stat: 'gpp', label: 'GPP', unit: 'mg O₂/L/day', color: '--flux-add' },
+      { stat: 'er', label: 'ER', unit: 'mg O₂/L/day', color: '--flux-remove' },
+      { stat: 'nep', label: 'NEP', unit: 'mg O₂/L/day', color: '--series-do' },
     ];
     const statRow = document.getElementById('statRow');
     STATS.forEach((s) => {
@@ -157,12 +156,12 @@
       {
         x: dates, y: daily.map((d) => d[BK.gpp]), type: 'scatter', mode: 'lines',
         line: { color: gppColor, width: 2, shape: 'spline', smoothing: 0.3 },
-        hovertemplate: '%{y:.2f} mg/L/day<extra>GPP</extra>',
+        hovertemplate: '%{y:.2f} mg O₂/L/day<extra>GPP</extra>',
       },
       {
         x: dates, y: daily.map((d) => d[BK.er]), type: 'scatter', mode: 'lines',
         line: { color: erColor, width: 2, shape: 'spline', smoothing: 0.3 },
-        hovertemplate: '%{y:.2f} mg/L/day<extra>ER</extra>',
+        hovertemplate: '%{y:.2f} mg O₂/L/day<extra>ER</extra>',
       },
     ], basePlotLayout({
       margin: { l: 56, r: 12, t: 10, b: 28 },
@@ -173,7 +172,7 @@
     Plotly.newPlot('nepPlot', [{
       x: dates, y: daily.map((d) => d[BK.nep]), type: 'bar',
       marker: { color: daily.map((d) => (d[BK.nep] == null ? 'rgba(0,0,0,0)' : (d[BK.nep] >= 0 ? goodColor : badColor))) },
-      hovertemplate: '%{y:.2f} mg/L/day<extra>NEP</extra>',
+      hovertemplate: '%{y:.2f} mg O₂/L/day<extra>NEP</extra>',
     }], basePlotLayout({
       margin: { l: 56, r: 12, t: 10, b: 28 },
       shapes: [cursorLineShape(dates[0])],
@@ -300,7 +299,7 @@
 
       Plotly.newPlot('monthlyNepPlot', [{
         x: labels, y: means, type: 'bar', marker: { color: colors },
-        hovertemplate: '%{y:.2f} mg/L/day<extra>%{x}</extra>',
+        hovertemplate: '%{y:.2f} mg O₂/L/day<extra>%{x}</extra>',
       }], basePlotLayout({
         margin: { l: 56, r: 12, t: 10, b: 28 },
         xaxis: { type: 'category', gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') } },
@@ -316,8 +315,8 @@
       const posLabels = labels.filter((_, i) => means[i] > 0);
       const f2m = (v) => (v >= 0 ? '+' : '') + v.toFixed(2);
 
-      let text = `Monthly NEP peaks in ${labels[peakIdx]} (mean ${f2m(means[peakIdx])} mg/L/day) and is net positive in ${posLabels.join(', ')}. ` +
-        `In the other months GPP and ER are close to balanced, with the most negative month being ${labels[lowIdx]} (${f2m(means[lowIdx])} mg/L/day). ` +
+      let text = `Monthly NEP peaks in ${labels[peakIdx]} (mean ${f2m(means[peakIdx])} mg O₂/L/day) and is net positive in ${posLabels.join(', ')}. ` +
+        `In the other months GPP and ER are close to balanced, with the most negative month being ${labels[lowIdx]} (${f2m(means[lowIdx])} mg O₂/L/day). ` +
         `This pattern - a productive summer, bracketed by spring and fall when respiration keeps pace with or slightly exceeds photosynthesis - is typical of temperate lakes: ` +
         `in spring, light and warmth are still building and algae are mixed through a deep, cold water column, while in fall the light available for photosynthesis ` +
         `drops faster than respiration does, and decomposition gets a boost from the summer bloom's die-off and from leaf litter and runoff.`;
@@ -390,8 +389,8 @@
     Plotly.newPlot('driversPlot', [
       line(dates, normalize(parRoll), cssVar('--series-par'), 'Surface PAR', 'µmol/m²/s', parRoll),
       line(dates, normalize(tempRoll), cssVar('--series-do'), 'Water temp', '°C', tempRoll),
-      line(dates, normalize(gppSeries), gppColor, 'GPP', 'mg/L/day', gppSeries),
-      line(dates, normalize(erSeries), erColor, 'ER', 'mg/L/day', erSeries),
+      line(dates, normalize(gppSeries), gppColor, 'GPP', 'mg O₂/L/day', gppSeries),
+      line(dates, normalize(erSeries), erColor, 'ER', 'mg O₂/L/day', erSeries),
     ], basePlotLayout({ yaxis: pctAxis }), { displayModeBar: false, responsive: true, scrollZoom: false });
 
     // ---- draw-your-prediction: freehand curves ----
@@ -597,7 +596,7 @@
       Plotly.newPlot('sketchNepPlot', [{
         x: dates, y: nep, type: 'bar',
         marker: { color: nep.map((v) => (v == null ? 'rgba(0,0,0,0)' : (v >= 0 ? goodColor : badColor))) },
-        hovertemplate: '%{y:.2f} mg/L/day<extra>Your NEP</extra>',
+        hovertemplate: '%{y:.2f} mg O₂/L/day<extra>Your NEP</extra>',
       }], basePlotLayout({
         margin: { l: 56, r: 12, t: 10, b: 28 },
         xaxis: { type: 'date', range: [dates[0], dates[n - 1]], tickformat: '%b', hoverformat: '%b %-d', ...axisStyle },
@@ -610,7 +609,7 @@
         const auto = have.filter((o) => o.v >= 0).length;
         const best = have.reduce((a, b) => (b.v > a.v ? b : a)), worst = have.reduce((a, b) => (b.v < a.v ? b : a));
         text.textContent = `On ${Math.round((100 * auto) / have.length)}% of the days you drew, your lake is autotrophic (GPP above ER) and on ${Math.round((100 * (have.length - auto)) / have.length)}% it is heterotrophic. ` +
-          `Your biggest oxygen surplus is around ${fmtMD(dates[best.i])} (${best.v >= 0 ? '+' : ''}${best.v.toFixed(1)} mg/L/day) and your biggest deficit around ${fmtMD(dates[worst.i])} (${worst.v >= 0 ? '+' : ''}${worst.v.toFixed(1)}). ` +
+          `Your biggest oxygen surplus is around ${fmtMD(dates[best.i])} (${best.v >= 0 ? '+' : ''}${best.v.toFixed(1)} mg O₂/L/day) and your biggest deficit around ${fmtMD(dates[worst.i])} (${worst.v >= 0 ? '+' : ''}${worst.v.toFixed(1)}). ` +
           `Keep this in mind - next you'll see what the buoy actually recorded.`;
       }
       card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -734,7 +733,7 @@
       // GPP is drawn as a wide, translucent band so it reads as the backdrop the
       // two pigment lines are compared against.
       (() => {
-        const t = line(rowDates, normalize(gppRaw), hexToRgba(gppColor, 0.4), 'GPP', 'mg/L/day', gppRaw);
+        const t = line(rowDates, normalize(gppRaw), hexToRgba(gppColor, 0.4), 'GPP', 'mg O₂/L/day', gppRaw);
         t.line.width = 9;
         return t;
       })(),

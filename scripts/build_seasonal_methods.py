@@ -1,3 +1,6 @@
+# NOTE: the OLS / MLE / Kalman filter / Bayesian columns this script adds to data/mendota_seasonal.json are
+# no longer used by the app (Module 6 teaches the bookkeeping method only) and are pruned by
+# scripts/prune_seasonal.py. Kept for reference.
 # Fits OLS, MLE, Kalman-filter, and Bayesian (MCMC) versions of the same
 # 3-process model (GPP ~ PAR, constant R, gas exchange ~ wind*(DOsat-DO))
 # for every day of the 2024 season, alongside the existing bookkeeping

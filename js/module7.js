@@ -191,7 +191,7 @@
     const DRIVERS = [
       { id: 'tn', label: 'Nitrogen (N)', field: 'tn_ugl', unit: 'µg/L', digits: 0, plot: 'plot-tn' },
       { id: 'tp', label: 'Phosphorus (P)', field: 'tp_ugl', unit: 'µg/L', digits: 0, plot: 'plot-tp' },
-      { id: 'par', label: 'Sunlight (PAR)', field: 'par_mean', unit: 'µmol/m²/s', digits: 0, plot: 'plot-parmean' },
+      { id: 'par', label: 'Light (PAR)', field: 'par_mean', unit: 'µmol/m²/s', digits: 0, plot: 'plot-parmean' },
       { id: 'temp', label: 'Water temperature', field: 'temp_mean', unit: '°C', digits: 1, plot: 'plot-tempmean' },
     ];
     const RANKS = ['Lowest', 'Middle', 'Highest'];
@@ -370,7 +370,7 @@
       const bar = (field, name, color) => ({
         x: LABELS, y: LAKE_KEYS.map((k) => MSTAT[k][field].mean), type: 'bar', name, marker: { color },
         error_y: { type: 'data', array: LAKE_KEYS.map((k) => MSTAT[k][field].sd), visible: true, color: cssVar('--text-muted'), thickness: 1.2, width: 4 },
-        hovertemplate: `%{y:.2f} mg/L/day<extra>${name} · %{x}</extra>`,
+        hovertemplate: `%{y:.2f} mg O₂/L/day<extra>${name} · %{x}</extra>`,
       });
       Plotly.react('plot-metab', [
         bar('gpp', 'GPP', cssVar('--flux-add')), bar('er', 'ER', cssVar('--flux-remove')), bar('nep', 'NEP', cssVar('--series-do')),

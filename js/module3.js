@@ -200,7 +200,7 @@
     }
 
     function fmtRate(v) {
-      return (v > 0 ? '+' : '') + v.toFixed(2) + ' mg/L/day';
+      return (v > 0 ? '+' : '') + v.toFixed(2) + ' mg O₂/L/day';
     }
 
     function recompute() {
@@ -232,7 +232,7 @@
       const gasYou = simulate(p.alpha, p.r, p.k, doReal[0], par, wind, temp).gasTotal / 7;
       const gasTrue = simulate(TRUE_PARAMS.alpha, TRUE_PARAMS.r, TRUE_PARAMS.k, doReal[0], par, wind, temp).gasTotal / 7;
 
-      const fmt = (v) => v.toFixed(2) + ' mg/L/day';
+      const fmt = (v) => v.toFixed(2) + ' mg O₂/L/day';
       document.getElementById('revGppYou').textContent = fmt(gppYou);
       document.getElementById('revGppTrue').textContent = fmt(gppTrue);
       document.getElementById('revRYou').textContent = fmt(rYou);

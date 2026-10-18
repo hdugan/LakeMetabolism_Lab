@@ -38,7 +38,7 @@
     document.getElementById(`${prefix}Gpp`).textContent = '+' + calc.gppDay.toFixed(2);
     document.getElementById(`${prefix}Er`).textContent = '−' + calc.erDaily.toFixed(2);
     document.getElementById(`${prefix}Op`).textContent = calc.gppDay >= calc.erDaily ? '>' : '<';
-    document.getElementById(`${prefix}Net`).textContent = `Net = ${fmtSigned(calc.nep)} mg/L/day`;
+    document.getElementById(`${prefix}Net`).textContent = `Net = ${fmtSigned(calc.nep)} mg O₂/L/day`;
   }
 
   // The day slope is GPP and ER acting at once, so it alone isn't either
@@ -81,8 +81,8 @@
     const calc2 = calcMetabolism(hourly, '2023-07-14', '2023-07-15', 8, 15);
     fillBalance('ex1', calc1);
     fillBalance('ex2', calc2);
-    document.getElementById('ex1NetBadge').textContent = `Net ${fmtSigned(calc1.nep)} mg/L/day`;
-    document.getElementById('ex2NetBadge').textContent = `Net ${fmtSigned(calc2.nep)} mg/L/day`;
+    document.getElementById('ex1NetBadge').textContent = `Net ${fmtSigned(calc1.nep)} mg O₂/L/day`;
+    document.getElementById('ex2NetBadge').textContent = `Net ${fmtSigned(calc2.nep)} mg O₂/L/day`;
 
     // Draws the oxygen curve for one night+day window (evening of d1 through
     // evening of d2), with night shading and markers at the three points the
@@ -253,7 +253,7 @@
       nepFeedback.classList.toggle('is-correct', correct);
       nepFeedback.classList.toggle('is-incorrect', !correct);
       if (correct) {
-        nepFeedback.textContent = `Yes: NEP = GPP − ER = ${fmtSigned(calc1.gppDay)} − ${calc1.erDaily.toFixed(2)} = ${fmtSigned(calc1.nep)} mg/L/day.`;
+        nepFeedback.textContent = `Yes: NEP = GPP − ER = ${fmtSigned(calc1.gppDay)} − ${calc1.erDaily.toFixed(2)} = ${fmtSigned(calc1.nep)} mg O₂/L/day.`;
         verdictNetEl.hidden = false;
         nepCongrats.hidden = false;
         nepContinueBtn.hidden = false;

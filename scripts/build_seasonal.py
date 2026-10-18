@@ -1,8 +1,8 @@
-# Builds data/mendota_seasonal.json for Module 8 (Seasonal Metabolism): a
+# Builds data/mendota_seasonal.json for the first version of Module 6 (Seasonal Metabolism): a
 # full 2024 open-water season (March 13 - November 25 - the buoy is out of
 # the water outside this window every year; there is no winter data to have),
 # with per-day GPP/ER/NEP from the same automated night-slope/day-slope
-# method as Module 6, plus a 7-day rolling median to tame the method's
+# method as Module 5, plus a 7-day rolling median to tame the method's
 # well-known day-to-day noise.
 #
 # Source (fetch once into this directory; see scripts/build_dataset.py):
@@ -107,7 +107,7 @@ def get(d, hour, key):
 # imperfect simplification: once the lake destratifies and mixes deeper in
 # fall, the true mixed layer is considerably deeper than 2 m, so the fall/
 # spring corrections here likely overstate the atmospheric flux's effect on
-# concentration (see the caveat in module7.html's footer).
+# concentration (see the caveat in module6.html's footer).
 Z_MIX_M = 2.0
 
 
@@ -131,7 +131,7 @@ for d in days:
     sr_h, ss_h, sr_next_h = round(sr) % 24, round(ss) % 24, round(sr_next) % 24
 
     # Full hourly sequence from this day's sunrise through the next day's
-    # sunrise, as (date, hour) pairs - the same day/night window Module 6
+    # sunrise, as (date, hour) pairs - the same day/night window Module 5
     # teaches by hand, just walked hour by hour instead of endpoint-to-endpoint.
     seq = [(d, h) for h in range(sr_h, 24)] + [(d + timedelta(days=1), h) for h in range(0, sr_next_h + 1)]
 
