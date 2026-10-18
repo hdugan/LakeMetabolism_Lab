@@ -13,65 +13,48 @@
   }
   const SEASON_EMOJI = { Spring: '🌱', Summer: '☀️', Fall: '🍂' };
 
-  function fmtDate(dateStr) {
-    const [y, m, d] = dateStr.split('-').map(Number);
-    return `${MONTHS[m - 1]} ${d}, ${y}`;
+  // Month and day only - for averages across years, where a specific year would mislead.
+  function fmtMD(dateStr) {
+    const [, m, d] = dateStr.split('-').map(Number);
+    return `${MONTHS[m - 1]} ${d}`;
   }
 
-  // Five ways of turning the same oxygen curve into GPP/ER/NEP. `gpp`/`er`/
-  // `nep` name the smoothed fields each method contributes to mendota_seasonal.json
-  // (bookkeeping's have no suffix - it's the original field, computed by
-  // scripts/build_seasonal.py; the other four are added by
-  // scripts/build_seasonal_methods.py).
-  const METHODS = [
-    {
-      key: 'bookkeeping', label: 'Bookkeeping', gpp: 'gpp_smooth', er: 'er_smooth', nep: 'nep_smooth',
-      desc: 'LakeMetabolizer’s metab.bookkeep(): the same night/day-slope idea as Module 5, but a wind-based atmospheric flux is subtracted from every hourly DO change first, so gas exchange isn’t folded into ER the way Module 5’s by-hand version does.',
-    },
-    {
-      key: 'ols', label: 'OLS', gpp: 'gpp_ols_smooth', er: 'er_ols_smooth', nep: 'nep_ols_smooth',
-      desc: 'Ordinary least squares: fits GPP, ER, and gas exchange together in a single regression against the whole oxygen curve, instead of reading two slopes in isolation.',
-    },
-    {
-      key: 'mle', label: 'MLE', gpp: 'gpp_mle_smooth', er: 'er_mle_smooth', nep: 'nep_mle_smooth',
-      desc: 'Maximum likelihood: searches for the GPP / ER / gas-exchange combination whose simulated oxygen curve best matches the buoy’s actual data.',
-    },
-    {
-      key: 'kf', label: 'Kalman filter', gpp: 'gpp_kf_smooth', er: 'er_kf_smooth', nep: 'nep_kf_smooth',
-      desc: 'Kalman filter: the same model, but lets random process noise absorb some of the day-to-day wobble that other methods force entirely into GPP and ER.',
-    },
-    {
-      key: 'bayes', label: 'Bayesian', gpp: 'gpp_bayes_smooth', er: 'er_bayes_smooth', nep: 'nep_bayes_smooth',
-      desc: 'Bayesian (Metropolis-Hastings MCMC): explores a full range of plausible parameter values weighted by how well each fits, instead of committing to one single best fit.',
-    },
-  ];
-  const METHOD_BY_KEY = Object.fromEntries(METHODS.map((m) => [m.key, m]));
+  // '#rrggbb' -> 'rgba(r,g,b,a)' for translucent fills.
+  function hexToRgba(hex, alpha) {
+    const h = hex.replace('#', '');
+    const v = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16);
+    return `rgba(${(v >> 16) & 255}, ${(v >> 8) & 255}, ${v & 255}, ${alpha})`;
+  }
 
-  // Per-season mean GPP/ER and share of autotrophic days for one method's
-  // fields - shared by the season bar chart and the autotrophic/heterotrophic
-  // reveal so the two never tell slightly different stories.
-  function seasonStats(daily, method) {
+  // All dates in this module are averages across years (the year in the data is just a
+  // calendar placeholder), so dates are shown as month and day only.
+  function fmtDate(dateStr) {
+    const [, m, d] = dateStr.split('-').map(Number);
+    return `${MONTHS[m - 1]} ${d}`;
+  }
+
+  // Bookkeeping fields in mendota_seasonal.json: the average across 2021-2025 of
+  // each year's 7-day-smoothed daily estimate (scripts/add_multiyear_metabolism.py).
+  // The file also carries the 2024-only series (gpp_smooth etc.) and
+  // OLS/MLE/Kalman/Bayesian columns; this module doesn't use them.
+  const BK = { gpp: 'gpp_avg', er: 'er_avg', nep: 'nep_avg' };
+
+  // Per-season means and share of autotrophic days - shared by the match-game
+  // reveal and the season cards so the two never tell slightly different stories.
+  function seasonStats(daily) {
     const bucket = { Spring: [], Summer: [], Fall: [] };
     daily.forEach((d) => { bucket[seasonOf(d.date)].push(d); });
     const seasons = ['Spring', 'Summer', 'Fall'];
     return seasons.map((s) => {
       const rows = bucket[s];
-      const gppVals = rows.map((d) => d[method.gpp]).filter((v) => v != null);
-      const erVals = rows.map((d) => d[method.er]).filter((v) => v != null);
-      const nepVals = rows.map((d) => d[method.nep]).filter((v) => v != null);
+      const gppVals = rows.map((d) => d[BK.gpp]).filter((v) => v != null);
+      const erVals = rows.map((d) => d[BK.er]).filter((v) => v != null);
+      const nepVals = rows.map((d) => d[BK.nep]).filter((v) => v != null);
       const mean = (arr) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null);
       const autoPct = nepVals.length ? (100 * nepVals.filter((v) => v >= 0).length) / nepVals.length : null;
-      return { season: s, gpp: mean(gppVals), er: mean(erVals), autoPct, nAuto: nepVals.filter((v) => v >= 0).length, n: nepVals.length };
+      const meanOf = (key) => mean(rows.map((d) => d[key]).filter((v) => v != null));
+      return { season: s, gpp: mean(gppVals), er: mean(erVals), nep: mean(nepVals), par: meanOf('par_clim'), wtemp: meanOf('wtemp_clim'), autoPct, nAuto: nepVals.filter((v) => v >= 0).length, n: nepVals.length };
     });
-  }
-
-  // Season-wide mean NEP and % autotrophic days for one method, across all
-  // days at once (not split by season) - used by the all-methods comparison.
-  function overallStats(daily, method) {
-    const nepVals = daily.map((d) => d[method.nep]).filter((v) => v != null);
-    const mean = nepVals.length ? nepVals.reduce((a, b) => a + b, 0) / nepVals.length : null;
-    const autoPct = nepVals.length ? (100 * nepVals.filter((v) => v >= 0).length) / nepVals.length : null;
-    return { mean, autoPct, n: nepVals.length };
   }
 
   function basePlotLayout(extra) {
@@ -84,12 +67,37 @@
       xaxis: {
         type: 'date',
         gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') },
-        tickformat: '%b',
+        tickformat: '%b', hoverformat: '%b %-d',
       },
       yaxis: { gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
       hovermode: 'x',
     }, extra || {});
   }
+
+  // ---- season prediction notes (localStorage) - independent of the data fetch ----
+  [
+    { id: 'springNotes', key: 'seasonalMetabolism.springNotes' },
+    { id: 'summerNotes', key: 'seasonalMetabolism.summerNotes' },
+    { id: 'fallNotes', key: 'seasonalMetabolism.fallNotes' },
+    { id: 'mayLowNotes', key: 'seasonalMetabolism.mayLowNotes' },
+  ].forEach((nt) => {
+    const el = document.getElementById(nt.id);
+    el.value = localStorage.getItem(nt.key) || '';
+    el.addEventListener('input', () => localStorage.setItem(nt.key, el.value));
+  });
+  // Flip cards (season cards): click or press Enter/Space to turn over.
+  function toggleFlip(card) {
+    const flipped = card.classList.toggle('flipped');
+    card.setAttribute('aria-pressed', String(flipped));
+  }
+  document.addEventListener('click', (e) => {
+    const card = e.target.closest('.flip-card');
+    if (card) toggleFlip(card);
+  });
+  document.addEventListener('keydown', (e) => {
+    const card = e.target.closest && e.target.closest('.flip-card');
+    if (card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggleFlip(card); }
+  });
 
   fetch(SEASONAL_DATA_URL)
     .then((r) => r.json())
@@ -103,7 +111,6 @@
     const daily = data.daily;
     const n = daily.length;
     const dates = daily.map((d) => d.date);
-    let currentMethod = METHOD_BY_KEY.bookkeeping;
 
     // ---- month tick labels under the slider, one per month boundary ----
     const scale = document.getElementById('sliderScale');
@@ -148,26 +155,29 @@
 
     Plotly.newPlot('gppErPlot', [
       {
-        x: dates, y: daily.map((d) => d[currentMethod.gpp]), type: 'scatter', mode: 'lines',
+        x: dates, y: daily.map((d) => d[BK.gpp]), type: 'scatter', mode: 'lines',
         line: { color: gppColor, width: 2, shape: 'spline', smoothing: 0.3 },
         hovertemplate: '%{y:.2f} mg/L/day<extra>GPP</extra>',
       },
       {
-        x: dates, y: daily.map((d) => d[currentMethod.er]), type: 'scatter', mode: 'lines',
+        x: dates, y: daily.map((d) => d[BK.er]), type: 'scatter', mode: 'lines',
         line: { color: erColor, width: 2, shape: 'spline', smoothing: 0.3 },
         hovertemplate: '%{y:.2f} mg/L/day<extra>ER</extra>',
       },
     ], basePlotLayout({
+      margin: { l: 56, r: 12, t: 10, b: 28 },
       shapes: [cursorLineShape(dates[0])],
+      yaxis: { title: { text: 'GPP / ER (mg O₂/L/day)', font: { size: 11, color: cssVar('--text-muted') } }, gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
     }), { displayModeBar: false, responsive: true, scrollZoom: false });
 
     Plotly.newPlot('nepPlot', [{
-      x: dates, y: daily.map((d) => d[currentMethod.nep]), type: 'bar',
-      marker: { color: daily.map((d) => (d[currentMethod.nep] == null ? 'rgba(0,0,0,0)' : (d[currentMethod.nep] >= 0 ? goodColor : badColor))) },
+      x: dates, y: daily.map((d) => d[BK.nep]), type: 'bar',
+      marker: { color: daily.map((d) => (d[BK.nep] == null ? 'rgba(0,0,0,0)' : (d[BK.nep] >= 0 ? goodColor : badColor))) },
       hovertemplate: '%{y:.2f} mg/L/day<extra>NEP</extra>',
     }], basePlotLayout({
+      margin: { l: 56, r: 12, t: 10, b: 28 },
       shapes: [cursorLineShape(dates[0])],
-      yaxis: { gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: true, zerolinecolor: cssVar('--baseline') },
+      yaxis: { title: { text: 'NEP (mg O₂/L/day)', font: { size: 11, color: cssVar('--text-muted') } }, gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: true, zerolinecolor: cssVar('--baseline') },
     }), { displayModeBar: false, responsive: true, scrollZoom: false });
 
     // ---- slider wiring ----
@@ -185,11 +195,11 @@
 
       STATS.forEach((s) => {
         const el = document.getElementById(`stat-${s.stat}`);
-        const val = d[currentMethod[s.stat]];
+        const val = d[BK[s.stat]];
         el.innerHTML = val == null ? `&ndash;<span class="unit"> ${s.unit}</span>` : `${val >= 0 ? '+' : ''}${val.toFixed(2)}<span class="unit"> ${s.unit}</span>`;
       });
       const statusEl = document.getElementById('stat-status');
-      const nepVal = d[currentMethod.nep];
+      const nepVal = d[BK.nep];
       if (nepVal == null) statusEl.textContent = 'No data';
       else if (nepVal >= 0) { statusEl.textContent = 'Autotrophic'; statusEl.style.color = goodColor; }
       else { statusEl.textContent = 'Heterotrophic'; statusEl.style.color = badColor; }
@@ -225,8 +235,8 @@
     }
     playBtn.addEventListener('click', () => setPlaying(!timer));
 
-    // ---- match-the-season drag game (answer key is always Bayesian - the
-    // method the rest of the app treats as the most trustworthy) ----
+    // ---- match-the-season drag game (answer key comes from the
+    // same bookkeeping estimates shown in the charts above) ----
     const slotAssignments = { gpp: null, er: null, auto: null, hetero: null };
     let selectedSeason = null;
 
@@ -274,14 +284,14 @@
       });
     });
 
-    // ---- monthly NEP (Bayesian), colored by season ----
+    // ---- monthly NEP (bookkeeping), colored by season ----
     const SEASON_COLOR = { Spring: cssVar('--series-wind'), Summer: cssVar('--series-par'), Fall: cssVar('--series-wtemp') };
     function renderMonthlyNep() {
       const byMonth = {};
       daily.forEach((d) => {
-        if (d.nep_bayes_smooth == null) return;
+        if (d[BK.nep] == null) return;
         const m = d.date.slice(0, 7);
-        (byMonth[m] = byMonth[m] || []).push(d.nep_bayes_smooth);
+        (byMonth[m] = byMonth[m] || []).push(d[BK.nep]);
       });
       const months = Object.keys(byMonth).sort();
       const means = months.map((m) => byMonth[m].reduce((a, b) => a + b, 0) / byMonth[m].length);
@@ -302,34 +312,24 @@
 
       // Every month/value below is found live in the data, not assumed.
       const peakIdx = means.reduce((best, v, i) => (v > means[best] ? i : best), 0);
-      let fallFlipIdx = -1;
-      for (let i = peakIdx; i < months.length; i++) {
-        if (means[i] < 0) { fallFlipIdx = i; break; }
-      }
-      const springFlipIdx = means.findIndex((v, i) => i > 0 && i < peakIdx && v >= 0 && means[i - 1] < 0);
+      const lowIdx = means.reduce((best, v, i) => (v < means[best] ? i : best), 0);
+      const posLabels = labels.filter((_, i) => means[i] > 0);
+      const f2m = (v) => (v >= 0 ? '+' : '') + v.toFixed(2);
 
-      let text = `Monthly NEP peaks in ${labels[peakIdx]} (mean ${means[peakIdx].toFixed(2)} mg/L/day) and stays positive through summer`;
-      if (fallFlipIdx > -1) {
-        text += `, then flips negative in ${labels[fallFlipIdx]} (${means[fallFlipIdx].toFixed(2)} mg/L/day) and stays net heterotrophic for the rest of the season. ` +
-          `This switch - a productive summer followed by a heterotrophic fall - happens in most temperate lakes every year, not just in this one season's ` +
-          `data: as day length shortens and the sun angle drops, the light available for photosynthesis falls faster than respiration does, and decomposition ` +
-          `gets an extra boost from the summer bloom's own die-off and from leaf litter and runoff entering the lake as the growing season ends.`;
-      } else {
-        text += '.';
-      }
-      if (springFlipIdx > -1) {
-        text += ` The same data shows a mirror-image flip in early spring: ${labels[0]} starts net heterotrophic (mean ${means[0].toFixed(2)} mg/L/day) before ` +
-          `turning positive by ${labels[springFlipIdx]}, as ice-out returns light to the water column.`;
-      }
+      let text = `Monthly NEP peaks in ${labels[peakIdx]} (mean ${f2m(means[peakIdx])} mg/L/day) and is net positive in ${posLabels.join(', ')}. ` +
+        `In the other months GPP and ER are close to balanced, with the most negative month being ${labels[lowIdx]} (${f2m(means[lowIdx])} mg/L/day). ` +
+        `This pattern - a productive summer, bracketed by spring and fall when respiration keeps pace with or slightly exceeds photosynthesis - is typical of temperate lakes: ` +
+        `in spring, light and warmth are still building and algae are mixed through a deep, cold water column, while in fall the light available for photosynthesis ` +
+        `drops faster than respiration does, and decomposition gets a boost from the summer bloom's die-off and from leaf litter and runoff.`;
       document.getElementById('matchGameText').textContent = text;
     }
 
     // ---- reveal: check the match game, then show the monthly chart ----
     document.getElementById('revealMatchGame').addEventListener('click', () => {
-      const stats = seasonStats(daily, METHOD_BY_KEY.bayes);
+      const stats = seasonStats(daily);
       const byGpp = stats.slice().sort((a, b) => b.gpp - a.gpp);
       const byEr = stats.slice().sort((a, b) => b.er - a.er);
-      const byAuto = stats.filter((s) => s.autoPct != null).slice().sort((a, b) => b.autoPct - a.autoPct);
+      const byAuto = stats.filter((s) => s.nep != null).slice().sort((a, b) => b.nep - a.nep);
       const correct = {
         gpp: byGpp[0].season, er: byEr[0].season,
         auto: byAuto[0].season, hetero: byAuto[byAuto.length - 1].season,
@@ -352,10 +352,11 @@
       renderMonthlyNep();
     });
 
-    // ---- chlorophyll, phycocyanin & NEP ----
+    // ---- shared helpers for the "why" section ----
     const normalize = (vals) => {
-      const min = Math.min(...vals), max = Math.max(...vals), span = max - min || 1;
-      return vals.map((v) => ((v - min) / span) * 100);
+      const nums = vals.filter((v) => v != null);
+      const min = Math.min(...nums), max = Math.max(...nums), span = max - min || 1;
+      return vals.map((v) => (v == null ? null : ((v - min) / span) * 100));
     };
     function pearson(a, b) {
       const mean = (arr) => arr.reduce((x, y) => x + y, 0) / arr.length;
@@ -365,108 +366,401 @@
       const sdb = Math.sqrt(mean(b.map((v) => (v - mb) ** 2)));
       return cov / (sda * sdb);
     }
-    function renderChlorNep() {
-      // NEP here is always the Bayesian estimate, regardless of the method
-      // selector above - bookkeeping's day-to-day noise swamps the real
-      // relationship to phycocyanin (see the caption below).
-      const rows = daily.filter((d) => d.chlor_smooth != null && d.phyco_smooth != null && d.nep_bayes_smooth != null);
-      const chlorRaw = rows.map((d) => d.chlor_smooth);
-      const phycoRaw = rows.map((d) => d.phyco_smooth);
-      const nepRaw = rows.map((d) => d.nep_bayes_smooth);
-      Plotly.react('chlorNepPlot', [
-        {
-          x: rows.map((d) => d.date), y: normalize(chlorRaw), customdata: chlorRaw,
-          type: 'scatter', mode: 'lines', line: { color: cssVar('--series-wind'), width: 2, shape: 'spline', smoothing: 0.3 },
-          hovertemplate: '%{customdata:.2f} RFU<extra>Chlorophyll</extra>',
-        },
-        {
-          x: rows.map((d) => d.date), y: normalize(phycoRaw), customdata: phycoRaw,
-          type: 'scatter', mode: 'lines', line: { color: cssVar('--series-do'), width: 2, shape: 'spline', smoothing: 0.3 },
-          hovertemplate: '%{customdata:.2f} RFU<extra>Phycocyanin</extra>',
-        },
-        {
-          x: rows.map((d) => d.date), y: normalize(nepRaw), customdata: nepRaw,
-          type: 'scatter', mode: 'lines', line: { color: cssVar('--series-rain'), width: 2, shape: 'spline', smoothing: 0.3 },
-          hovertemplate: '%{customdata:.2f} mg/L/day<extra>NEP (Bayesian)</extra>',
-        },
-      ], basePlotLayout({
-        yaxis: { title: { text: '% of season range', font: { size: 11, color: cssVar('--text-muted') } }, range: [-3, 103], gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
+    // Trailing 7-day mean that skips missing values (PAR and temperature are
+    // raw daily values; GPP/ER are already smoothed in the data file).
+    function rolling(key) {
+      return daily.map((_, i) => {
+        const vals = daily.slice(Math.max(0, i - 6), i + 1).map((d) => d[key]).filter((v) => v != null);
+        return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+      });
+    }
+    const axisStyle = { gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') } };
+    const pctAxis = { title: { text: '% of season range', font: { size: 11, color: cssVar('--text-muted') } }, range: [-3, 103], zeroline: false, ...axisStyle };
+    const line = (x, y, color, name, unit, custom) => ({
+      x, y, customdata: custom, type: 'scatter', mode: 'lines', connectgaps: true,
+      line: { color, width: 2, shape: 'spline', smoothing: 0.3 },
+      hovertemplate: `%{customdata:.2f} ${unit}<extra>${name}</extra>`,
+    });
+
+    // ---- drivers vs. metabolism ----
+    const parRoll = rolling('par_clim');
+    const tempRoll = rolling('wtemp_clim');
+    const gppSeries = daily.map((d) => d[BK.gpp]);
+    const erSeries = daily.map((d) => d[BK.er]);
+    Plotly.newPlot('driversPlot', [
+      line(dates, normalize(parRoll), cssVar('--series-par'), 'Surface PAR', 'µmol/m²/s', parRoll),
+      line(dates, normalize(tempRoll), cssVar('--series-do'), 'Water temp', '°C', tempRoll),
+      line(dates, normalize(gppSeries), gppColor, 'GPP', 'mg/L/day', gppSeries),
+      line(dates, normalize(erSeries), erColor, 'ER', 'mg/L/day', erSeries),
+    ], basePlotLayout({ yaxis: pctAxis }), { displayModeBar: false, responsive: true, scrollZoom: false });
+
+    // ---- draw-your-prediction: freehand curves ----
+    // One bin per day of the season. Dragging fills every bin between the
+    // previous and current pointer position (linear interpolation) so a fast
+    // drag never leaves gaps. Real curves stay hidden until "Reveal".
+    // cfg: { plotId, surfaceId, switchId, revealId, clearId, keyId, feedbackId,
+    //        series: [{ key, color, real }], yRange, yTitle, tickvals, onReveal(drawn) }
+    function makeDrawChart(cfg) {
+      const plotEl = document.getElementById(cfg.plotId);
+      const surface = document.getElementById(cfg.surfaceId);
+      const [lo, hi] = cfg.yRange;
+      const clampLo = cfg.clamp ? cfg.clamp[0] : lo, clampHi = cfg.clamp ? cfg.clamp[1] : hi;
+      const drawn = {};
+      cfg.series.forEach((sr) => { drawn[sr.key] = new Array(n).fill(null); });
+      const idxOf = (key) => cfg.series.findIndex((sr) => sr.key === key);
+      let drawKey = cfg.series[0].key;
+      const k = cfg.series.length;
+      const traces = [
+        ...cfg.series.map((sr) => ({
+          x: dates, y: drawn[sr.key], type: 'scatter', mode: 'lines', hoverinfo: 'skip',
+          line: { color: sr.color, width: 3.5 }, connectgaps: false,
+        })),
+        ...(cfg.series[0].real ? cfg.series.map((sr) => ({
+          x: dates, y: new Array(n).fill(null), type: 'scatter', mode: 'lines', hoverinfo: 'skip',
+          line: { color: sr.color, width: 2.5, dash: 'dash' }, connectgaps: true,
+        })) : []),
+        // Optional translucent band between the first two real curves, filled
+        // only once they're revealed (cfg.shadeColor).
+        ...(cfg.shadeColor ? [
+          { x: dates, y: new Array(n).fill(null), type: 'scatter', mode: 'lines', hoverinfo: 'skip', line: { width: 0 }, showlegend: false },
+          { x: dates, y: new Array(n).fill(null), type: 'scatter', mode: 'lines', hoverinfo: 'skip', line: { width: 0 }, fill: 'tonexty', fillcolor: cfg.shadeColor, showlegend: false },
+        ] : []),
+      ];
+      Plotly.newPlot(cfg.plotId, traces, basePlotLayout({
+        margin: { l: 56, r: 12, t: 10, b: 28 },
+        dragmode: false, hovermode: false,
+        xaxis: { type: 'date', range: [dates[0], dates[n - 1]], fixedrange: true, tickformat: '%b', ...axisStyle },
+        yaxis: { title: { text: cfg.yTitle, font: { size: 11, color: cssVar('--text-muted') } }, range: cfg.yRange, tickvals: cfg.tickvals, fixedrange: true, zeroline: false, ...axisStyle },
       }), { displayModeBar: false, responsive: true, scrollZoom: false });
 
-      // Every correlation and peak date below is computed live from the
-      // data, not assumed - the caption states whatever this actually comes
-      // out to.
-      const corrChlorPhyco = pearson(chlorRaw, phycoRaw);
-      const corrChlorNep = pearson(chlorRaw, nepRaw);
-      const corrPhycoNep = pearson(phycoRaw, nepRaw);
-      const peakChlorDay = rows.reduce((a, b) => (b.chlor_smooth > a.chlor_smooth ? b : a));
-      const peakPhycoDay = rows.reduce((a, b) => (b.phyco_smooth > a.phyco_smooth ? b : a));
+      // Keep the transparent drawing surface exactly over Plotly's plot area.
+      function placeSurface() {
+        const size = plotEl._fullLayout && plotEl._fullLayout._size;
+        if (!size) return;
+        Object.assign(surface.style, { left: size.l + 'px', top: size.t + 'px', width: size.w + 'px', height: size.h + 'px' });
+      }
+      placeSurface();
+      plotEl.on('plotly_afterplot', placeSurface);
+      window.addEventListener('resize', () => setTimeout(placeSurface, 0));
 
-      document.getElementById('chlorNepText').textContent =
-        `Chlorophyll and phycocyanin peak at completely different times: chlorophyll tops out on ${fmtDate(peakChlorDay.date)} ` +
-        `(${peakChlorDay.chlor_smooth.toFixed(2)} RFU) - an early spring bloom, before cyanobacteria are active - while phycocyanin's ` +
-        `peak comes later, on ${fmtDate(peakPhycoDay.date)} (${peakPhycoDay.phyco_smooth.toFixed(2)} RFU), and stays elevated through ` +
-        `summer. Season-long the two sensors are actually slightly anti-correlated (r = ${corrChlorPhyco.toFixed(2)}): the spring bloom ` +
-        `and the summer cyanobacteria are two different populations of algae, not one continuous bloom. Bayesian net metabolism ` +
-        `actually tracks phycocyanin fairly well through the summer (r = ${corrPhycoNep.toFixed(2)}) - the season's highest-NEP days ` +
-        `cluster right where phycocyanin is elevated, consistent with that summer cyanobacteria bloom actively driving gross ` +
-        `production. Chlorophyll vs. NEP is weaker, and slightly negative (r = ${corrChlorNep.toFixed(2)}): the spring NEP bump does ` +
-        `line up with the chlorophyll peak, but it's most likely picking up a diatom bloom - a distinct, earlier-season phytoplankton ` +
-        `event - rather than the cyanobacteria that dominate later.`;
+      function pointToBin(e) {
+        const r = surface.getBoundingClientRect();
+        const fx = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+        const fy = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+        const val = lo + (1 - fy) * (hi - lo);
+        return { i: Math.round(fx * (n - 1)), v: Math.max(clampLo, Math.min(clampHi, val)) };
+      }
+      let last = null;
+      function paint(e) {
+        const pt = pointToBin(e);
+        const arr = drawn[drawKey];
+        if (last && last.i !== pt.i) {
+          const step = pt.i > last.i ? 1 : -1;
+          for (let i = last.i; i !== pt.i + step; i += step) {
+            arr[i] = last.v + ((pt.v - last.v) * (i - last.i)) / (pt.i - last.i);
+          }
+        } else {
+          arr[pt.i] = pt.v;
+        }
+        last = pt;
+        Plotly.restyle(cfg.plotId, { y: [arr.slice()] }, [idxOf(drawKey)]);
+      }
+      surface.addEventListener('pointerdown', (e) => {
+        surface.setPointerCapture(e.pointerId);
+        last = null;
+        paint(e);
+      });
+      surface.addEventListener('pointermove', (e) => { if (last) paint(e); });
+      ['pointerup', 'pointercancel'].forEach((ev) => surface.addEventListener(ev, () => { last = null; }));
+
+      document.getElementById(cfg.switchId).addEventListener('click', (e) => {
+        const btn = e.target.closest('.res-btn');
+        if (!btn) return;
+        drawKey = btn.dataset.draw;
+        document.querySelectorAll(`#${cfg.switchId} .res-btn`).forEach((b) => b.classList.toggle('active', b === btn));
+      });
+      document.getElementById(cfg.clearId).addEventListener('click', () => {
+        cfg.series.forEach((sr) => { drawn[sr.key].fill(null); });
+        Plotly.restyle(cfg.plotId, { y: cfg.series.map((sr) => drawn[sr.key].slice()) }, cfg.series.map((_, i) => i));
+      });
+      if (cfg.revealId) document.getElementById(cfg.revealId).addEventListener('click', () => {
+        Plotly.restyle(cfg.plotId, { y: cfg.series.map((sr) => sr.real) }, cfg.series.map((_, i) => k + i));
+        if (cfg.shadeColor) {
+          // lower curve first so 'tonexty' fills up to the upper one
+          Plotly.restyle(cfg.plotId, { y: [cfg.series[1].real, cfg.series[0].real] }, [2 * k, 2 * k + 1]);
+        }
+        document.getElementById(cfg.keyId).hidden = false;
+        const fb = document.getElementById(cfg.feedbackId);
+        fb.textContent = cfg.feedback(drawn);
+        fb.hidden = false;
+        if (cfg.onReveal) cfg.onReveal();
+      });
+      return drawn;
     }
 
-    // ---- method selector ----
-    const methodDesc = document.getElementById('methodDesc');
-    function selectMethod(key) {
-      currentMethod = METHOD_BY_KEY[key];
-      document.querySelectorAll('#methodSwitch .res-btn').forEach((btn) => {
-        btn.classList.toggle('active', btn.dataset.method === key);
-      });
-      methodDesc.textContent = currentMethod.desc;
+    const peakIdx = (arr) => arr.reduce((best, v, i) => (v != null && (best < 0 || v > arr[best]) ? i : best), -1);
+    // Chart 1's real curves are the 2021-2025 average (smoother than one year).
+    const realPar = normalize(rolling('par_clim'));
+    const realTemp = normalize(rolling('wtemp_clim'));
 
-      Plotly.restyle('gppErPlot', { y: [daily.map((d) => d[currentMethod.gpp]), daily.map((d) => d[currentMethod.er])] });
-      Plotly.restyle('nepPlot', {
-        y: [daily.map((d) => d[currentMethod.nep])],
-        marker: [{ color: daily.map((d) => (d[currentMethod.nep] == null ? 'rgba(0,0,0,0)' : (d[currentMethod.nep] >= 0 ? goodColor : badColor))) }],
-      });
-      update(Number(slider.value));
+    // Chart 1: relative light & temperature curves (timing is the point).
+    makeDrawChart({
+      plotId: 'drawPlot', surfaceId: 'drawSurface', switchId: 'drawSwitch', revealId: 'drawReveal', clearId: 'drawClear',
+      keyId: 'drawRealKey', feedbackId: 'drawFeedback',
+      series: [
+        { key: 'par', color: cssVar('--series-par'), real: realPar },
+        { key: 'temp', color: cssVar('--series-do'), real: realTemp },
+      ],
+      yRange: [-5, 105], clamp: [0, 100], tickvals: [0, 25, 50, 75, 100], yTitle: 'Relative level (% of season range)',
+      feedback(drawn) {
+        const rp = peakIdx(realPar), rt = peakIdx(realTemp);
+        const dp = peakIdx(drawn.par), dt = peakIdx(drawn.temp);
+        const lagDays = rt - rp;
+        let text = `Real data (average of 2021–2025): surface PAR peaks around ${fmtMD(dates[rp])} and water temperature around ${fmtMD(dates[rt])} - ` +
+          `temperature peaks about ${Math.abs(lagDays) < 7 ? 'the same time' : Math.round(Math.abs(lagDays) / 7) + ' weeks ' + (lagDays > 0 ? 'later' : 'earlier')}. `;
+        // The summer solstice (about June 21) is the longest day and highest sun of the year.
+        const solsticeGap = Math.abs((new Date(`${dates[rp].slice(0, 4)}-06-21`) - new Date(dates[rp])) / 86400000);
+        if (solsticeGap <= 14) {
+          text += 'Surface PAR peaks right around the summer solstice (about June 21), the longest day of the year, when the sun is highest in the sky. ';
+        }
+        if (dp >= 0 && dt >= 0) {
+          const yourLag = dt - dp;
+          text += `In your drawing, surface PAR peaks around ${fmtMD(dates[dp])} and temperature around ${fmtMD(dates[dt])}` +
+            (yourLag > 7 ? ' - you also had warmth lagging behind surface PAR.' : yourLag < -7 ? ' - you had temperature peaking before surface PAR.' : ' - you had them peaking together.');
+        } else if (dp >= 0 || dt >= 0) {
+          text += `You drew only ${dp >= 0 ? 'surface PAR' : 'temperature'}, so there's no timing to compare - try drawing both next time.`;
+        } else {
+          text += 'You didn’t draw anything, so use the dashed lines as a preview, and try sketching before revealing next time.';
+        }
+        return text;
+      },
+    });
+
+    // Chart 2: surface vs. 1 m PAR, in real units (the gap matters).
+    // Real curves here are the average of 2021-2025 (see scripts/add_par_below.py),
+    // so they show the typical seasonal pattern rather than one year.
+    const surfRoll = rolling('par_clim');
+    const belowRoll = rolling('par_below_clim');
+    const parTop = Math.ceil((Math.max(...surfRoll.filter((v) => v != null)) * 1.1) / 100) * 100;
+    function ratioFor(filter) {
+      const r = daily.filter((d) => d.par_clim > 0 && d.par_below_clim != null && filter(d));
+      return r.length ? (100 * r.reduce((a, d) => a + d.par_below_clim / d.par_clim, 0)) / r.length : null;
     }
-    document.getElementById('methodSwitch').addEventListener('click', (e) => {
-      const btn = e.target.closest('.res-btn');
-      if (!btn) return;
-      selectMethod(btn.dataset.method);
+    makeDrawChart({
+      plotId: 'drawPlot2', surfaceId: 'drawSurface2', switchId: 'drawSwitch2', revealId: 'drawReveal2', clearId: 'drawClear2',
+      keyId: 'drawRealKey2', feedbackId: 'drawFeedback2',
+      shadeColor: hexToRgba(cssVar('--series-par'), 0.22),
+      onReveal() { document.getElementById('keepExploringWrap').hidden = false; },
+      series: [
+        { key: 'surface', color: cssVar('--series-par'), real: surfRoll },
+        { key: 'below', color: cssVar('--series-rain'), real: belowRoll },
+      ],
+      yRange: [0, parTop], tickvals: Array.from({ length: parTop / 100 + 1 }, (_, i) => i * 100), yTitle: 'PAR (µmol/m²/s, 7-day mean)',
+      feedback(drawn) {
+        const seasonRatio = (name) => ratioFor((d) => seasonOf(d.date) === name);
+        const sp = seasonRatio('Spring'), su = seasonRatio('Summer'), fa = seasonRatio('Fall'), all = ratioFor(() => true);
+        const pct = (v) => (v == null ? '–' : v.toFixed(0) + '%');
+        const mean = (a) => { const v = a.filter((x) => x != null); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; };
+        const yourS = mean(drawn.surface), yourB = mean(drawn.below);
+        const bestSeason = sp != null && su != null && fa != null && sp > su && sp > fa;
+        let text = `Real data (average of 2021–2025): on an average day the sensor at 1 m sees about ${pct(all)} of the surface light (spring ${pct(sp)}, summer ${pct(su)}, fall ${pct(fa)}). ` +
+          (bestSeason ? `Spring is the highest: the water is typically clearest then, before algae build up, so more light makes it down. ` : '') +
+          `The lake's water absorbs and scatters light quickly - algae, sediment, and dissolved organic matter all block it - so the under-water curve follows the surface curve's shape ` +
+          `but sits far below it, and the share that gets through changes with how murky the water is. In practice the algae floating deeper than 1 m get even less. `;
+        if (yourS != null && yourB != null) {
+          text += `In your drawing the 1 m line averages ${(100 * yourB / yourS).toFixed(0)}% of your surface line.`;
+        } else {
+          text += 'Draw both lines before revealing next time to see how your gap compares.';
+        }
+        return text;
+      },
     });
 
-    // ---- all-methods comparison (independent of the selector above) ----
-    const methodColors = METHODS.map((m) => {
-      const stats = overallStats(daily, m);
-      return stats.mean == null ? 'rgba(0,0,0,0)' : (stats.mean >= 0 ? goodColor : badColor);
+    // Chart 3: sketch GPP and ER (real units); NEP is derived from the two lines.
+    const metabTop = Math.ceil(Math.max(...gppSeries.filter((v) => v != null), ...erSeries.filter((v) => v != null)) * 1.15);
+    const sketched = makeDrawChart({
+      plotId: 'drawPlot3', surfaceId: 'drawSurface3', switchId: 'drawSwitch3', clearId: 'drawClear3',
+      series: [
+        { key: 'gpp', color: gppColor },
+        { key: 'er', color: erColor },
+      ],
+      yRange: [0, metabTop], tickvals: Array.from({ length: metabTop + 1 }, (_, i) => i), yTitle: 'mg O₂/L/day',
     });
-    const allStats = METHODS.map((m) => overallStats(daily, m));
-    Plotly.newPlot('methodComparePlot', [{
-      x: METHODS.map((m) => m.label), y: allStats.map((s) => s.mean), type: 'bar',
-      marker: { color: methodColors },
-      customdata: allStats.map((s) => s.autoPct),
-      hovertemplate: '%{y:.2f} mg/L/day, %{customdata:.0f}% autotrophic days<extra>%{x}</extra>',
-    }], basePlotLayout({
-      xaxis: { type: 'category', gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') } },
-      yaxis: { gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: true, zerolinecolor: cssVar('--baseline') },
-    }), { displayModeBar: false, responsive: true, scrollZoom: false });
+    const sketchNote = document.getElementById('sketchWhyNotes');
+    sketchNote.value = localStorage.getItem('seasonalMetabolism.sketchWhyNotes') || '';
+    sketchNote.addEventListener('input', () => localStorage.setItem('seasonalMetabolism.sketchWhyNotes', sketchNote.value));
+    document.getElementById('showSketchNep').addEventListener('click', () => {
+      const nep = dates.map((_, i) => (sketched.gpp[i] != null && sketched.er[i] != null ? sketched.gpp[i] - sketched.er[i] : null));
+      const have = nep.map((v, i) => ({ v, i })).filter((o) => o.v != null);
+      const card = document.getElementById('sketchNepCard');
+      card.hidden = false;
+      Plotly.newPlot('sketchNepPlot', [{
+        x: dates, y: nep, type: 'bar',
+        marker: { color: nep.map((v) => (v == null ? 'rgba(0,0,0,0)' : (v >= 0 ? goodColor : badColor))) },
+        hovertemplate: '%{y:.2f} mg/L/day<extra>Your NEP</extra>',
+      }], basePlotLayout({
+        margin: { l: 56, r: 12, t: 10, b: 28 },
+        xaxis: { type: 'date', range: [dates[0], dates[n - 1]], tickformat: '%b', hoverformat: '%b %-d', ...axisStyle },
+        yaxis: { title: { text: 'NEP (mg O₂/L/day)', font: { size: 11, color: cssVar('--text-muted') } }, ...axisStyle, zeroline: true, zerolinecolor: cssVar('--baseline') },
+      }), { displayModeBar: false, responsive: true, scrollZoom: false });
+      const text = document.getElementById('sketchNepText');
+      if (!have.length) {
+        text.textContent = 'Draw both GPP and ER over the same stretch of the season first - NEP only shows up on days where you drew both.';
+      } else {
+        const auto = have.filter((o) => o.v >= 0).length;
+        const best = have.reduce((a, b) => (b.v > a.v ? b : a)), worst = have.reduce((a, b) => (b.v < a.v ? b : a));
+        text.textContent = `On ${Math.round((100 * auto) / have.length)}% of the days you drew, your lake is autotrophic (GPP above ER) and on ${Math.round((100 * (have.length - auto)) / have.length)}% it is heterotrophic. ` +
+          `Your biggest oxygen surplus is around ${fmtMD(dates[best.i])} (${best.v >= 0 ? '+' : ''}${best.v.toFixed(1)} mg/L/day) and your biggest deficit around ${fmtMD(dates[worst.i])} (${worst.v >= 0 ? '+' : ''}${worst.v.toFixed(1)}). ` +
+          `Keep this in mind - next you'll see what the buoy actually recorded.`;
+      }
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
 
-    const bkStats = allStats[0];
-    const others = allStats.slice(1);
-    const othersAllAgree = others.every((s) => s.mean != null && s.mean >= 0) && bkStats.mean != null && bkStats.mean < 0;
-    document.getElementById('methodCompareText').textContent = othersAllAgree
-      ? `Bookkeeping is still the outlier, but only barely: it puts the season at ${bkStats.mean.toFixed(2)} mg/L/day (${bkStats.autoPct.toFixed(0)}% autotrophic days) - just barely net heterotrophic - ` +
-        `while all four statistical methods agree the lake is net autotrophic, from ${Math.min(...others.map((s) => s.mean)).toFixed(2)} to ${Math.max(...others.map((s) => s.mean)).toFixed(2)} mg/L/day. ` +
-        `Unlike Module 5's by-hand version, this bookkeeping does subtract an estimated atmospheric flux before splitting day from night, and it tracks the other methods closely through summer, when the lake runs supersaturated. ` +
-        `The remaining gap traces to a simplification: the flux correction assumes a fixed 2-meter mixed layer all season, which overstates the correction once the lake mixes far deeper than that after fall turnover.`
-      : `The five methods don't fully agree: season-mean NEP ranges from ${Math.min(...allStats.map((s) => s.mean)).toFixed(2)} to ${Math.max(...allStats.map((s) => s.mean)).toFixed(2)} mg/L/day. ` +
-        `Bookkeeping now subtracts an estimated atmospheric flux too (unlike Module 5's by-hand version), but assumes a fixed 2-meter mixed layer all season - a simplification that's roughest once the lake mixes deeper after fall turnover.`;
+    // "Show me the real data": overlay the buoy's GPP/ER and NEP on the student's
+    // sketch, then open the rest of the module (slider, match game, drivers).
+    document.getElementById('showRealMetab').addEventListener('click', () => {
+      const dash = (y, color, name) => ({ x: dates, y, type: 'scatter', mode: 'lines', hoverinfo: 'skip', line: { color, width: 2.5, dash: 'dash' }, connectgaps: true, name });
+      Plotly.addTraces('drawPlot3', [dash(gppSeries, gppColor, 'Real GPP'), dash(erSeries, erColor, 'Real ER')]);
+      document.getElementById('drawRealKey3').hidden = false;
+      const realNep = daily.map((d) => d[BK.nep]);
+      if (document.getElementById('sketchNepPlot').data) {
+        Plotly.addTraces('sketchNepPlot', [{ x: dates, y: realNep, type: 'scatter', mode: 'lines', hoverinfo: 'skip', line: { color: cssVar('--text-primary'), width: 2.5, dash: 'dash' }, connectgaps: true, name: 'Real NEP' }]);
+      }
+      const vals = realNep.filter((v) => v != null);
+      const autoPct = Math.round((100 * vals.filter((v) => v >= 0).length) / vals.length);
+      document.getElementById('realMetabText').textContent =
+        `Dashed lines show the buoy's real values (bookkeeping method, average of 2021–2025). In the real data GPP peaks around ${fmtMD(dates[peakOf(gppSeries)])} and ER around ${fmtMD(dates[peakOf(erSeries)])}, ` +
+        `and the lake is autotrophic on ${autoPct}% of days. How does your sketch compare - did GPP and ER rise and fall together, and when did one pull ahead of the other?`;
+      document.getElementById('realMetabText').hidden = false;
+      document.getElementById('showRealMetab').hidden = true;
+
+      document.getElementById('metabolismRest').hidden = false;
+      // Charts built while hidden have no real size yet.
+      ['gppErPlot', 'nepPlot', 'driversPlot', 'chlorGppPlot', 'monthlyNepPlot'].forEach((id) => Plotly.Plots.resize(id));
+    });
+
+    // Peak dates and correlations are found in the data, not assumed.
+    const peakOf = (arr) => arr.reduce((best, v, i) => (v != null && v > arr[best] ? i : best), 0);
+    const parPeak = fmtDate(dates[peakOf(parRoll)]);
+    const tempPeak = fmtDate(dates[peakOf(tempRoll)]);
+    const gppPeak = fmtDate(dates[peakOf(gppSeries)]);
+    const pairs = daily.filter((d) => d.par_clim != null && d.wtemp_clim != null && d[BK.gpp] != null && d[BK.er] != null);
+    const rGppPar = pearson(pairs.map((d) => d[BK.gpp]), pairs.map((d) => d.par_clim));
+    const rGppTemp = pearson(pairs.map((d) => d[BK.gpp]), pairs.map((d) => d.wtemp_clim));
+    const rErTemp = pearson(pairs.map((d) => d[BK.er]), pairs.map((d) => d.wtemp_clim));
+    document.getElementById('driversText').textContent =
+      `Light peaks first (7-day mean PAR tops out around ${parPeak}), but the water keeps warming for weeks afterward (warmest around ${tempPeak}) ` +
+      `and GPP peaks around ${gppPeak}. By fall the two drivers have come apart: sunlight has dropped sharply while the water is still warm. ` +
+      `Across the season, ER tracks water temperature closely (r = ${rErTemp.toFixed(2)}), and GPP tracks temperature too (r = ${rGppTemp.toFixed(2)}) ` +
+      `- partly because warm water and bright light arrive together in summer - while GPP's day-to-day link to light alone is weaker (r = ${rGppPar.toFixed(2)}), ` +
+      `since algae also need to be present in the water, not just sunshine. Whenever GPP outruns ER the lake is autotrophic; whenever ER wins, heterotrophic.`;
+
+    // ---- season cards: numbers are live, mechanisms are the explanation ----
+    const stats = seasonStats(daily);
+    const byName = Object.fromEntries(stats.map((x) => [x.season, x]));
+    const f1 = (v) => (v == null ? '–' : v.toFixed(1));
+    const f2 = (v) => (v == null ? '–' : (v >= 0 ? '+' : '') + v.toFixed(2));
+    const pctDrop = Math.round(100 * (1 - byName.Fall.par / byName.Summer.par));
+    const SEASON_INFO = {
+      Spring: {
+        months: 'March – May', color: '--series-wind',
+        verdict: 'Waking up: production and respiration nearly cancel.',
+        body: [
+          'Ice-out lets light back into a cold, well-mixed lake. Algae respond fast &mdash; chlorophyll shows an early-season bloom &mdash; but cold water keeps bacterial respiration slow.',
+          'Light is still building and the lake hasn’t stratified yet, so algae get mixed down out of the sun. GPP and ER stay low and close to balanced; the lake hovers near zero NEP.',
+        ],
+      },
+      Summer: {
+        months: 'June – August', color: '--series-par',
+        verdict: 'Peak everything: GPP wins, so the lake is autotrophic.',
+        body: [
+          'Maximum sunlight and warm water. The lake stratifies, holding algae &mdash; increasingly cyanobacteria &mdash; in the bright surface layer where they can photosynthesize all day.',
+          'ER is also at its yearly high (warm water speeds respiration of everything living there), but GPP rises even further, leaving a positive NEP: more oxygen is made than used.',
+        ],
+      },
+      Fall: {
+        months: 'September – November', color: '--series-wtemp',
+        verdict: 'Light fades, respiration lingers: ER wins, the lake is heterotrophic.',
+        body: [
+          `Day length shortens and sun angle drops &mdash; average PAR is about ${pctDrop}% lower than in summer &mdash; and as surface waters cool, wind mixing deepens the layer and carries algae below the light. GPP collapses.`,
+          'But the water is still warm and the summer’s dead algae, plus leaf litter and runoff, give decomposers plenty to eat. ER stays above GPP as GPP falls away, so NEP slips slightly negative.',
+        ],
+      },
+    };
+    const cards = document.getElementById('seasonCards');
+    const SEASON_INK = { Spring: '#ffffff', Summer: '#1f1f1f', Fall: '#ffffff' };
+    ['Spring', 'Summer', 'Fall'].forEach((name) => {
+      const info = SEASON_INFO[name], st = byName[name];
+      const card = document.createElement('div');
+      card.className = 'flip-card';
+      card.setAttribute('role', 'button');
+      card.tabIndex = 0;
+      card.setAttribute('aria-pressed', 'false');
+      card.setAttribute('aria-label', `Reveal ${name}`);
+      card.style.setProperty('--season-color', cssVar(info.color));
+      card.style.setProperty('--season-ink', SEASON_INK[name]);
+      card.innerHTML = `
+        <div class="flip-inner">
+          <div class="flip-face flip-front">
+            <span class="flip-emoji">${SEASON_EMOJI[name]}</span>
+            <span class="flip-title">${name}</span>
+            <span class="flip-hint">(reveal)</span>
+          </div>
+          <div class="flip-face flip-back season-card">
+            <h3>${SEASON_EMOJI[name]} ${name}</h3>
+            <p class="season-months">${info.months}</p>
+            <div class="season-nums">
+              <span>GPP<br><strong>${f1(st.gpp)}</strong></span>
+              <span>ER<br><strong>${f1(st.er)}</strong></span>
+              <span>NEP<br><strong>${f2(st.nep)}</strong></span>
+              <span>Autotrophic days<br><strong>${st.autoPct == null ? '–' : st.autoPct.toFixed(0) + '%'}</strong></span>
+              <span>Surface PAR<br><strong>${f1(st.par)}</strong></span>
+              <span>Water temp<br><strong>${f1(st.wtemp)} °C</strong></span>
+            </div>
+            <p class="season-verdict">${info.verdict}</p>
+            ${info.body.map((t) => `<p>${t}</p>`).join('')}
+          </div>
+        </div>`;
+      cards.appendChild(card);
+    });
+
+    // ---- chlorophyll, phycocyanin & GPP ----
+    const rows = daily.filter((d) => d.chlor_avg != null && d.phyco_avg != null && d[BK.gpp] != null);
+    const chlorRaw = rows.map((d) => d.chlor_avg);
+    const phycoRaw = rows.map((d) => d.phyco_avg);
+    const gppRaw = rows.map((d) => d[BK.gpp]);
+    const rowDates = rows.map((d) => d.date);
+    Plotly.newPlot('chlorGppPlot', [
+      // GPP is drawn as a wide, translucent band so it reads as the backdrop the
+      // two pigment lines are compared against.
+      (() => {
+        const t = line(rowDates, normalize(gppRaw), hexToRgba(gppColor, 0.4), 'GPP', 'mg/L/day', gppRaw);
+        t.line.width = 9;
+        return t;
+      })(),
+      line(rowDates, normalize(chlorRaw), cssVar('--series-wind'), 'Chlorophyll', 'RFU', chlorRaw),
+      line(rowDates, normalize(phycoRaw), cssVar('--series-do'), 'Phycocyanin', 'RFU', phycoRaw),
+    ], basePlotLayout({ yaxis: pctAxis }), { displayModeBar: false, responsive: true, scrollZoom: false });
+
+    const peakChlor = rows.reduce((a, b) => (b.chlor_avg > a.chlor_avg ? b : a));
+    const peakPhyco = rows.reduce((a, b) => (b.phyco_avg > a.phyco_avg ? b : a));
+    document.getElementById('chlorGppText').textContent =
+      `Chlorophyll peaks on ${fmtDate(peakChlor.date)} (${peakChlor.chlor_avg.toFixed(2)} RFU) - an early-season bloom, before cyanobacteria are active - ` +
+      `while phycocyanin peaks later, on ${fmtDate(peakPhyco.date)} (${peakPhyco.phyco_avg.toFixed(2)} RFU), and stays elevated through summer. ` +
+      `Season-long the two sensors are actually slightly anti-correlated (r = ${pearson(chlorRaw, phycoRaw).toFixed(2)}): the spring bloom and the summer ` +
+      `cyanobacteria look like two different algal communities, not one continuous bloom. GPP follows the summer one: it tracks phycocyanin (r = ${pearson(phycoRaw, gppRaw).toFixed(2)}) ` +
+      `but not chlorophyll (r = ${pearson(chlorRaw, gppRaw).toFixed(2)}). The spring chlorophyll bump is probably a different group of phytoplankton, such as diatoms - ` +
+      `these sensors can't tell us that directly - and it produces much less oxygen than the summer's warm-water cyanobacteria.`;
+
+    // ---- gate: the metabolism half of the module opens after the PAR reveal ----
+    document.getElementById('keepExploring').addEventListener('click', () => {
+      const block = document.getElementById('metabolismBlock');
+      block.hidden = false;
+      document.getElementById('keepExploringWrap').hidden = true;
+      block.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 
     // ---- initial render ----
     update(Number(slider.value));
-    methodDesc.textContent = currentMethod.desc;
-    renderChlorNep();
   }
 })();

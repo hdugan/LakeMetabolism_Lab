@@ -1798,3 +1798,86 @@ a { color: var(--series-do); }
 @media (max-width: 600px) {
   .flashcard-options { grid-template-columns: 1fr; }
 }
+
+/* ==================================================================
+   Module 6 — season cards
+   ================================================================== */
+
+.season-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.season-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-hairline);
+  border-top: 4px solid var(--season-color, var(--baseline));
+  border-radius: var(--card-radius);
+  padding: 14px 16px;
+}
+.season-card h3 { font-size: 16px; margin: 0 0 2px; }
+.season-card .season-months { font-size: 12px; color: var(--text-muted); margin: 0 0 10px; }
+.season-card .season-nums {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0 0 10px;
+}
+.season-card .season-nums strong { color: var(--text-primary); font-size: 14px; }
+.season-card p { font-size: 13px; margin: 0 0 8px; color: var(--text-secondary); }
+.season-card .season-verdict { font-weight: 600; color: var(--text-primary); }
+
+@media (max-width: 700px) {
+  .season-grid { grid-template-columns: 1fr; }
+}
+
+/* Module 6 — freehand drawing chart */
+.draw-wrap { position: relative; }
+.draw-surface {
+  position: absolute;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+/* Module 6 — flip cards (season cards that turn over to reveal) */
+.flip-card {
+  perspective: 1200px;
+  cursor: pointer;
+  display: grid;
+  border-radius: var(--card-radius);
+}
+.flip-card:focus-visible { outline: 2px solid var(--series-do); outline-offset: 3px; }
+.flip-inner {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 0.6s ease;
+}
+.flip-card.flipped .flip-inner { transform: rotateY(180deg); }
+.flip-face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-back { transform: rotateY(180deg); }
+.flip-front {
+  background: var(--season-color, var(--baseline));
+  color: var(--season-ink, #fff);
+  border-radius: var(--card-radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 24px 16px;
+  min-height: 200px;
+  text-align: center;
+}
+.flip-emoji { font-size: 40px; line-height: 1; }
+.flip-title { font-size: 22px; font-weight: 700; }
+.flip-hint { font-size: 13px; opacity: 0.85; }
+@media (prefers-reduced-motion: reduce) {
+  .flip-inner { transition: none; }
+}
