@@ -83,12 +83,21 @@
     render();
   });
 
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const escMultiline = (s) => esc(s).replace(/\n/g, '<br>');
+
+  // Rebuilt on every render: what the preview shows, the rich-text (HTML) copy that pastes into Word
+  // with bold intact, and a plain-text fallback. The copied HTML carries no colors, so it comes out
+  // black-on-white in Word even if the page is in dark mode.
+  let currentHtml = '', currentText = '';
+
   function render() {
     sectionsEl.innerHTML = '';
-    const lines = [];
+    const text = [];
+    const html = [];
     const name = nameInput.value.trim();
-    lines.push(name ? `Name: ${name}` : 'Name: (not entered)');
-    lines.push('');
+    text.push(name ? `Name: ${name}` : 'Name: (not entered)', '');
+    html.push(`<p><strong>Name:</strong> ${name ? esc(name) : '(not entered)'}</p>`);
 
     SECTIONS.forEach((section) => {
       const heading = document.createElement('h3');
@@ -96,8 +105,8 @@
       heading.textContent = section.title;
       sectionsEl.appendChild(heading);
 
-      lines.push(`## ${section.title}`);
-      lines.push('');
+      text.push(section.title, '');
+      html.push(`<h3>${esc(section.title)}</h3>`);
 
       section.fields.forEach((field) => {
         const value = (localStorage.getItem(field.key) || '').trim();
@@ -112,27 +121,49 @@
         block.textContent = value || 'Not answered yet.';
         sectionsEl.appendChild(block);
 
-        lines.push(field.label);
-        lines.push(value || '(not answered yet)');
-        lines.push('');
+        text.push(`Q) ${field.label}`, `A) ${value || '(not answered yet)'}`, '');
+        html.push(`<p><strong>Q) ${esc(field.label)}</strong></p>`);
+        html.push(`<p>A) ${value ? escMultiline(value) : '<em>(not answered yet)</em>'}</p>`);
       });
     });
 
-    outputEl.value = lines.join('\n').trim() + '\n';
+    currentHtml = html.join('\n');
+    currentText = text.join('\n').trim() + '\n';
+    outputEl.innerHTML = currentHtml;
   }
 
   refreshBtn.addEventListener('click', render);
+
+  // Copy as rich text where the browser allows it (ClipboardItem), otherwise select an off-screen
+  // copy of the formatted HTML and use the classic copy command, which also keeps the formatting.
+  function copyRichFallback() {
+    const holder = document.createElement('div');
+    holder.innerHTML = currentHtml;
+    holder.style.cssText = 'position:fixed; left:-9999px; top:0; background:#fff; color:#000;';
+    document.body.appendChild(holder);
+    const range = document.createRange();
+    range.selectNodeContents(holder);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    const ok = document.execCommand('copy');
+    sel.removeAllRanges();
+    document.body.removeChild(holder);
+    return ok;
+  }
 
   copyBtn.addEventListener('click', () => {
     const showCopied = () => {
       copyFeedback.classList.add('show');
       setTimeout(() => copyFeedback.classList.remove('show'), 1800);
     };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(outputEl.value).then(showCopied);
-    } else {
-      outputEl.select();
-      document.execCommand('copy');
+    const wrapped = `<div style="font-family:Calibri, Arial, sans-serif; font-size:11pt;">${currentHtml}</div>`;
+    if (navigator.clipboard && window.ClipboardItem) {
+      navigator.clipboard.write([new ClipboardItem({
+        'text/html': new Blob([wrapped], { type: 'text/html' }),
+        'text/plain': new Blob([currentText], { type: 'text/plain' }),
+      })]).then(showCopied).catch(() => { if (copyRichFallback()) showCopied(); });
+    } else if (copyRichFallback()) {
       showCopied();
     }
   });

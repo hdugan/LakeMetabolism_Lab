@@ -1908,3 +1908,19 @@ a { color: var(--series-do); }
 @media (max-width: 640px) {
   .float-photo { float: none; width: 100%; max-width: 360px; margin: 12px auto; }
 }
+
+/* Your Responses: a Word-page-like preview of exactly what gets copied */
+.response-preview {
+  background: #fff;
+  color: #111;
+  border: 1px solid var(--border-hairline);
+  border-radius: 10px;
+  padding: 16px 18px;
+  font-family: Calibri, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  max-height: 420px;
+  overflow: auto;
+}
+.response-preview h3 { margin: 18px 0 6px; font-size: 16px; }
+.response-preview p { margin: 0 0 8px; }
