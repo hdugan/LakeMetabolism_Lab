@@ -4,7 +4,7 @@
   const NAME_KEY = 'lakeMetab.studentName';
 
   // Every free-response note the lab saves, in the order they should be
-  // reviewed/turned in. Keys match what modules 1-7 already write to
+  // reviewed/turned in. Keys match what modules 1-8 already write to
   // localStorage - this page only reads them, never writes to another
   // page's key. Module 1 includes the former standalone Module 2 (Lake
   // Detective) fields, which merged into it when that module was folded
@@ -66,6 +66,24 @@
         { key: 'compareLakes.fingerprintNotes', label: "What do you notice? Which lake's nutrients, light, and temperature would you expect to make the most oxygen, and does that match what you saw in each lake's oxygen?" },
         { key: 'compareLakes.manipulateNotes', label: "You've seen what controls GPP in different lakes. How would you change GPP in a lake?" },
         { key: 'compareLakes.experimentNotes', label: "What changed in Peter Lake compared with Paul Lake while nutrients were being added, and what happened after they stopped? Both GPP and ER changed - why do you think respiration responded too?" },
+        { key: 'compareLakes.referenceNotes', label: 'In the Paul and Peter experiment, why did the scientists leave Paul Lake alone? What could you not conclude without it?' },
+      ],
+    },
+    {
+      title: 'Module 8 — Synthesis',
+      fields: [
+        { key: 'synthesis.metabolismDef', label: 'In your own words, what is lake metabolism, and what do GPP, ER and NEP each tell you about a lake?' },
+        { key: 'synthesis.propertyOwner', label: 'A lake-front property owner tells you their lake has a lot of algae. What would you measure, and what would you expect to see in the oxygen data?' },
+        { key: 'synthesis.mendotaDriver', label: 'Which of the three drivers you studied (nutrients, light, temperature) matters most for GPP in Lake Mendota in summer?' },
+        { key: 'synthesis.buoyLimits', label: "What is one thing the buoy data cannot tell us about a lake's metabolism?" },
+        { key: 'synthesis.carbon', label: 'A lake that is net heterotrophic is releasing carbon dioxide to the air. What does that suggest about the role of lakes in the global carbon cycle?' },
+      ],
+    },
+    {
+      title: 'Lab feedback',
+      fields: [
+        { key: 'feedback.liked', label: 'What did you like about this lab? Feedback here is helpful for future updates.' },
+        { key: 'feedback.disliked', label: 'What did you not like about this lab? Feedback here is helpful for future updates.' },
       ],
     },
   ];

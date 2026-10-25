@@ -414,7 +414,7 @@
   const FERT_COLOR = cssVar('--series-wtemp');
 
   let cascade = null, expBuilt = false;
-  [{ id: 'experimentNotes', key: 'compareLakes.experimentNotes' }, { id: 'manipulateNotes', key: 'compareLakes.manipulateNotes' }].forEach((nt) => {
+  [{ id: 'experimentNotes', key: 'compareLakes.experimentNotes' }, { id: 'referenceLakeNotes', key: 'compareLakes.referenceNotes' }, { id: 'manipulateNotes', key: 'compareLakes.manipulateNotes' }].forEach((nt) => {
     const el = document.getElementById(nt.id);
     el.value = localStorage.getItem(nt.key) || '';
     el.addEventListener('input', () => localStorage.setItem(nt.key, el.value));
