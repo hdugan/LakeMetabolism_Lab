@@ -4,7 +4,7 @@
   const { cssVar, stripOffset, buildNightLayer } = window.LakeCommon;
 
   // Bump when data/lakes_compare.json changes (same cache-busting idea as common.js).
-  const LAKES_DATA_URL = 'data/lakes_compare.json?v=5';
+  const LAKES_DATA_URL = 'data/lakes_compare.json?v=7';
 
   const LAKE_KEYS = ['mendota', 'troutbog', 'troutlake'];
   const LAKE_COLOR = {
@@ -99,15 +99,35 @@
     LAKE_KEYS.forEach((k) => { daily[k] = { low: data.lakes[k].diel.daily_low_sat_pct, high: data.lakes[k].diel.daily_high_sat_pct }; });
 
     const axisStyle = { gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') } };
-    Plotly.newPlot('drawPlot', LAKE_KEYS.map((k) => ({
-      x: [LABEL[k], LABEL[k]], y: [null, null], type: 'scatter', mode: 'lines+markers', hoverinfo: 'skip',
-      line: { color: LAKE_COLOR[k], width: 8 }, marker: { color: LAKE_COLOR[k], size: 14, symbol: 'line-ew-open', line: { width: 4, color: LAKE_COLOR[k] } },
-    })), baseLayout({
+    // Lakes sit at x = 0, 1, 2 on a numeric axis (labelled with the lake names) so the box plots can be
+    // sized and placed in pixels. The average-day bar's ends and both box plots share one width (the student's own bar ends in round dots, so the revealed data stays easy to see), and each
+    // box sits beside the bars (never on top of them): lows to the left, highs to the right.
+    const TICK_PX = 24, GAP_PX = 10;
+    const plotWidthPx = () => (plotEl._fullLayout && plotEl._fullLayout._size ? plotEl._fullLayout._size.w : 600);
+    const pxToAxis = (px) => (px * LAKE_KEYS.length) / plotWidthPx();   // axis spans LAKE_KEYS.length units
+    const tick = (color) => ({ color, size: TICK_PX, symbol: 'line-ew-open', line: { width: 4, color } });
+    const DRAWN0 = LAKE_KEYS.length;
+    // Traces 0-2: the "typical day" bars (median daily low to median daily high), a wider/fainter line drawn
+    // behind the student's own bars (traces 3-5); traces 6-8: daily lows; 9-11: daily highs (empty until revealed).
+    Plotly.newPlot('drawPlot', [
+      ...LAKE_KEYS.map((k, i) => ({
+        x: [i, i], y: [null, null], type: 'scatter', mode: 'lines+markers', hoverinfo: 'skip',
+        line: { color: rgba(LAKE_COLOR[k], 0.35), width: 18 }, marker: tick(rgba(LAKE_COLOR[k], 0.55)),
+      })),
+      ...LAKE_KEYS.map((k, i) => ({
+        x: [i, i], y: [null, null], type: 'scatter', mode: 'lines+markers', hoverinfo: 'skip',
+        line: { color: LAKE_COLOR[k], width: 4 }, marker: { color: LAKE_COLOR[k], size: 12, symbol: 'circle', line: { width: 0 } },
+      })),
+      ...['low', 'high'].flatMap((field) => LAKE_KEYS.map((k, i) => ({
+        type: 'box', y: [null], x: [i], width: 0.1, name: `${LABEL[k]} ${field === 'low' ? 'nighttime lows' : 'daytime highs'}`,
+        boxpoints: 'outliers', marker: { color: LAKE_COLOR[k], size: 4 }, line: { color: LAKE_COLOR[k], width: 2 }, fillcolor: rgba(LAKE_COLOR[k], 0.35),
+        hovertemplate: `%{y:.0f}%<extra>${LABEL[k]} ${field === 'low' ? 'daily low' : 'daily high'}</extra>`,
+      }))),
+    ], baseLayout({
       margin: { l: 56, r: 12, t: 12, b: 36 },
-      hovermode: false, dragmode: false, boxmode: 'group', boxgap: 0.35,
+      hovermode: false, dragmode: false,
       shapes: [{ type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: 100, y1: 100, line: { color: cssVar('--baseline'), width: 1.5, dash: 'dot' } }],
-      annotations: [{ xref: 'paper', x: 1, xanchor: 'right', y: 100, yanchor: 'bottom', yref: 'y', text: '100% = in balance with the air', showarrow: false, font: { size: 10, color: cssVar('--text-muted') } }],
-      xaxis: Object.assign({ type: 'category', categoryarray: LABELS, range: [-0.5, LAKE_KEYS.length - 0.5], fixedrange: true }, axisStyle),
+      xaxis: Object.assign({ type: 'linear', tickvals: LAKE_KEYS.map((_, i) => i), ticktext: LABELS, range: [-0.5, LAKE_KEYS.length - 0.5], fixedrange: true, showgrid: false, zeroline: false }, axisStyle),
       yaxis: Object.assign({ title: yTitle('Dissolved oxygen (% saturation)'), range: Y_RANGE, tickvals: [0, 50, 100, 150, 200], fixedrange: true, zeroline: false }, axisStyle),
     }), { displayModeBar: false, responsive: true, scrollZoom: false });
 
@@ -130,7 +150,7 @@
     let active = null;   // { key, anchor }
     function setRange(key, a, b) {
       drawn[key] = { lo: Math.min(a, b), hi: Math.max(a, b) };
-      Plotly.restyle('drawPlot', { y: [[drawn[key].lo, drawn[key].hi]] }, [LAKE_KEYS.indexOf(key)]);
+      Plotly.restyle('drawPlot', { y: [[drawn[key].lo, drawn[key].hi]] }, [DRAWN0 + LAKE_KEYS.indexOf(key)]);
     }
     surface.addEventListener('pointerdown', (e) => {
       surface.setPointerCapture(e.pointerId);
@@ -143,7 +163,7 @@
 
     document.getElementById('drawClear').addEventListener('click', () => {
       LAKE_KEYS.forEach((k) => { delete drawn[k]; });
-      Plotly.restyle('drawPlot', { y: LAKE_KEYS.map(() => [null, null]) }, LAKE_KEYS.map((_, i) => i));
+      Plotly.restyle('drawPlot', { y: LAKE_KEYS.map(() => [null, null]) }, LAKE_KEYS.map((_, i) => DRAWN0 + i));
     });
 
     // Daily swing = mean over the two days of (max - min); used by the dynamics summary.
@@ -156,32 +176,49 @@
       return mean(perDay);
     }
 
-    let revealed = false;
-    document.getElementById('drawReveal').addEventListener('click', () => {
-      if (!revealed) {
-        revealed = true;
-        const boxes = [];
-        LAKE_KEYS.forEach((k) => {
-          [['low', 'low', 'Daily low'], ['high', 'high', 'Daily high']].forEach(([field, group, name]) => {
-            boxes.push({
-              type: 'box', y: daily[k][field], x: daily[k][field].map(() => LABEL[k]), name, offsetgroup: group, legendgroup: group,
-              boxpoints: 'outliers', marker: { color: LAKE_COLOR[k], size: 4 }, line: { color: LAKE_COLOR[k], width: 2 }, fillcolor: rgba(LAKE_COLOR[k], 0.35),
-              hovertemplate: `%{y:.0f}%<extra>${LABEL[k]} ${name.toLowerCase()}</extra>`,
-            });
-          });
-        });
-        Plotly.addTraces('drawPlot', boxes);
-        Plotly.relayout('drawPlot', { hovermode: 'closest' });
+    // Three reveals: the average day (median daily low to median daily high), the daytime highs
+    // (box plot of every day's highest reading), and the nighttime lows (box plot of every day's lowest).
+    const revealedSet = new Set();
+    const fb = document.getElementById('drawFeedback');
+    const FEEDBACK = {
+      avg: () => 'Average day: ' + LAKE_KEYS.map((k) => `${LABEL[k]} typically drops to about ${fmt(median(daily[k].low), 0)}% and rises to about ${fmt(median(daily[k].high), 0)}%`).join('; ') + '.',
+    };
+    function afterReveal(kind) {
+      revealedSet.add(kind);
+      if (revealedSet.has('avg')) {   // only the average day has a written summary
+        fb.textContent = FEEDBACK.avg();
+        fb.hidden = false;
       }
-      document.getElementById('drawRealKey').hidden = false;
-
-      const real = LAKE_KEYS.map((k) => `${LABEL[k]} typically drops to about ${fmt(median(daily[k].low), 0)}% each day and rises to about ${fmt(median(daily[k].high), 0)}%`);
-      const text = `Real data (${daily.mendota.low.length} days in July 2019, median daily low and high): ${real[0]}; ${real[1]}; and ${real[2]}.`;
-      const fb = document.getElementById('drawFeedback');
-      fb.textContent = text;
-      fb.hidden = false;
-      document.getElementById('exploreWrap').hidden = false;
+      if (revealedSet.size === 3) document.getElementById('exploreWrap').hidden = false;
+    }
+    document.getElementById('drawTypical').addEventListener('click', () => {
+      Plotly.restyle('drawPlot', { y: LAKE_KEYS.map((k) => [median(daily[k].low), median(daily[k].high)]) }, LAKE_KEYS.map((_, i) => i));
+      document.getElementById('drawTypicalKey').hidden = false;
+      afterReveal('avg');
     });
+    const boxState = {};   // field -> first trace index, for every box plot revealed so far
+    function layoutBoxes() {
+      const w = pxToAxis(TICK_PX);
+      const off = pxToAxis(TICK_PX + GAP_PX);           // centre of a box = lake centre -/+ (bar tick half + box half + gap)
+      Object.keys(boxState).forEach((field) => {
+        const sign = field === 'low' ? -1 : 1;
+        Plotly.restyle('drawPlot', {
+          y: LAKE_KEYS.map((k) => daily[k][field]),
+          x: LAKE_KEYS.map((k, i) => daily[k][field].map(() => i + sign * off)),
+          width: LAKE_KEYS.map(() => w),
+        }, LAKE_KEYS.map((_, i) => boxState[field] + i));
+      });
+    }
+    window.addEventListener('resize', () => setTimeout(layoutBoxes, 150));
+    function revealBoxes(field, firstTrace, kind) {
+      boxState[field] = firstTrace;
+      layoutBoxes();
+      Plotly.relayout('drawPlot', { hovermode: 'closest' });
+      document.getElementById('drawRealKey').hidden = false;
+      afterReveal(kind);
+    }
+    document.getElementById('drawLows').addEventListener('click', () => revealBoxes('low', 2 * LAKE_KEYS.length, 'low'));
+    document.getElementById('drawHighs').addEventListener('click', () => revealBoxes('high', 3 * LAKE_KEYS.length, 'high'));
 
     // ------------------------------------------------------------------
     // Drivers match game: rank the lakes (lowest -> highest) for N, P, light, temperature

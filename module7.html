@@ -92,20 +92,23 @@
   <section class="chart-card overlay-card">
     <div class="chart-card-head">
       <h2>Your prediction: daily oxygen range</h2>
-      <span class="chart-unit">% saturation &middot; real = July 2019 daily lows and highs</span>
+      <span class="chart-unit">% saturation &middot; real = July 2019</span>
     </div>
     <div class="overlay-legend">
       <span><span class="swatch" style="background:var(--series-wind)"></span>Lake Mendota</span>
       <span><span class="swatch" style="background:var(--series-wtemp)"></span>Trout Bog</span>
       <span><span class="swatch" style="background:var(--series-do)"></span>Trout Lake</span>
-      <span id="drawRealKey" hidden><span class="swatch" style="background:var(--text-muted)"></span>Boxes: left = daily lows, right = daily highs (July 2019)</span>
+      <span id="drawTypicalKey" hidden><span class="swatch" style="background:var(--text-muted); height:8px;"></span>Wide bar = average day (median low to high)</span>
+      <span id="drawRealKey" hidden><span class="swatch" style="background:var(--text-muted)"></span>Boxes: left = nighttime lows, right = daytime highs</span>
     </div>
     <div class="draw-wrap">
       <div class="overlay-plot" id="drawPlot" style="height:300px;"></div>
       <div class="draw-surface" id="drawSurface" aria-label="Drawing area" role="img"></div>
     </div>
     <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
-      <button type="button" class="play-btn" id="drawReveal">Reveal the real data</button>
+      <button type="button" class="play-btn" id="drawTypical">Reveal avg. day</button>
+      <button type="button" class="play-btn" id="drawHighs">Reveal daytime highs</button>
+      <button type="button" class="play-btn" id="drawLows">Reveal nighttime lows</button>
       <button type="button" class="play-btn" id="drawClear" style="background:var(--surface-2, var(--page-plane)); color:var(--text-primary); border:1px solid var(--border-hairline);">Clear my lines</button>
     </div>
     <p id="drawFeedback" style="margin:12px 0 0; font-size:14px; line-height:1.6;" hidden></p>
@@ -343,6 +346,6 @@
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="js/common.js?v=14"></script>
-<script src="js/module7.js?v=22"></script>
+<script src="js/module7.js?v=33"></script>
 </body>
 </html>
