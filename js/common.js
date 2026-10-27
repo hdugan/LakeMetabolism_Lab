@@ -90,5 +90,27 @@ window.LakeCommon = (() => {
     return { nightShapes, sunAnnotations, xAll };
   }
 
-  return { cssVar, stripOffset, WEEKDAYS, DATA_URL, EXTENDED_DATA_URL, SEASONAL_DATA_URL, parseHM, fmtBadgeTime, buildNightLayer, cursorLineShape };
+  // A side-by-side table for "your prediction vs. the real data" summaries, so every comparison lists the
+  // same measures in the same order and students can read across a row. headers[0] labels the first column.
+  function compareTable(headers, rows) {
+    const table = document.createElement('table');
+    table.className = 'compare-table';
+    const thead = table.createTHead().insertRow();
+    headers.forEach((h) => { const th = document.createElement('th'); th.textContent = h; thead.appendChild(th); });
+    const tbody = table.createTBody();
+    rows.forEach((r) => {
+      const tr = tbody.insertRow();
+      r.forEach((cell, i) => {
+        const td = tr.insertCell();
+        td.textContent = cell;
+        if (i === 0) td.className = 'compare-label';
+      });
+    });
+    const wrap = document.createElement('div');
+    wrap.className = 'compare-wrap';
+    wrap.appendChild(table);
+    return wrap;
+  }
+
+  return { cssVar, compareTable, stripOffset, WEEKDAYS, DATA_URL, EXTENDED_DATA_URL, SEASONAL_DATA_URL, parseHM, fmtBadgeTime, buildNightLayer, cursorLineShape };
 })();

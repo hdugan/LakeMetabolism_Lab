@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Compare Lakes — Lake Metabolism Lab</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
-<link rel="stylesheet" href="css/style.css?v=35">
+<link rel="stylesheet" href="css/style.css?v=39">
 </head>
 <body>
 
@@ -111,7 +111,7 @@
       <button type="button" class="play-btn" id="drawLows">Reveal nighttime lows</button>
       <button type="button" class="play-btn" id="drawClear" style="background:var(--surface-2, var(--page-plane)); color:var(--text-primary); border:1px solid var(--border-hairline);">Clear my lines</button>
     </div>
-    <p id="drawFeedback" style="margin:12px 0 0; font-size:14px; line-height:1.6;" hidden></p>
+    <div id="drawFeedback" style="margin:12px 0 0; font-size:14px; line-height:1.6;" hidden></div>
   </section>
 
   <section class="lookfor" aria-label="Explain your sketch" style="background:color-mix(in srgb, var(--series-do) 10%, var(--surface-1));">
@@ -210,7 +210,7 @@
           </div>
           <div class="overlay-plot" id="plot-metab" style="height:280px;"></div>
         </div>
-        <p id="metabText" style="margin:12px 0 0; font-size:14px; line-height:1.6;"></p>
+        <div id="metabText" style="margin:12px 0 0; font-size:14px; line-height:1.6;"></div>
         <p id="metabCaveat" style="margin:10px 0 0; font-size:12.5px; line-height:1.5; color:var(--text-muted);"></p>
       </div>
     </section>
@@ -345,7 +345,7 @@
 </footer>
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-<script src="js/common.js?v=14"></script>
-<script src="js/module7.js?v=33"></script>
+<script src="js/common.js?v=15"></script>
+<script src="js/module7.js?v=35"></script>
 </body>
 </html>

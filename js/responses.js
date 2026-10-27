@@ -49,9 +49,6 @@
     {
       title: 'Module 6 — Seasonal Metabolism',
       fields: [
-        { key: 'seasonalMetabolism.springNotes', label: 'Spring (March – May): what is the lake like, and what is changing?' },
-        { key: 'seasonalMetabolism.summerNotes', label: 'Summer (June – August): what is the lake like, and what is changing?' },
-        { key: 'seasonalMetabolism.fallNotes', label: 'Fall (September – November): what is the lake like, and what is changing?' },
         { key: 'seasonalMetabolism.sketchWhyNotes', label: 'Why did you draw GPP and ER the way you did? Describe how each one changes across spring, summer, and fall, and what you think drives it.' },
         { key: 'seasonalMetabolism.mayLowNotes', label: 'Knowing how lakes work, why are GPP and algal biomass so low in mid-May?' },
       ],

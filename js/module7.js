@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const { cssVar, stripOffset, buildNightLayer } = window.LakeCommon;
+  const { cssVar, compareTable, stripOffset, buildNightLayer } = window.LakeCommon;
 
   // Bump when data/lakes_compare.json changes (same cache-busting idea as common.js).
   const LAKES_DATA_URL = 'data/lakes_compare.json?v=7';
@@ -180,13 +180,19 @@
     // (box plot of every day's highest reading), and the nighttime lows (box plot of every day's lowest).
     const revealedSet = new Set();
     const fb = document.getElementById('drawFeedback');
+    // The average-day summary: the student's bar next to the median low-to-high range, one row per lake.
     const FEEDBACK = {
-      avg: () => 'Average day: ' + LAKE_KEYS.map((k) => `${LABEL[k]} typically drops to about ${fmt(median(daily[k].low), 0)}% and rises to about ${fmt(median(daily[k].high), 0)}%`).join('; ') + '.',
+      avg: () => {
+        const rng = (lo, hi) => `${fmt(lo, 0)}% to ${fmt(hi, 0)}%`;
+        return compareTable(['Lake', 'Your range', 'Average day (median low to high)'],
+          LAKE_KEYS.map((k) => [LABEL[k], drawn[k] && drawn[k].hi - drawn[k].lo > 1 ? rng(drawn[k].lo, drawn[k].hi) : '–', rng(median(daily[k].low), median(daily[k].high))]));
+      },
     };
     function afterReveal(kind) {
       revealedSet.add(kind);
       if (revealedSet.has('avg')) {   // only the average day has a written summary
-        fb.textContent = FEEDBACK.avg();
+        fb.textContent = '';
+        fb.appendChild(FEEDBACK.avg());
         fb.hidden = false;
       }
       if (revealedSet.size === 3) document.getElementById('exploreWrap').hidden = false;
@@ -417,15 +423,18 @@
         yaxis: Object.assign({ title: yTitle('mg O₂/L/day'), zeroline: true, zerolinecolor: cssVar('--baseline') }, axisStyle),
       }), { displayModeBar: false, responsive: true, scrollZoom: false });
 
+      // One row per lake: what the student predicted next to what the data say, then the numbers behind it.
       const f2 = (v) => (v >= 0 ? '+' : '') + v.toFixed(2);
-      const parts = LAKE_KEYS.map((k) => `${LABEL[k]}: GPP ${MSTAT[k].gpp.mean.toFixed(2)}, ER ${MSTAT[k].er.mean.toFixed(2)}, NEP ${f2(MSTAT[k].nep.mean)} - ${CLASS_LABEL[classify(k)].split(' (')[0].toLowerCase()}`);
-      let text = `July 2019 averages (mg O₂/L/day): ${parts.join('; ')}. `;
-      const answered = LAKE_KEYS.filter((k) => metabPick[k]);
-      if (answered.length) {
-        text += 'Your predictions: ' + answered.map((k) => `${LABEL[k]} - ${CLASS_LABEL[metabPick[k]].split(' (')[0].toLowerCase()} (${metabPick[k] === classify(k) ? 'matches' : 'differs'})`).join('; ') + '. ';
-      }
-      text += 'Mendota\u2019s abundant nutrients and light grow so many algae that photosynthesis outpaces respiration. Trout Bog is the opposite: its dark water starves algae of light so GPP is tiny, while carbon washed in from the surrounding forest fuels respiration, making it strongly heterotrophic. Trout Lake is clear but so nutrient-poor that both processes are small and nearly cancel: its average NEP is about zero, well within its day-to-day ups and downs, so it is about balanced.';
-      document.getElementById('metabText').textContent = text;
+      const plain = (c) => CLASS_LABEL[c].split(' (')[0].toLowerCase();
+      const metabBox = document.getElementById('metabText');
+      metabBox.textContent = '';
+      metabBox.appendChild(compareTable(['Lake', 'Your prediction', 'What the data say', 'GPP', 'ER', 'NEP'],
+        LAKE_KEYS.map((k) => [LABEL[k], metabPick[k] ? plain(metabPick[k]) : '–', plain(classify(k)),
+          MSTAT[k].gpp.mean.toFixed(2), MSTAT[k].er.mean.toFixed(2), f2(MSTAT[k].nep.mean)])));
+      const explain = document.createElement('p');
+      explain.style.margin = '8px 0 0';
+      explain.textContent = 'July 2019 averages, in mg O₂/L/day. Mendota\u2019s abundant nutrients and light grow so many algae that photosynthesis outpaces respiration. Trout Bog is the opposite: its dark water starves algae of light so GPP is tiny, while carbon washed in from the surrounding forest fuels respiration, making it strongly heterotrophic. Trout Lake is clear but so nutrient-poor that both processes are small and nearly cancel: its average NEP is about zero, well within its day-to-day ups and downs, so it is about balanced.';
+      metabBox.appendChild(explain);
       document.getElementById('metabCaveat').textContent =
         'Estimates use the same bookkeeping method as Module 6 and are rough, especially for the bog. Mendota and Trout Lake use measured wind and a mixed-layer depth from their thermistor chains (about ' +
         `${metab.mendota.mean_z_mix.toFixed(0)} m and ${metab.troutlake.mean_z_mix.toFixed(0)} m); Trout Bog has no wind record after 2014 and no July 2019 temperature profile, so its July-average wind from 2003–2014 (${metab.troutbog.wind_source.match(/\(([^)]+) m\/s/)[1]} m/s) and an assumed 1 m mixed layer were used. ` +

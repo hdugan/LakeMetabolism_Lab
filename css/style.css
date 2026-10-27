@@ -1939,3 +1939,22 @@ a { color: var(--series-do); }
 @media (max-width: 700px) {
   .chart-panel .control-left { flex: 1 1 100%; flex-direction: row; align-items: center; justify-content: space-between; }
 }
+
+/* Side-by-side "your prediction vs. real data" summaries */
+.compare-wrap { overflow-x: auto; margin: 4px 0 8px; }
+.compare-table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+.compare-table th, .compare-table td { border: 1px solid var(--border-hairline); padding: 6px 10px; text-align: left; vertical-align: top; }
+.compare-table th { background: var(--surface-1); color: var(--text-secondary); font-weight: 600; }
+.compare-table td.compare-label { color: var(--text-secondary); font-weight: 600; width: 38%; }
+
+/* Module 6: play bar and readings span the full width; the chart sits beside "The missing season" */
+.metab-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; column-gap: 18px; align-items: start; }
+.metab-layout > .control-bar, .metab-layout > .stat-row { grid-column: 1 / -1; }   /* full width of the page */
+.metab-layout > .chart-card { grid-column: 1; }
+.metab-layout > .state-caption { grid-column: 2; grid-row: 3; margin: 0;
+  background: color-mix(in srgb, var(--series-par) 12%, var(--surface-1));
+  border-color: color-mix(in srgb, var(--series-par) 35%, transparent); }   /* yellow, like the other highlight boxes */
+@media (max-width: 900px) {
+  .metab-layout { grid-template-columns: minmax(0, 1fr); }
+  .metab-layout > .state-caption { grid-column: 1; grid-row: auto; margin: 0 0 18px; }
+}

@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const { cssVar, cursorLineShape, SEASONAL_DATA_URL } = window.LakeCommon;
+  const { cssVar, compareTable, cursorLineShape, SEASONAL_DATA_URL } = window.LakeCommon;
 
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -75,9 +75,6 @@
 
   // ---- season prediction notes (localStorage) - independent of the data fetch ----
   [
-    { id: 'springNotes', key: 'seasonalMetabolism.springNotes' },
-    { id: 'summerNotes', key: 'seasonalMetabolism.summerNotes' },
-    { id: 'fallNotes', key: 'seasonalMetabolism.fallNotes' },
     { id: 'mayLowNotes', key: 'seasonalMetabolism.mayLowNotes' },
   ].forEach((nt) => {
     const el = document.getElementById(nt.id);
@@ -107,7 +104,8 @@
     });
 
   function init(data) {
-    const daily = data.daily;
+    // March is left out of every chart: only one year (2024) has March data, so it isn't a multi-year average.
+    const daily = data.daily.filter((d) => d.date.slice(5, 7) !== '03');
     const n = daily.length;
     const dates = daily.map((d) => d.date);
 
@@ -169,16 +167,6 @@
       yaxis: { title: { text: 'GPP / ER (mg O₂/L/day)', font: { size: 11, color: cssVar('--text-muted') } }, gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
     }), { displayModeBar: false, responsive: true, scrollZoom: false });
 
-    Plotly.newPlot('nepPlot', [{
-      x: dates, y: daily.map((d) => d[BK.nep]), type: 'bar',
-      marker: { color: daily.map((d) => (d[BK.nep] == null ? 'rgba(0,0,0,0)' : (d[BK.nep] >= 0 ? goodColor : badColor))) },
-      hovertemplate: '%{y:.2f} mg O₂/L/day<extra>NEP</extra>',
-    }], basePlotLayout({
-      margin: { l: 56, r: 12, t: 10, b: 28 },
-      shapes: [cursorLineShape(dates[0])],
-      yaxis: { title: { text: 'NEP (mg O₂/L/day)', font: { size: 11, color: cssVar('--text-muted') } }, gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: true, zerolinecolor: cssVar('--baseline') },
-    }), { displayModeBar: false, responsive: true, scrollZoom: false });
-
     // ---- slider wiring ----
     const slider = document.getElementById('timeSlider');
     slider.max = String(n - 1);
@@ -205,7 +193,6 @@
 
       const shape = cursorLineShape(d.date);
       Plotly.relayout('gppErPlot', { shapes: [shape] });
-      Plotly.relayout('nepPlot', { shapes: [shape] });
     }
 
     slider.addEventListener('input', () => update(Number(slider.value)));
@@ -317,9 +304,7 @@
 
       let text = `Monthly NEP peaks in ${labels[peakIdx]} (mean ${f2m(means[peakIdx])} mg O₂/L/day) and is net positive in ${posLabels.join(', ')}. ` +
         `In the other months GPP and ER are close to balanced, with the most negative month being ${labels[lowIdx]} (${f2m(means[lowIdx])} mg O₂/L/day). ` +
-        `This pattern - a productive summer, bracketed by spring and fall when respiration keeps pace with or slightly exceeds photosynthesis - is typical of temperate lakes: ` +
-        `in spring, light and warmth are still building and algae are mixed through a deep, cold water column, while in fall the light available for photosynthesis ` +
-        `drops faster than respiration does, and decomposition gets a boost from the summer bloom's die-off and from leaf litter and runoff.`;
+        `This pattern of a productive summer, bracketed by spring and fall when respiration keeps pace with or slightly exceeds photosynthesis is typical of temperate lakes.`;
       document.getElementById('matchGameText').textContent = text;
     }
 
@@ -381,17 +366,8 @@
       hovertemplate: `%{customdata:.2f} ${unit}<extra>${name}</extra>`,
     });
 
-    // ---- drivers vs. metabolism ----
-    const parRoll = rolling('par_clim');
-    const tempRoll = rolling('wtemp_clim');
     const gppSeries = daily.map((d) => d[BK.gpp]);
     const erSeries = daily.map((d) => d[BK.er]);
-    Plotly.newPlot('driversPlot', [
-      line(dates, normalize(parRoll), cssVar('--series-par'), 'Surface PAR', 'µmol/m²/s', parRoll),
-      line(dates, normalize(tempRoll), cssVar('--series-do'), 'Water temp', '°C', tempRoll),
-      line(dates, normalize(gppSeries), gppColor, 'GPP', 'mg O₂/L/day', gppSeries),
-      line(dates, normalize(erSeries), erColor, 'ER', 'mg O₂/L/day', erSeries),
-    ], basePlotLayout({ yaxis: pctAxis }), { displayModeBar: false, responsive: true, scrollZoom: false });
 
     // ---- draw-your-prediction: freehand curves ----
     // One bin per day of the season. Dragging fills every bin between the
@@ -490,7 +466,9 @@
         }
         document.getElementById(cfg.keyId).hidden = false;
         const fb = document.getElementById(cfg.feedbackId);
-        fb.textContent = cfg.feedback(drawn);
+        const out = cfg.feedback(drawn);   // plain text, or a DOM node (e.g. a comparison table)
+        fb.textContent = '';
+        if (typeof out === 'string') fb.textContent = out; else fb.appendChild(out);
         fb.hidden = false;
         if (cfg.onReveal) cfg.onReveal();
       });
@@ -514,24 +492,28 @@
       feedback(drawn) {
         const rp = peakIdx(realPar), rt = peakIdx(realTemp);
         const dp = peakIdx(drawn.par), dt = peakIdx(drawn.temp);
-        const lagDays = rt - rp;
-        let text = `Real data (average of 2021–2025): surface PAR peaks around ${fmtMD(dates[rp])} and water temperature around ${fmtMD(dates[rt])} - ` +
-          `temperature peaks about ${Math.abs(lagDays) < 7 ? 'the same time' : Math.round(Math.abs(lagDays) / 7) + ' weeks ' + (lagDays > 0 ? 'later' : 'earlier')}. `;
+        const lagText = (t, pr) => {
+          if (t < 0 || pr < 0) return '–';
+          const d = t - pr;
+          return Math.abs(d) < 7 ? 'about the same time' : `${Math.round(Math.abs(d) / 7)} weeks ${d > 0 ? 'later' : 'earlier'}`;
+        };
+        const md = (i) => (i >= 0 ? fmtMD(dates[i]) : '–');
+        const box = document.createElement('div');
+        box.appendChild(compareTable(['', 'Your drawing', 'Real data (average of 2021–2025)'], [
+          ['Surface PAR peaks around', md(dp), md(rp)],
+          ['Water temperature peaks around', md(dt), md(rt)],
+          ['Temperature peaks … relative to surface PAR', lagText(dt, dp), lagText(rt, rp)],
+        ]));
+        const note = document.createElement('p');
+        note.style.margin = '6px 0 0';
         // The summer solstice (about June 21) is the longest day and highest sun of the year.
         const solsticeGap = Math.abs((new Date(`${dates[rp].slice(0, 4)}-06-21`) - new Date(dates[rp])) / 86400000);
-        if (solsticeGap <= 14) {
-          text += 'Surface PAR peaks right around the summer solstice (about June 21), the longest day of the year, when the sun is highest in the sky. ';
-        }
-        if (dp >= 0 && dt >= 0) {
-          const yourLag = dt - dp;
-          text += `In your drawing, surface PAR peaks around ${fmtMD(dates[dp])} and temperature around ${fmtMD(dates[dt])}` +
-            (yourLag > 7 ? ' - you also had warmth lagging behind surface PAR.' : yourLag < -7 ? ' - you had temperature peaking before surface PAR.' : ' - you had them peaking together.');
-        } else if (dp >= 0 || dt >= 0) {
-          text += `You drew only ${dp >= 0 ? 'surface PAR' : 'temperature'}, so there's no timing to compare - try drawing both next time.`;
-        } else {
-          text += 'You didn’t draw anything, so use the dashed lines as a preview, and try sketching before revealing next time.';
-        }
-        return text;
+        let text = solsticeGap <= 14 ? 'Surface PAR peaks right around the summer solstice (about June 21), the longest day of the year, when the sun is highest in the sky. ' : '';
+        if (dp < 0 && dt < 0) text += 'You didn’t draw anything, so use the dashed lines as a preview, and try sketching before revealing next time.';
+        else if (dp < 0 || dt < 0) text += `You drew only ${dp >= 0 ? 'surface PAR' : 'temperature'}, so there's no timing to compare - try drawing both next time.`;
+        note.textContent = text;
+        if (text) box.appendChild(note);
+        return box;
       },
     });
 
@@ -556,27 +538,31 @@
       ],
       yRange: [0, parTop], tickvals: Array.from({ length: parTop / 100 + 1 }, (_, i) => i * 100), yTitle: 'PAR (µmol/m²/s, 7-day mean)',
       feedback(drawn) {
-        const seasonRatio = (name) => ratioFor((d) => seasonOf(d.date) === name);
-        const sp = seasonRatio('Spring'), su = seasonRatio('Summer'), fa = seasonRatio('Fall'), all = ratioFor(() => true);
         const pct = (v) => (v == null ? '–' : v.toFixed(0) + '%');
-        const mean = (a) => { const v = a.filter((x) => x != null); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; };
-        const yourS = mean(drawn.surface), yourB = mean(drawn.below);
-        const bestSeason = sp != null && su != null && fa != null && sp > su && sp > fa;
-        let text = `Real data (average of 2021–2025): on an average day the sensor at 1 m sees about ${pct(all)} of the surface light (spring ${pct(sp)}, summer ${pct(su)}, fall ${pct(fa)}). ` +
-          (bestSeason ? `Spring is the highest: the water is typically clearest then, before algae build up, so more light makes it down. ` : '') +
-          `The lake's water absorbs and scatters light quickly - algae, sediment, and dissolved organic matter all block it - so the under-water curve follows the surface curve's shape ` +
-          `but sits far below it, and the share that gets through changes with how murky the water is. In practice the algae floating deeper than 1 m get even less. `;
-        if (yourS != null && yourB != null) {
-          text += `In your drawing the 1 m line averages ${(100 * yourB / yourS).toFixed(0)}% of your surface line.`;
-        } else {
-          text += 'Draw both lines before revealing next time to see how your gap compares.';
-        }
-        return text;
+        const SEASONS = [['Overall', () => true], ['Spring', (d) => seasonOf(d.date) === 'Spring'], ['Summer', (d) => seasonOf(d.date) === 'Summer'], ['Fall', (d) => seasonOf(d.date) === 'Fall']];
+        // Share of surface light reaching 1 m: the real averages, and the same measure from the student's two lines
+        // (days where both were drawn).
+        const yourRatio = (filter) => {
+          const r = daily.map((d, i) => ({ d, i })).filter(({ d, i }) => drawn.surface[i] > 0 && drawn.below[i] != null && filter(d));
+          return r.length ? (100 * r.reduce((a, { i }) => a + drawn.below[i] / drawn.surface[i], 0)) / r.length : null;
+        };
+        const md = (i) => (i >= 0 ? fmtMD(dates[i]) : '–');
+        const box = document.createElement('div');
+        box.appendChild(compareTable(['', 'Your drawing', 'Real data (average of 2021–2025)'], [
+          ...SEASONS.map(([name, f]) => [name === 'Overall' ? 'Light at 1 m, as % of surface light: overall' : `…${name.toLowerCase()}`, pct(yourRatio(f)), pct(ratioFor(f))]),
+          ['Surface PAR peaks around', md(peakIdx(drawn.surface)), md(peakIdx(surfRoll))],
+          ['PAR at 1 m peaks around', md(peakIdx(drawn.below)), md(peakIdx(belowRoll))],
+        ]));
+        const note = document.createElement('p');
+        note.style.margin = '6px 0 0';
+        note.textContent = 'In Lake Mendota, less than half of the PAR at the surface is available at 1 m. In the spring, during the clear-water phase, the lake often has high clarity. The % of light available at 1 m typically decreases later in the year as algal biomass builds up.';
+        box.appendChild(note);
+        return box;
       },
     });
 
     // Chart 3: sketch GPP and ER (real units); NEP is derived from the two lines.
-    const metabTop = Math.ceil(Math.max(...gppSeries.filter((v) => v != null), ...erSeries.filter((v) => v != null)) * 1.15);
+    const metabTop = 4;   // fixed top of the y-axis (mg O₂/L/day); the real GPP and ER peaks fall below it
     const sketched = makeDrawChart({
       plotId: 'drawPlot3', surfaceId: 'drawSurface3', switchId: 'drawSwitch3', clearId: 'drawClear3',
       series: [
@@ -588,11 +574,49 @@
     const sketchNote = document.getElementById('sketchWhyNotes');
     sketchNote.value = localStorage.getItem('seasonalMetabolism.sketchWhyNotes') || '';
     sketchNote.addEventListener('input', () => localStorage.setItem('seasonalMetabolism.sketchWhyNotes', sketchNote.value));
+    // The same six measures, in the same order, for the student's sketch and for the real data, so the two
+    // summaries line up row by row in one table.
+    function nepSummary(gppArr, erArr, nepArr) {
+      const have = nepArr.map((v, i) => ({ v, i })).filter((o) => o.v != null);
+      if (!have.length) return null;
+      const auto = have.filter((o) => o.v >= 0).length;
+      const best = have.reduce((a, b) => (b.v > a.v ? b : a)), worst = have.reduce((a, b) => (b.v < a.v ? b : a));
+      const peak = (arr) => { const i = arr.reduce((bi, v, k) => (v != null && (bi < 0 || v > arr[bi]) ? k : bi), -1); return i < 0 ? '–' : `${fmtMD(dates[i])} (${arr[i].toFixed(2)})`; };
+      const sg = (v) => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2);
+      return [
+        `${Math.round((100 * auto) / have.length)}%`,
+        `${Math.round((100 * (have.length - auto)) / have.length)}%`,
+        `${fmtMD(dates[best.i])} (${sg(best.v)})`,
+        `${fmtMD(dates[worst.i])} (${sg(worst.v)})`,
+        peak(gppArr),
+        peak(erArr),
+      ];
+    }
+    const NEP_ROWS = ['% of days autotrophic (GPP > ER)', '% of days heterotrophic (ER > GPP)', 'Biggest surplus: date (NEP)', 'Biggest deficit: date (NEP)', 'GPP peak: date (value)', 'ER peak: date (value)'];
+    function renderNepCompare(withReal) {
+      const text = document.getElementById('sketchNepText');
+      text.textContent = '';
+      const yourNep = dates.map((_, i) => (sketched.gpp[i] != null && sketched.er[i] != null ? sketched.gpp[i] - sketched.er[i] : null));
+      const yours = nepSummary(sketched.gpp, sketched.er, yourNep) || NEP_ROWS.map(() => '–');
+      const intro = document.createElement('p');
+      intro.style.margin = '0 0 6px';
+      if (!withReal && yours[0] === '–') {
+        intro.textContent = 'Draw both GPP and ER over the same stretch of the season first - NEP only shows up on days where you drew both.';
+        text.appendChild(intro);
+        return;
+      }
+      const real = withReal ? nepSummary(gppSeries, erSeries, daily.map((d) => d[BK.nep])) : null;
+      intro.textContent = withReal ? 'Your sketch and the real data, measure by measure (mg O₂/L/day):' : 'Here is what your two lines add up to (mg O₂/L/day). Keep it in mind - next you\'ll see what the buoy actually recorded.';
+      text.appendChild(intro);
+      text.appendChild(compareTable(withReal ? ['', 'Your sketch', 'Real data (average of 2021–2025)'] : ['', 'Your sketch'],
+        NEP_ROWS.map((label, k) => (withReal ? [label, yours[k], real[k]] : [label, yours[k]]))));
+    }
     document.getElementById('showSketchNep').addEventListener('click', () => {
       const nep = dates.map((_, i) => (sketched.gpp[i] != null && sketched.er[i] != null ? sketched.gpp[i] - sketched.er[i] : null));
       const have = nep.map((v, i) => ({ v, i })).filter((o) => o.v != null);
-      const card = document.getElementById('sketchNepCard');
-      card.hidden = false;
+      const card = document.getElementById('sketchCard');
+      document.getElementById('sketchNepWrap').hidden = false;
+      document.getElementById('showRealMetab').hidden = false;
       Plotly.newPlot('sketchNepPlot', [{
         x: dates, y: nep, type: 'bar',
         marker: { color: nep.map((v) => (v == null ? 'rgba(0,0,0,0)' : (v >= 0 ? goodColor : badColor))) },
@@ -602,57 +626,76 @@
         xaxis: { type: 'date', range: [dates[0], dates[n - 1]], tickformat: '%b', hoverformat: '%b %-d', ...axisStyle },
         yaxis: { title: { text: 'NEP (mg O₂/L/day)', font: { size: 11, color: cssVar('--text-muted') } }, ...axisStyle, zeroline: true, zerolinecolor: cssVar('--baseline') },
       }), { displayModeBar: false, responsive: true, scrollZoom: false });
-      const text = document.getElementById('sketchNepText');
-      if (!have.length) {
-        text.textContent = 'Draw both GPP and ER over the same stretch of the season first - NEP only shows up on days where you drew both.';
-      } else {
-        const auto = have.filter((o) => o.v >= 0).length;
-        const best = have.reduce((a, b) => (b.v > a.v ? b : a)), worst = have.reduce((a, b) => (b.v < a.v ? b : a));
-        text.textContent = `On ${Math.round((100 * auto) / have.length)}% of the days you drew, your lake is autotrophic (GPP above ER) and on ${Math.round((100 * (have.length - auto)) / have.length)}% it is heterotrophic. ` +
-          `Your biggest oxygen surplus is around ${fmtMD(dates[best.i])} (${best.v >= 0 ? '+' : ''}${best.v.toFixed(1)} mg O₂/L/day) and your biggest deficit around ${fmtMD(dates[worst.i])} (${worst.v >= 0 ? '+' : ''}${worst.v.toFixed(1)}). ` +
-          `Keep this in mind - next you'll see what the buoy actually recorded.`;
-      }
-      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      renderNepCompare(false);
+      const top = card.getBoundingClientRect().top + window.scrollY - 70;   // both charts in view together
+      window.scrollTo({ top, behavior: 'smooth' });
     });
 
     // "Show me the real data": overlay the buoy's GPP/ER and NEP on the student's
     // sketch, then open the rest of the module (slider, match game, drivers).
+    let realTimer = null, realTracesAdded = false;
     document.getElementById('showRealMetab').addEventListener('click', () => {
-      const dash = (y, color, name) => ({ x: dates, y, type: 'scatter', mode: 'lines', hoverinfo: 'skip', line: { color, width: 2.5, dash: 'dash' }, connectgaps: true, name });
-      Plotly.addTraces('drawPlot3', [dash(gppSeries, gppColor, 'Real GPP'), dash(erSeries, erColor, 'Real ER')]);
-      document.getElementById('drawRealKey3').hidden = false;
+      if (realTimer) return;
+      // Bring the sketch back into view, then draw the real GPP and ER onto it and the real NEP onto the
+      // NEP chart below it - together, left to right - so students watch the dashed lines arrive.
+      const card = document.getElementById('sketchCard');
+      window.scrollTo({ top: card.getBoundingClientRect().top + window.scrollY - 70, behavior: 'smooth' });
       const realNep = daily.map((d) => d[BK.nep]);
-      if (document.getElementById('sketchNepPlot').data) {
-        Plotly.addTraces('sketchNepPlot', [{ x: dates, y: realNep, type: 'scatter', mode: 'lines', hoverinfo: 'skip', line: { color: cssVar('--text-primary'), width: 2.5, dash: 'dash' }, connectgaps: true, name: 'Real NEP' }]);
+      const nothing = new Array(n).fill(null);
+      const dash = (color, name) => ({ x: dates, y: nothing, type: 'scatter', mode: 'lines', hoverinfo: 'skip', line: { color, width: 2.5, dash: 'dash' }, connectgaps: true, name });
+      if (!realTracesAdded) {
+        Plotly.addTraces('drawPlot3', [dash(gppColor, 'Real GPP'), dash(erColor, 'Real ER')]);
+        Plotly.addTraces('sketchNepPlot', [dash(cssVar('--text-primary'), 'Real NEP')]);
+        realTracesAdded = true;
+      } else {
+        // replay: clear the dashed lines first so they draw in again from the left
+        Plotly.restyle('drawPlot3', { y: [nothing, nothing] }, [2, 3]);
+        Plotly.restyle('sketchNepPlot', { y: [nothing] }, [1]);
       }
-      const vals = realNep.filter((v) => v != null);
-      const autoPct = Math.round((100 * vals.filter((v) => v >= 0).length) / vals.length);
-      document.getElementById('realMetabText').textContent =
-        `Dashed lines show the buoy's real values (bookkeeping method, average of 2021–2025). In the real data GPP peaks around ${fmtMD(dates[peakOf(gppSeries)])} and ER around ${fmtMD(dates[peakOf(erSeries)])}, ` +
-        `and the lake is autotrophic on ${autoPct}% of days. How does your sketch compare - did GPP and ER rise and fall together, and when did one pull ahead of the other?`;
-      document.getElementById('realMetabText').hidden = false;
-      document.getElementById('showRealMetab').hidden = true;
-
-      document.getElementById('metabolismRest').hidden = false;
-      // Charts built while hidden have no real size yet.
-      ['gppErPlot', 'nepPlot', 'driversPlot', 'chlorGppPlot', 'monthlyNepPlot'].forEach((id) => Plotly.Plots.resize(id));
+      document.getElementById('drawRealKey3').hidden = false;
+      const upTo = (arr, k) => arr.map((v, i) => (i < k ? v : null));
+      const STEPS = 30;
+      let step = 0;
+      realTimer = true;   // blocks a second click until this run has finished
+      setTimeout(() => {
+        realTimer = setInterval(() => {
+          step += 1;
+          const k = Math.ceil((n * step) / STEPS);
+          Plotly.restyle('drawPlot3', { y: [upTo(gppSeries, k), upTo(erSeries, k)] }, [2, 3]);
+          Plotly.restyle('sketchNepPlot', { y: [upTo(realNep, k)] }, [1]);
+          if (step < STEPS) return;
+          clearInterval(realTimer);
+          realTimer = null;
+          document.getElementById('showRealMetab').textContent = 'Replay the real data';
+          renderNepCompare(true);
+          document.getElementById('realMetabText').textContent =
+            'Dashed lines show the buoy\'s real values (bookkeeping method, average of 2021–2025). How does your sketch compare?';
+          document.getElementById('realMetabText').hidden = false;
+          document.getElementById('metabolismRest').hidden = false;
+          // Charts built while hidden have no real size yet.
+          ['gppErPlot', 'chlorGppPlot', 'monthlyNepPlot'].forEach((id) => Plotly.Plots.resize(id));
+        }, 40);
+      }, 500);   // let the page finish scrolling back up to the charts first
     });
 
-    // Peak dates and correlations are found in the data, not assumed.
-    const peakOf = (arr) => arr.reduce((best, v, i) => (v != null && v > arr[best] ? i : best), 0);
-    const parPeak = fmtDate(dates[peakOf(parRoll)]);
-    const tempPeak = fmtDate(dates[peakOf(tempRoll)]);
-    const gppPeak = fmtDate(dates[peakOf(gppSeries)]);
-    const pairs = daily.filter((d) => d.par_clim != null && d.wtemp_clim != null && d[BK.gpp] != null && d[BK.er] != null);
-    const rGppPar = pearson(pairs.map((d) => d[BK.gpp]), pairs.map((d) => d.par_clim));
-    const rGppTemp = pearson(pairs.map((d) => d[BK.gpp]), pairs.map((d) => d.wtemp_clim));
-    const rErTemp = pearson(pairs.map((d) => d[BK.er]), pairs.map((d) => d.wtemp_clim));
-    document.getElementById('driversText').textContent =
-      `Light peaks first (7-day mean PAR tops out around ${parPeak}), but the water keeps warming for weeks afterward (warmest around ${tempPeak}) ` +
-      `and GPP peaks around ${gppPeak}. By fall the two drivers have come apart: sunlight has dropped sharply while the water is still warm. ` +
-      `Across the season, ER tracks water temperature closely (r = ${rErTemp.toFixed(2)}), and GPP tracks temperature too (r = ${rGppTemp.toFixed(2)}) ` +
-      `- partly because warm water and bright light arrive together in summer - while GPP's day-to-day link to light alone is weaker (r = ${rGppPar.toFixed(2)}), ` +
-      `since algae also need to be present in the water, not just sunshine. Whenever GPP outruns ER the lake is autotrophic; whenever ER wins, heterotrophic.`;
+    // "Clear to reset this" starts the whole GPP/ER exercise over: the student's lines are cleared by the
+    // chart itself; here we also stop any replay, remove the real dashed lines and the NEP chart, and clear
+    // the comparison. (Sections already unlocked further down the page stay open.)
+    document.getElementById('drawClear3').addEventListener('click', () => {
+      if (realTimer && realTimer !== true) clearInterval(realTimer);
+      realTimer = null;
+      if (realTracesAdded) {
+        Plotly.deleteTraces('drawPlot3', [2, 3]);
+        realTracesAdded = false;
+      }
+      if (document.getElementById('sketchNepPlot').data) Plotly.purge('sketchNepPlot');
+      document.getElementById('sketchNepWrap').hidden = true;
+      document.getElementById('showRealMetab').hidden = true;
+      document.getElementById('showRealMetab').textContent = 'Show me the real data';
+      document.getElementById('drawRealKey3').hidden = true;
+      document.getElementById('sketchNepText').textContent = '';
+      document.getElementById('realMetabText').hidden = true;
+    });
 
     // ---- season cards: numbers are live, mechanisms are the explanation ----
     const stats = seasonStats(daily);
@@ -662,7 +705,7 @@
     const pctDrop = Math.round(100 * (1 - byName.Fall.par / byName.Summer.par));
     const SEASON_INFO = {
       Spring: {
-        months: 'March – May', color: '--series-wind',
+        months: 'April – May', color: '--series-wind',
         verdict: 'Waking up: production and respiration nearly cancel.',
         body: [
           'Ice-out lets light back into a cold, well-mixed lake. Algae respond fast &mdash; chlorophyll shows an early-season bloom &mdash; but cold water keeps bacterial respiration slow.',
@@ -742,20 +785,21 @@
     ], basePlotLayout({ yaxis: pctAxis }), { displayModeBar: false, responsive: true, scrollZoom: false });
 
     const peakChlor = rows.reduce((a, b) => (b.chlor_avg > a.chlor_avg ? b : a));
-    const peakPhyco = rows.reduce((a, b) => (b.phyco_avg > a.phyco_avg ? b : a));
+    const MONTH_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     document.getElementById('chlorGppText').textContent =
-      `Chlorophyll peaks on ${fmtDate(peakChlor.date)} (${peakChlor.chlor_avg.toFixed(2)} RFU) - an early-season bloom, before cyanobacteria are active - ` +
-      `while phycocyanin peaks later, on ${fmtDate(peakPhyco.date)} (${peakPhyco.phyco_avg.toFixed(2)} RFU), and stays elevated through summer. ` +
-      `Season-long the two sensors are actually slightly anti-correlated (r = ${pearson(chlorRaw, phycoRaw).toFixed(2)}): the spring bloom and the summer ` +
-      `cyanobacteria look like two different algal communities, not one continuous bloom. GPP follows the summer one: it tracks phycocyanin (r = ${pearson(phycoRaw, gppRaw).toFixed(2)}) ` +
-      `but not chlorophyll (r = ${pearson(chlorRaw, gppRaw).toFixed(2)}). The spring chlorophyll bump is probably a different group of phytoplankton, such as diatoms - ` +
-      `these sensors can't tell us that directly - and it produces much less oxygen than the summer's warm-water cyanobacteria.`;
+      `Chlorophyll peaks in ${MONTH_LONG[+peakChlor.date.slice(5, 7) - 1]}, an early-season bloom, before cyanobacteria are active, while phycocyanin stays elevated through summer. ` +
+      `GPP tracks phycocyanin (r = ${pearson(phycoRaw, gppRaw).toFixed(2)}) but not chlorophyll (r = ${pearson(chlorRaw, gppRaw).toFixed(2)}). ` +
+      `The spring chlorophyll bump is probably a different group of phytoplankton, such as diatoms (these sensors can't tell us that directly) ` +
+      `and it produces much less oxygen than the summer's warm-water cyanobacteria.`;
 
     // ---- gate: the metabolism half of the module opens after the PAR reveal ----
     document.getElementById('keepExploring').addEventListener('click', () => {
       const block = document.getElementById('metabolismBlock');
       block.hidden = false;
       document.getElementById('keepExploringWrap').hidden = true;
+      // The GPP/ER sketch chart was drawn while this block was hidden, so Plotly gave it a default width;
+      // resize it now that it is visible so it matches the other drawing charts.
+      Plotly.Plots.resize('drawPlot3');
       block.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
