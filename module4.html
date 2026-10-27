@@ -29,8 +29,7 @@
     <p class="lede lede-wide">
       Everything so far has used one real week of data. This module zooms out to two real months
       (June&ndash;July 2023) and asks a different question: not <em>what</em> is the lake doing, but
-      <strong>how often do you have to look to find out?</strong> You'll play field limnologist and decide
-      how many measurements you need to estimate oxygen dynamics.
+      <strong>how often do you have to look to find out?</strong>
     </p>
   </div>
 </header>
@@ -42,13 +41,13 @@
     <h2>You're the limnologist</h2>
     <p class="case-sub">
       It's the 1980s. There's no buoy, no sensor, no continuous record &mdash; just you, a boat, a clipboard, and
-      a Winkler titration kit. Budget allows one visit per week. Here's what you measured.
+      a Winkler titration kit. Budget allows one visit every two weeks. Here's what you measured.
     </p>
-    <div class="stat-row" id="p1WeekCards"></div>
+    <div class="stat-row cols-5" id="p1WeekCards"></div>
     <div class="overlay-plot" id="p1Plot" style="height:180px; margin-top:10px;"></div>
     <div style="margin-top:14px; padding:16px; border-radius:var(--card-radius); background:color-mix(in srgb, var(--series-do) 10%, var(--surface-1));">
       <p style="margin:0 0 6px; font-size:14px; color:var(--text-secondary);">
-        Based on these four visits alone &mdash; <strong>what can you conclude about this lake?</strong>
+        Based on these visits alone &mdash; <strong>what can you conclude about this lake?</strong>
       </p>
       <textarea class="notes-field" id="p1Notes" placeholder="Write your conclusion here&hellip;"></textarea>
       <div class="notes-hint">Saved automatically in this browser.</div>
@@ -75,7 +74,7 @@
     <div style="display:flex; gap:20px; align-items:stretch; flex-wrap:wrap;">
       <div class="overlay-plot" id="p2Plot" style="flex:1 1 420px; min-width:0;"></div>
       <div class="state-caption" style="flex:0 0 260px; margin:0; background:color-mix(in srgb, var(--series-par) 10%, var(--surface-1));">
-        <span class="callout-label">What does the data show</span>
+        <span class="callout-label">What do the data show</span>
         <p id="p2Stats" style="margin:6px 0 0;"></p>
       </div>
     </div>
@@ -199,6 +198,6 @@
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="js/common.js?v=14"></script>
-<script src="js/module4.js?v=14"></script>
+<script src="js/module4.js?v=16"></script>
 </body>
 </html>

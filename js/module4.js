@@ -115,22 +115,24 @@
     const yPad = 0.6;
     const yRangeFull = [Math.min(...yFull) - yPad, Math.max(...yFull) + yPad];
 
-    initPart1(data, fiveMinDo, fiveMinMinutes);
+    initPart1(data, fiveMinDo, fiveMinMinutes, xRange, yRangeFull);
     initPart2(fiveMinDo, fiveMinMinutes, xRange, yRangeFull);
     initPart3(data, doColor);
   }
 
   // ==========================================================================
-  // Part 1 - traditional weekly sampling
+  // Part 1 - traditional bi-weekly sampling
   // ==========================================================================
-  function initPart1(data, fiveMinDo, fiveMinMinutes) {
-    const weekly = sampleRegular(fiveMinDo, fiveMinMinutes, 7 * 24 * 60).slice(0, 4);
+  function initPart1(data, fiveMinDo, fiveMinMinutes, xRange, yRangeFull) {
+    // One visit every two weeks across the same two months Part 2 shows, on the same axes as Part 2,
+    // so the two plots can be compared fairly.
+    const weekly = sampleRegular(fiveMinDo, fiveMinMinutes, 14 * 24 * 60);
     const cardsEl = document.getElementById('p1WeekCards');
     weekly.forEach((p, i) => {
       const tile = document.createElement('div');
       tile.className = 'stat-tile';
       tile.innerHTML = `
-        <div class="stat-tile-label"><span class="dot" style="background:${cssVar('--series-do')}"></span>Week ${i + 1}</div>
+        <div class="stat-tile-label"><span class="dot" style="background:${cssVar('--series-do')}"></span>Visit ${i + 1}</div>
         <div class="stat-tile-value">${p.do_mgl.toFixed(1)}<span class="unit"> mg/L</span></div>`;
       cardsEl.appendChild(tile);
     });
@@ -142,8 +144,8 @@
       marker: { size: 10, color: cssVar('--series-do') },
       hovertemplate: '%{y:.2f} mg/L<extra></extra>',
     }], basePlotLayout({
-      xaxis: { type: 'date', tickformat: '%b %-d', gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') } },
-      yaxis: { title: { text: 'Dissolved oxygen (mg/L)', font: { size: 12, color: cssVar('--text-secondary') } }, range: [0, 16], gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
+      xaxis: { type: 'date', range: xRange, tickformat: '%b %-d', gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') } },
+      yaxis: { title: { text: 'Dissolved oxygen (mg/L)', font: { size: 12, color: cssVar('--text-secondary') } }, range: yRangeFull, gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
     }), { displayModeBar: false, responsive: true, scrollZoom: false });
 
     const notes = document.getElementById('p1Notes');

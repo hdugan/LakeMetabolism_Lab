@@ -35,8 +35,10 @@
   }
 
   function fillBalance(prefix, calc) {
-    document.getElementById(`${prefix}Gpp`).textContent = '+' + calc.gppDay.toFixed(2);
-    document.getElementById(`${prefix}Er`).textContent = '−' + calc.erDaily.toFixed(2);
+    // Both sides of the balance are shown as plain positive amounts: it compares how much oxygen each
+    // process moved, so respiration's minus sign (kept in the slope math above) is dropped here.
+    document.getElementById(`${prefix}Gpp`).textContent = calc.gppDay.toFixed(2);
+    document.getElementById(`${prefix}Er`).textContent = calc.erDaily.toFixed(2);
     document.getElementById(`${prefix}Op`).textContent = calc.gppDay >= calc.erDaily ? '>' : '<';
     document.getElementById(`${prefix}Net`).textContent = `Net = ${fmtSigned(calc.nep)} mg O₂/L/day`;
   }
@@ -230,9 +232,10 @@
         fillSummary(calc1);
         summary.hidden = false;
         fillBalance('verdict', calc1);
-        document.getElementById('verdictText').textContent = calc1.nep >= 0
-          ? `Gross Primary Production was higher than Ecosystem Respiration on July 9–10: this stretch of lake was autotrophic, producing a bit more organic matter than it consumed.`
-          : `Ecosystem Respiration was higher than Gross Primary Production on July 9–10: the lake ecosystem was consuming more organic matter than it produced that day.`;
+        const dropSign = 'Here we remove the negative sign in front of respiration because we are comparing how much oxygen each process moved, not which direction it went. ';
+        document.getElementById('verdictText').textContent = dropSign + (calc1.nep >= 0
+          ? `On July 9–10, Gross Primary Production was higher than Ecosystem Respiration: this stretch of lake was autotrophic, producing a bit more organic matter than it consumed.`
+          : `On July 9–10, Ecosystem Respiration was higher than Gross Primary Production: the lake ecosystem was consuming more organic matter than it produced that day.`);
         verdict.hidden = false;
         nepSection.hidden = false;
         nepQuestion.hidden = false;
@@ -321,6 +324,7 @@
     recallContinueBtn.addEventListener('click', () => {
       autoHeteroSection.hidden = false;
       farmSection.hidden = false;
+      document.getElementById('nextModuleWrap').hidden = false;   // the module is finished: offer the next one
       // These two charts were drawn earlier while their section was still
       // display:none, so Plotly sized them at 0x0 - force a resize now that
       // the container has real dimensions, or they'd stay invisible.
