@@ -405,7 +405,7 @@
 
   initFinalQuiz();
 
-  // ---- "Case notes" (localStorage) - independent of the chart data fetch ----
+  // ---- "Think it through" (localStorage) - independent of the chart data fetch ----
   const TEMP_SOLUBILITY_KEY = 'oxygenBudget.tempSolubilityNotes';
   const tempSolubilityNotes = document.getElementById('tempSolubilityNotes');
   tempSolubilityNotes.value = localStorage.getItem(TEMP_SOLUBILITY_KEY) || '';

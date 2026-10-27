@@ -368,7 +368,7 @@ a { color: var(--series-do); }
 }
 .chart-grid-stack .chart-plot {
   flex: 1 1 auto;
-  height: 130px;
+  height: 112px;
 }
 
 /* ---- shared bubble: time control + all four charts in one card ---- */
@@ -1924,3 +1924,18 @@ a { color: var(--series-do); }
 }
 .response-preview h3 { margin: 18px 0 6px; font-size: 16px; }
 .response-preview p { margin: 0 0 8px; }
+
+/* Module 1: the play bar lines up with the charts below it. The left column (button + date/time) has the
+   same width as the chart titles' column, so the slider starts and ends where the plots do. */
+.chart-panel .control-bar { padding: 10px 14px; gap: 14px; align-items: center; }
+.chart-panel .control-left {
+  flex: 0 0 168px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.chart-panel .control-left .time-readout { text-align: left; min-width: 0; }
+@media (max-width: 700px) {
+  .chart-panel .control-left { flex: 1 1 100%; flex-direction: row; align-items: center; justify-content: space-between; }
+}

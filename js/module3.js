@@ -59,7 +59,7 @@
         '<p style="padding:40px;color:var(--text-secondary)">Could not load lake data (' + err + ').</p>';
     });
 
-  // ---- "Case notes" (localStorage) - independent of the chart data fetch ----
+  // ---- "Think it through" (localStorage) - independent of the chart data fetch ----
   const bestFitNotes = document.getElementById('bestFitNotes');
   bestFitNotes.value = localStorage.getItem('buildOxygenCurve.bestFitNotes') || '';
   bestFitNotes.addEventListener('input', () => {
@@ -235,8 +235,10 @@
       const fmt = (v) => v.toFixed(2) + ' mg O₂/L/day';
       document.getElementById('revGppYou').textContent = fmt(gppYou);
       document.getElementById('revGppTrue').textContent = fmt(gppTrue);
-      document.getElementById('revRYou').textContent = fmt(rYou);
-      document.getElementById('revRTrue').textContent = fmt(rTrue);
+      // respiration removes oxygen, so its rates are shown with a minus sign (matching the slider readout)
+      const fmtNeg = (v) => (v > 0 ? '-' : '') + fmt(v);
+      document.getElementById('revRYou').textContent = fmtNeg(rYou);
+      document.getElementById('revRTrue').textContent = fmtNeg(rTrue);
       document.getElementById('revGasYou').textContent = fmt(gasYou);
       document.getElementById('revGasTrue').textContent = fmt(gasTrue);
 

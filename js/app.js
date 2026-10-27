@@ -121,14 +121,6 @@
     });
 
     // ---- slider day labels ----
-    const scale = document.getElementById('sliderScale');
-    days.forEach((d) => {
-      const span = document.createElement('span');
-      const dt = new Date(`${d.date}T12:00:00`);
-      span.textContent = `${WEEKDAYS[dt.getDay()]} ${dt.getDate()}`;
-      scale.appendChild(span);
-    });
-
     // ---- wire up slider / play / readouts ----
     const slider = document.getElementById('timeSlider');
     const readoutDate = document.getElementById('readoutDate');
@@ -242,26 +234,25 @@
       {
         key: 'wtemp', label: 'Temperature', icon: '🌡️',
         varKey: 'wtemp_c', unit: '°C', decimals: 1, colorVar: '--series-wtemp',
-        observe: 'Water temperature and oxygen both rise and fall once a day. But look at the timing: water temperature usually peaks by mid-to-late afternoon, while oxygen keeps climbing for a few more hours, often not turning around until early evening.',
-        reflect: 'If temperature directly controlled oxygen, the two should peak at almost the same time. Instead there is a gap of several hours between them. What does that gap suggest about whether temperature is really driving oxygen, or just moving alongside something else that is?',
+        observe: "Water temperature and oxygen typically both rise and fall once a day. But sometimes, they don't follow the same pattern. Why could that be?",
       },
       {
         key: 'wind', label: 'Wind', icon: '💨',
         varKey: 'wind_ms', unit: 'm/s', decimals: 1, colorVar: '--series-wind',
-        observe: 'Wind speed jumps around hour to hour — sometimes calm at night, sometimes gusty at midday — with no repeating daily rhythm like oxygen has.',
-        reflect: "Oxygen rises and falls on a reliable daily schedule. Wind doesn't seem to. If wind isn't driving that schedule, what job might it still be doing for the lake?",
+        observe: 'Wind speed jumps around hour to hour. Does it have any kind of repeating pattern?',
       },
       {
         key: 'par', label: 'Sunlight', icon: '☀️',
         varKey: 'par', unit: 'µmol/m²/s', decimals: 0, colorVar: '--series-par',
         observe: 'Both curves rise and fall every day, but not at the same moment. PAR peaks right around solar noon, while oxygen often keeps climbing for several more hours, sometimes not turning around until early evening.',
-        reflect: 'Why does oxygen continue increasing for hours after sunlight has already passed its maximum?',
       },
     ];
 
-    const NOTES_PREFIX = 'lakeDetective.notes.';
+    const TRIED_KEY = 'lakeDetective.tried';
     const VERDICT_KEY = 'lakeDetective.verdict';
-    const triedSet = new Set();
+    let savedTried = [];
+    try { savedTried = JSON.parse(localStorage.getItem(TRIED_KEY) || '[]'); } catch (e) { /* ignore */ }
+    const triedSet = new Set(savedTried);
 
     function normalize(values, floorAtZero) {
       const present = values.filter((v) => v !== null && v !== undefined);
@@ -278,15 +269,10 @@
     const suspectGrid = document.getElementById('suspectGrid');
     const emptyState = document.getElementById('emptyState');
     const overlaySection = document.getElementById('overlaySection');
-    const analysisSection = document.getElementById('analysisSection');
     const overlayTitle = document.getElementById('overlayTitle');
     const overlayLegend = document.getElementById('overlayLegend');
     const observeCallout = document.getElementById('observeCallout');
     const observeText = document.getElementById('observeText');
-    const reflectText = document.getElementById('reflectText');
-    const reflectNotes = document.getElementById('reflectNotes');
-    const triedCount = document.getElementById('triedCount');
-    const verdictRow = document.getElementById('verdictRow');
     const verdictNotes = document.getElementById('verdictNotes');
 
     // ---- suspect buttons ----
@@ -300,29 +286,11 @@
         <span class="suspect-check">✓ tested</span>
         <span class="suspect-icon">${s.icon}</span>
         <span class="suspect-label">${s.label}</span>`;
-      if (localStorage.getItem(NOTES_PREFIX + s.key)) btn.classList.add('tried');
+      if (triedSet.has(s.key)) btn.classList.add('tried');
       btn.addEventListener('click', () => selectSuspect(s.key));
       suspectGrid.appendChild(btn);
     });
 
-    // ---- verdict / progress chips ----
-    function renderVerdictRow() {
-      verdictRow.innerHTML = '';
-      SUSPECTS.forEach((s) => {
-        const chip = document.createElement('span');
-        chip.className = 'verdict-chip';
-        chip.textContent = (triedSet.has(s.key) ? '✓ ' : '– ') + s.label;
-        verdictRow.appendChild(chip);
-      });
-      triedCount.textContent = String(triedSet.size);
-    }
-    // A suspect counts as "tried" if it has saved notes from an earlier
-    // visit, so the progress count survives a reload instead of resetting
-    // to 0 while the notes themselves are still there.
-    SUSPECTS.forEach((s) => {
-      if (localStorage.getItem(NOTES_PREFIX + s.key)) triedSet.add(s.key);
-    });
-    renderVerdictRow();
 
     // ---- restore saved verdict notes ----
     verdictNotes.value = localStorage.getItem(VERDICT_KEY) || '';
@@ -339,11 +307,10 @@
         if (btn.dataset.key === key) btn.classList.add('tried');
       });
       triedSet.add(key);
-      renderVerdictRow();
+      localStorage.setItem(TRIED_KEY, JSON.stringify(Array.from(triedSet)));
 
       emptyState.hidden = true;
       overlaySection.hidden = false;
-      analysisSection.hidden = false;
 
       overlayTitle.textContent = `Oxygen vs. ${s.label}`;
       observeCallout.style.setProperty('--accent', color);
@@ -351,9 +318,6 @@
         <span><span class="swatch" style="background:${doColor}"></span>Oxygen (DO, mg/L)</span>
         <span><span class="swatch" style="background:${color}"></span>${s.label} (${s.unit})</span>`;
       observeText.textContent = s.observe;
-      reflectText.textContent = s.reflect;
-      reflectNotes.value = localStorage.getItem(NOTES_PREFIX + key) || '';
-      reflectNotes.oninput = () => localStorage.setItem(NOTES_PREFIX + key, reflectNotes.value);
 
       drawOverlay(s);
     }
