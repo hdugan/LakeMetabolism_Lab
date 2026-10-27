@@ -531,7 +531,7 @@
     const Y_RANGE = [0, Math.ceil(gppMax * 1.2 * 2) / 2];
     const keys = ['paul', 'fert'];
     const drawn = { paul: new Array(n).fill(null), fert: new Array(n).fill(null) };
-    const drawColor = { paul: EXP_COLOR.Paul, fert: FERT_COLOR };
+    const drawColor = { paul: EXP_COLOR.Paul, fert: EXP_COLOR.Peter };   // each drawn line matches its real line's color
     let drawKey = 'paul';
     const plotEl = document.getElementById('expDrawPlot');
     const surface = document.getElementById('expDrawSurface');
