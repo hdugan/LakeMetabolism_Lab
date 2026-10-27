@@ -68,7 +68,7 @@
       fields: [
         { key: 'synthesis.metabolismDef', label: 'In your own words, what is lake metabolism, and what do GPP, ER and NEP each tell you about a lake?' },
         { key: 'synthesis.propertyOwner', label: 'A lake-front property owner tells you their lake has a lot of algae. What would you measure, and what would you expect to see in the oxygen data?' },
-        { key: 'synthesis.mendotaDriver', label: 'Which of the three drivers you studied (nutrients, light, temperature) matters most for GPP in Lake Mendota in summer?' },
+        { key: 'synthesis.mendotaDriver', label: "Which of the three drivers you studied (nutrients, light, temperature) best explains why Lake Mendota's GPP is higher than in Trout Lake or Trout Bog? Use evidence from the lab." },
         { key: 'synthesis.buoyLimits', label: "What is one thing the buoy data cannot tell us about a lake's metabolism?" },
         { key: 'synthesis.carbon', label: 'A lake that is net heterotrophic is releasing carbon dioxide to the air. What does that suggest about the role of lakes in the global carbon cycle?' },
       ],
