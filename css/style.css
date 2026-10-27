@@ -1958,3 +1958,9 @@ a { color: var(--series-do); }
   .metab-layout { grid-template-columns: minmax(0, 1fr); }
   .metab-layout > .state-caption { grid-column: 1; grid-row: auto; margin: 0 0 18px; }
 }
+
+/* a yellow highlight box (same tint as "The missing season") */
+.note-yellow {
+  background: color-mix(in srgb, var(--series-par) 12%, var(--surface-1));
+  border-color: color-mix(in srgb, var(--series-par) 35%, transparent);
+}

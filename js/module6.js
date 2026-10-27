@@ -83,6 +83,7 @@
   });
   // Flip cards (season cards): click or press Enter/Space to turn over.
   function toggleFlip(card) {
+    if (card.dataset.once && card.classList.contains('flipped')) return;   // one-way cards stay open (so the chart can be used)
     const flipped = card.classList.toggle('flipped');
     card.setAttribute('aria-pressed', String(flipped));
   }
@@ -439,6 +440,7 @@
         }
         last = pt;
         Plotly.restyle(cfg.plotId, { y: [arr.slice()] }, [idxOf(drawKey)]);
+        if (cfg.onChange) cfg.onChange(drawn);   // e.g. keep a derived chart in step while drawing
       }
       surface.addEventListener('pointerdown', (e) => {
         surface.setPointerCapture(e.pointerId);
@@ -457,6 +459,7 @@
       document.getElementById(cfg.clearId).addEventListener('click', () => {
         cfg.series.forEach((sr) => { drawn[sr.key].fill(null); });
         Plotly.restyle(cfg.plotId, { y: cfg.series.map((sr) => drawn[sr.key].slice()) }, cfg.series.map((_, i) => i));
+        if (cfg.onChange) cfg.onChange(drawn);
       });
       if (cfg.revealId) document.getElementById(cfg.revealId).addEventListener('click', () => {
         Plotly.restyle(cfg.plotId, { y: cfg.series.map((sr) => sr.real) }, cfg.series.map((_, i) => k + i));
@@ -549,7 +552,8 @@
         const md = (i) => (i >= 0 ? fmtMD(dates[i]) : '–');
         const box = document.createElement('div');
         box.appendChild(compareTable(['', 'Your drawing', 'Real data (average of 2021–2025)'], [
-          ...SEASONS.map(([name, f]) => [name === 'Overall' ? 'Light at 1 m, as % of surface light: overall' : `…${name.toLowerCase()}`, pct(yourRatio(f)), pct(ratioFor(f))]),
+          ['Light at 1 m, as % of surface light: overall', pct(yourRatio(SEASONS[0][1])), pct(ratioFor(SEASONS[0][1]))],
+          ['…spring / summer / fall', SEASONS.slice(1).map(([, f]) => pct(yourRatio(f))).join(' / '), SEASONS.slice(1).map(([, f]) => pct(ratioFor(f))).join(' / ')],
           ['Surface PAR peaks around', md(peakIdx(drawn.surface)), md(peakIdx(surfRoll))],
           ['PAR at 1 m peaks around', md(peakIdx(drawn.below)), md(peakIdx(belowRoll))],
         ]));
@@ -570,7 +574,30 @@
         { key: 'er', color: erColor },
       ],
       yRange: [0, metabTop], tickvals: Array.from({ length: metabTop + 1 }, (_, i) => i), yTitle: 'mg O₂/L/day',
+      onChange: () => updateLiveNep(false),
     });
+    // Your NEP (GPP - ER) is drawn live: the bars update as the GPP and ER lines are drawn, on days where both exist.
+    function updateLiveNep(force) {
+      const nep = dates.map((_, i) => (sketched.gpp[i] != null && sketched.er[i] != null ? sketched.gpp[i] - sketched.er[i] : null));
+      const vals = nep.filter((v) => v != null);
+      const wrap = document.getElementById('sketchNepWrap');
+      const plotDiv = document.getElementById('sketchNepPlot');
+      wrap.hidden = false;   // always visible, blank until GPP and ER overlap on some days
+      const colors = nep.map((v) => (v == null ? 'rgba(0,0,0,0)' : (v >= 0 ? goodColor : badColor)));
+      const lim = Math.max(1.5, ...vals.map((v) => Math.abs(v))) * 1.1;
+      if (!plotDiv.data) {
+        Plotly.newPlot('sketchNepPlot', [{
+          x: dates, y: nep, type: 'bar', marker: { color: colors },
+          hovertemplate: '%{y:.2f} mg O₂/L/day<extra>Your NEP</extra>',
+        }], basePlotLayout({
+          margin: { l: 56, r: 12, t: 10, b: 28 },
+          xaxis: { type: 'date', range: [dates[0], dates[n - 1]], tickformat: '%b', hoverformat: '%b %-d', ...axisStyle },
+          yaxis: { title: { text: 'NEP (mg O₂/L/day)', font: { size: 11, color: cssVar('--text-muted') } }, range: [-lim, lim], ...axisStyle, zeroline: true, zerolinecolor: cssVar('--baseline') },
+        }), { displayModeBar: false, responsive: true, scrollZoom: false });
+      } else {
+        Plotly.update('sketchNepPlot', { y: [nep], 'marker.color': [colors] }, { 'yaxis.range': [-lim, lim] }, [0]);
+      }
+    }
     const sketchNote = document.getElementById('sketchWhyNotes');
     sketchNote.value = localStorage.getItem('seasonalMetabolism.sketchWhyNotes') || '';
     sketchNote.addEventListener('input', () => localStorage.setItem('seasonalMetabolism.sketchWhyNotes', sketchNote.value));
@@ -586,13 +613,11 @@
       return [
         `${Math.round((100 * auto) / have.length)}%`,
         `${Math.round((100 * (have.length - auto)) / have.length)}%`,
-        `${fmtMD(dates[best.i])} (${sg(best.v)})`,
-        `${fmtMD(dates[worst.i])} (${sg(worst.v)})`,
-        peak(gppArr),
-        peak(erArr),
+        `${fmtMD(dates[best.i])} (${sg(best.v)}) / ${fmtMD(dates[worst.i])} (${sg(worst.v)})`,
+        `${peak(gppArr)} / ${peak(erArr)}`,
       ];
     }
-    const NEP_ROWS = ['% of days autotrophic (GPP > ER)', '% of days heterotrophic (ER > GPP)', 'Biggest surplus: date (NEP)', 'Biggest deficit: date (NEP)', 'GPP peak: date (value)', 'ER peak: date (value)'];
+    const NEP_ROWS = ['% of days autotrophic (GPP > ER)', '% of days heterotrophic (ER > GPP)', 'Biggest surplus / biggest deficit: date (NEP)', 'GPP peak / ER peak: date (value)'];
     function renderNepCompare(withReal) {
       const text = document.getElementById('sketchNepText');
       text.textContent = '';
@@ -611,26 +636,6 @@
       text.appendChild(compareTable(withReal ? ['', 'Your sketch', 'Real data (average of 2021–2025)'] : ['', 'Your sketch'],
         NEP_ROWS.map((label, k) => (withReal ? [label, yours[k], real[k]] : [label, yours[k]]))));
     }
-    document.getElementById('showSketchNep').addEventListener('click', () => {
-      const nep = dates.map((_, i) => (sketched.gpp[i] != null && sketched.er[i] != null ? sketched.gpp[i] - sketched.er[i] : null));
-      const have = nep.map((v, i) => ({ v, i })).filter((o) => o.v != null);
-      const card = document.getElementById('sketchCard');
-      document.getElementById('sketchNepWrap').hidden = false;
-      document.getElementById('showRealMetab').hidden = false;
-      Plotly.newPlot('sketchNepPlot', [{
-        x: dates, y: nep, type: 'bar',
-        marker: { color: nep.map((v) => (v == null ? 'rgba(0,0,0,0)' : (v >= 0 ? goodColor : badColor))) },
-        hovertemplate: '%{y:.2f} mg O₂/L/day<extra>Your NEP</extra>',
-      }], basePlotLayout({
-        margin: { l: 56, r: 12, t: 10, b: 28 },
-        xaxis: { type: 'date', range: [dates[0], dates[n - 1]], tickformat: '%b', hoverformat: '%b %-d', ...axisStyle },
-        yaxis: { title: { text: 'NEP (mg O₂/L/day)', font: { size: 11, color: cssVar('--text-muted') } }, ...axisStyle, zeroline: true, zerolinecolor: cssVar('--baseline') },
-      }), { displayModeBar: false, responsive: true, scrollZoom: false });
-      renderNepCompare(false);
-      const top = card.getBoundingClientRect().top + window.scrollY - 70;   // both charts in view together
-      window.scrollTo({ top, behavior: 'smooth' });
-    });
-
     // "Show me the real data": overlay the buoy's GPP/ER and NEP on the student's
     // sketch, then open the rest of the module (slider, match game, drivers).
     let realTimer = null, realTracesAdded = false;
@@ -686,11 +691,9 @@
       realTimer = null;
       if (realTracesAdded) {
         Plotly.deleteTraces('drawPlot3', [2, 3]);
+        Plotly.deleteTraces('sketchNepPlot', [1]);   // the real NEP line; the student's (now blank) bars stay
         realTracesAdded = false;
       }
-      if (document.getElementById('sketchNepPlot').data) Plotly.purge('sketchNepPlot');
-      document.getElementById('sketchNepWrap').hidden = true;
-      document.getElementById('showRealMetab').hidden = true;
       document.getElementById('showRealMetab').textContent = 'Show me the real data';
       document.getElementById('drawRealKey3').hidden = true;
       document.getElementById('sketchNepText').textContent = '';
@@ -800,6 +803,7 @@
       // The GPP/ER sketch chart was drawn while this block was hidden, so Plotly gave it a default width;
       // resize it now that it is visible so it matches the other drawing charts.
       Plotly.Plots.resize('drawPlot3');
+      updateLiveNep(true);   // the blank NEP chart shows from the start, under the sketch
       block.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
