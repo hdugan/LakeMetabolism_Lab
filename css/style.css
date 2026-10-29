@@ -478,6 +478,10 @@ a { color: var(--series-do); }
   font-size: 17px;
   margin: 0 0 4px;
 }
+.chart-card > h2 {
+  font-size: 17px;
+  margin: 0 0 12px;
+}
 .case-card .case-sub {
   margin: 0 0 16px;
   color: var(--text-secondary);

@@ -242,9 +242,9 @@
         observe: 'Wind speed jumps around hour to hour. Does it have any kind of repeating pattern?',
       },
       {
-        key: 'par', label: 'Sunlight', icon: '☀️',
+        key: 'par', label: 'Light (PAR)', legend: 'PAR', icon: '☀️',
         varKey: 'par', unit: 'µmol/m²/s', decimals: 0, colorVar: '--series-par',
-        observe: 'Both curves rise and fall every day, but not at the same moment. PAR peaks right around solar noon, while oxygen often keeps climbing for several more hours, sometimes not turning around until early evening.',
+        observe: 'Both curves rise and fall every day, but not at the same time. PAR peaks right around solar noon, while oxygen often keeps climbing for several more hours, sometimes not turning around until early evening. Why does PAR peak before oxygen?',
       },
     ];
 
@@ -316,7 +316,7 @@
       observeCallout.style.setProperty('--accent', color);
       overlayLegend.innerHTML = `
         <span><span class="swatch" style="background:${doColor}"></span>Oxygen (DO, mg/L)</span>
-        <span><span class="swatch" style="background:${color}"></span>${s.label} (${s.unit})</span>`;
+        <span><span class="swatch" style="background:${color}"></span>${s.legend || s.label} (${s.unit})</span>`;
       observeText.textContent = s.observe;
 
       drawOverlay(s);
