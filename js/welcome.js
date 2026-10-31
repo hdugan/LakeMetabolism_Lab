@@ -60,6 +60,7 @@
   ];
 
   const startBtn = document.getElementById('flashcardStartBtn');
+  startBtn.textContent = `Before we begin, review ${TERMS.length} terms`;
   const panel = document.getElementById('flashcardPanel');
   const deck = document.getElementById('flashcardDeck');
   const termEl = document.getElementById('flashcardTerm');

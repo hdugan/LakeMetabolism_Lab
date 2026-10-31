@@ -213,15 +213,18 @@
 
     const EVENTS = {
       storm: {
-        label: 'Storm', resolutionLabel: '5-minute data', secondaryKey: 'wind_ms', secondaryLabel: 'Wind speed (m/s)', secondaryColor: cssVar('--series-wind'),
+        label: 'Storm', resolutionLabel: '5-minute data', highlights: [{ x0: '2023-07-12T12:00:00', x1: '2023-07-12T18:00:00', text: 'Storm (rain)' }], secondaryKey: 'wind_ms', secondaryLabel: 'Wind speed (m/s)', secondaryColor: cssVar('--series-wind'),
         caption: 'On July 12, 2023, a summer thunderstorm dropped over 47 mm of rain in a few hours and pushed winds to some of the highest of the whole two-month record. Both effects show up immediately in the 5-minute data: light was cut to a fraction of a normal sunny day, and the usual afternoon oxygen rise never really happened.',
       },
       windmix: {
-        label: 'Wind mixing', resolutionLabel: '5-minute data', secondaryKey: 'wind_ms', secondaryLabel: 'Wind speed (m/s)', secondaryColor: cssVar('--series-wind'),
+        label: 'Wind mixing', resolutionLabel: '5-minute data', highlights: [
+          { x0: '2023-07-27T23:45:00', x1: '2023-07-28T01:05:00', text: 'Heavy wind' },
+          { x0: '2023-07-28T21:35:00', x1: '2023-07-28T22:25:00', text: 'Heavy wind' },
+        ], secondaryKey: 'wind_ms', secondaryLabel: 'Wind speed (m/s)', secondaryColor: cssVar('--series-wind'),
         caption: 'Just after midnight on July 28, wind suddenly spiked to over 10 m/s - the windiest moment of the whole record. Within a few hours, oxygen at the sensor dropped sharply, and water temperature dropped right along with it - the signature of wind churning the water column and mixing cooler, lower-oxygen water up from below. By the next calm afternoon, the lake had settled back into its normal rhythm.',
       },
       cloud: {
-        label: 'Cloud cover', resolutionLabel: '5-minute data', secondaryKey: 'par', secondaryLabel: 'Light (PAR)', secondaryColor: cssVar('--series-par'),
+        label: 'Cloud cover', resolutionLabel: '5-minute data', highlights: [{ x0: '2023-06-11T05:19:00', x1: '2023-06-11T20:38:00', text: 'Cloudy day' }], secondaryKey: 'par', secondaryLabel: 'Light (PAR)', secondaryColor: cssVar('--series-par'),
         caption: 'June 11, 2023 was heavily overcast - peak light that day reached only about a quarter of a typical sunny day. With that much less light, photosynthesis nearly stalled: oxygen barely moved, a striking contrast to the much bigger rise-and-fall on the sunnier days right before and after it.',
       },
     };
@@ -256,6 +259,14 @@
           hovertemplate: `%{customdata:.2f}<extra>${ev.secondaryLabel}</extra>`,
         },
       ], basePlotLayout({
+        shapes: (ev.highlights || []).map((h) => ({
+          type: 'rect', xref: 'x', yref: 'paper', x0: h.x0, x1: h.x1, y0: 0, y1: 1,
+          fillcolor: cssVar('--series-par'), opacity: 0.22, line: { width: 0 }, layer: 'below',
+        })),
+        annotations: (ev.highlights || []).map((h) => ({
+          xref: 'x', yref: 'paper', x: h.x0, y: 0.99, xanchor: 'left', yanchor: 'top', xshift: 4, showarrow: false,
+          text: h.text, font: { size: 11, color: cssVar('--text-secondary') },
+        })),
         xaxis: { type: 'date', tickformat: '%b %-d %-I%p', gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') } },
         yaxis: { title: { text: '% of window range', font: { size: 11, color: cssVar('--text-muted') } }, range: [-3, 103], gridcolor: cssVar('--gridline'), linecolor: cssVar('--baseline'), tickfont: { color: cssVar('--text-muted') }, zeroline: false },
       }), { displayModeBar: false, responsive: true, scrollZoom: false });
